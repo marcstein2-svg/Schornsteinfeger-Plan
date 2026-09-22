@@ -26,7 +26,6 @@
       --green-light: #e8f6ef;
       --red: #c84d4d;
       --red-light: #fdecec;
-      --blue: #47759e;
       --shadow: 0 8px 28px rgba(28, 35, 42, .07);
       --radius: 17px;
     }
@@ -65,21 +64,26 @@
        HEADER
     ===================================================== */
     .site-header {
-      background: linear-gradient(
-        135deg,
-        #20252b 0%,
-        #282f36 100%
-      );
-      color: #fff;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, .12);
       position: sticky;
       top: 0;
       z-index: 5000;
+      background:
+        linear-gradient(
+          135deg,
+          #20252b 0%,
+          #282f36 100%
+        );
+      color: #fff;
+      box-shadow:
+        0 4px 20px rgba(0, 0, 0, .12);
+      overflow: visible !important;
     }
     .header-inner {
       max-width: 1180px;
       margin: 0 auto;
-      padding: 14px 20px 0;
+      padding:
+        14px 20px 0;
+      overflow: visible !important;
     }
     .brand-row {
       display: flex;
@@ -95,7 +99,8 @@
       place-items: center;
       border-radius: 13px;
       background: var(--gold);
-      box-shadow: 0 5px 15px rgba(0,0,0,.2);
+      box-shadow:
+        0 5px 15px rgba(0, 0, 0, .2);
     }
     .brand-logo svg {
       width: 36px;
@@ -117,8 +122,10 @@
       margin-left: auto;
       padding: 6px 10px;
       border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.06);
+      border:
+        1px solid rgba(255,255,255,.14);
+      background:
+        rgba(255,255,255,.06);
       color: var(--gold-light);
       font-size: .72rem;
       font-weight: 750;
@@ -129,11 +136,13 @@
     ===================================================== */
     .main-nav {
       position: relative;
+      z-index: 10000;
       display: flex;
       align-items: center;
       gap: 3px;
       margin-top: 12px;
       min-height: 43px;
+      overflow: visible !important;
     }
     .nav-link,
     .legal-button {
@@ -148,46 +157,51 @@
       font-size: .86rem;
       font-weight: 650;
       white-space: nowrap;
-      transition: background .18s ease,
-                  color .18s ease;
+      transition:
+        background .18s ease,
+        color .18s ease;
     }
     .nav-link:hover,
     .legal-button:hover,
     .legal-button[aria-expanded="true"] {
-      background: rgba(255,255,255,.08);
+      background:
+        rgba(255,255,255,.08);
       color: #fff;
     }
+    /* =====================================================
+       RECHTLICHES DROPDOWN
+    ===================================================== */
     .legal-menu {
       position: relative;
       margin-left: auto;
+      z-index: 99999;
     }
     .legal-button {
       gap: 7px;
     }
     .legal-arrow {
       font-size: .62rem;
-      transition: transform .18s ease;
+      transition:
+        transform .18s ease;
     }
-    .legal-button[aria-expanded="true"] .legal-arrow {
-      transform: rotate(180deg);
+    .legal-button[aria-expanded="true"]
+    .legal-arrow {
+      transform:
+        rotate(180deg);
     }
-    /*
-      Wichtig:
-      Das Dropdown wird nicht innerhalb eines overflow-x
-      Containers abgeschnitten.
-    */
     .legal-dropdown {
       position: absolute;
-      top: calc(100% + 2px);
+      top: calc(100% + 4px);
       right: 0;
-      width: 210px;
+      width: 220px;
       padding: 6px;
       background: #fff;
-      border: 1px solid var(--border);
+      border:
+        1px solid var(--border);
       border-radius: 12px;
       box-shadow:
-        0 14px 35px rgba(0,0,0,.18);
-      z-index: 99999;
+        0 15px 35px rgba(0,0,0,.22);
+      z-index: 999999;
     }
     .legal-dropdown[hidden] {
       display: none !important;
@@ -199,7 +213,7 @@
       background: transparent;
       color: var(--text);
       text-align: left;
-      padding: 10px 11px;
+      padding: 11px 12px;
       border-radius: 8px;
       font-size: .86rem;
       font-weight: 600;
@@ -211,9 +225,12 @@
        MAIN
     ===================================================== */
     main {
+      position: relative;
+      z-index: 1;
       max-width: 1180px;
       margin: 0 auto;
-      padding: 27px 20px 50px;
+      padding:
+        27px 20px 50px;
     }
     .page {
       display: none;
@@ -239,7 +256,8 @@
           #fafbfc 70%,
           #f4ead5 100%
         );
-      border: 1px solid var(--border);
+      border:
+        1px solid var(--border);
       border-radius: 22px;
       box-shadow: var(--shadow);
     }
@@ -255,7 +273,8 @@
       padding: 6px 10px;
       border-radius: 999px;
       background: var(--gold-light);
-      border: 1px solid #e4ca8d;
+      border:
+        1px solid #e4ca8d;
       color: #7d5b20;
       font-size: .73rem;
       font-weight: 800;
@@ -264,7 +283,8 @@
     }
     .hero h1 {
       margin: 13px 0 8px;
-      font-size: clamp(2rem, 4vw, 3rem);
+      font-size:
+        clamp(2rem, 4vw, 3rem);
       line-height: 1.02;
       letter-spacing: -.045em;
     }
@@ -274,6 +294,9 @@
       max-width: 630px;
       font-size: 1rem;
     }
+    /* =====================================================
+       CHIMNEY ILLUSTRATION
+    ===================================================== */
     .chimney-art {
       position: absolute;
       right: 35px;
@@ -305,7 +328,8 @@
       background: var(--gold);
       transform:
         rotate(-18deg);
-      transform-origin: right center;
+      transform-origin:
+        right center;
       border-radius: 5px;
     }
     .chimney {
@@ -315,7 +339,8 @@
       width: 45px;
       height: 100px;
       background: #777f86;
-      border: 4px solid #5d656c;
+      border:
+        4px solid #5d656c;
       border-bottom: 0;
     }
     .chimney::before {
@@ -346,7 +371,8 @@
     ===================================================== */
     .card {
       background: var(--card);
-      border: 1px solid var(--border);
+      border:
+        1px solid var(--border);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       padding: 23px;
@@ -381,7 +407,7 @@
       font-size: 1.1rem;
     }
     /* =====================================================
-       FORMS
+       FORMULARE
     ===================================================== */
     .form-grid {
       display: grid;
@@ -408,7 +434,8 @@
     .field textarea {
       width: 100%;
       padding: 10px 11px;
-      border: 1px solid #d5dbe0;
+      border:
+        1px solid #d5dbe0;
       border-radius: 10px;
       background: #fff;
       color: var(--text);
@@ -422,7 +449,8 @@
     .field textarea:focus {
       border-color: var(--gold);
       box-shadow:
-        0 0 0 3px rgba(199,154,66,.13);
+        0 0 0 3px
+        rgba(199,154,66,.13);
     }
     .field textarea {
       min-height: 90px;
@@ -445,7 +473,8 @@
         background .16s ease;
     }
     .btn:hover {
-      transform: translateY(-1px);
+      transform:
+        translateY(-1px);
     }
     .btn-primary {
       background: var(--dark);
@@ -482,7 +511,8 @@
     .preview-box {
       margin-top: 18px;
       padding: 14px;
-      border: 1px dashed #d2b26b;
+      border:
+        1px dashed #d2b26b;
       border-radius: 12px;
       background: #fffaf0;
       color: #5e4a22;
@@ -492,7 +522,8 @@
        LEISTUNG
     ===================================================== */
     .performance-card {
-      border-top: 4px solid var(--gold);
+      border-top:
+        4px solid var(--gold);
     }
     .performance-grid {
       display: grid;
@@ -511,7 +542,8 @@
     .quick-info-item {
       padding: 12px;
       background: #f7f8f9;
-      border: 1px solid var(--border);
+      border:
+        1px solid var(--border);
       border-radius: 11px;
     }
     .quick-info-item span {
@@ -553,7 +585,8 @@
     }
     .status-primary {
       padding: 20px;
-      background: rgba(255,255,255,.055);
+      background:
+        rgba(255,255,255,.055);
       border:
         1px solid rgba(255,255,255,.08);
       border-radius: 15px;
@@ -564,7 +597,8 @@
     }
     .status-number {
       margin: 5px 0;
-      font-size: clamp(2rem, 5vw, 3.35rem);
+      font-size:
+        clamp(2rem, 5vw, 3.35rem);
       font-weight: 850;
       line-height: 1;
       letter-spacing: -.04em;
@@ -583,15 +617,18 @@
       font-weight: 800;
     }
     .status-pill.good {
-      background: rgba(22,132,91,.18);
+      background:
+        rgba(22,132,91,.18);
       color: #7be0b3;
     }
     .status-pill.bad {
-      background: rgba(200,77,77,.18);
+      background:
+        rgba(200,77,77,.18);
       color: #ff9e9e;
     }
     .status-pill.neutral {
-      background: rgba(199,154,66,.17);
+      background:
+        rgba(199,154,66,.17);
       color: #f0ce83;
     }
     .status-stats {
@@ -602,7 +639,8 @@
     }
     .dark-stat {
       padding: 15px;
-      background: rgba(255,255,255,.055);
+      background:
+        rgba(255,255,255,.055);
       border:
         1px solid rgba(255,255,255,.08);
       border-radius: 13px;
@@ -622,7 +660,8 @@
     }
     .progress-track {
       height: 10px;
-      background: rgba(255,255,255,.1);
+      background:
+        rgba(255,255,255,.1);
       border-radius: 999px;
       overflow: hidden;
     }
@@ -636,7 +675,8 @@
           #f1d17f
         );
       border-radius: inherit;
-      transition: width .35s ease;
+      transition:
+        width .35s ease;
     }
     .progress-caption {
       display: flex;
@@ -802,7 +842,8 @@
       border-radius: 7px;
     }
     .footer-links button:hover {
-      background: rgba(255,255,255,.07);
+      background:
+        rgba(255,255,255,.07);
       color: #fff;
     }
     /* =====================================================
@@ -832,19 +873,23 @@
       }
     }
     /* =====================================================
-       HOCHFORMAT / MOBILE
-       Wichtig: kein overflow-x am NAV.
-       Dadurch kann das Untermenü nicht abgeschnitten werden.
-    ===================================================== */
+       MOBILE / HOCHFORMAT
+       ===================================================== */
     @media (max-width: 720px) {
+      /*
+        Ganz wichtig:
+        Der Header bleibt sichtbar und darf nichts
+        abschneiden.
+      */
       .site-header {
         position: relative;
+        z-index: 5000;
+        overflow: visible !important;
       }
       .header-inner {
         padding:
-          12px
-          12px
-          0;
+          12px 12px 0;
+        overflow: visible !important;
       }
       .brand-row {
         min-height: 50px;
@@ -868,15 +913,18 @@
         display: none;
       }
       /*
-        Die Navigation darf auf kleinen Geräten umbrechen.
+        Navigation darf umbrechen.
       */
       .main-nav {
+        position: relative;
         display: flex;
         flex-wrap: wrap;
-        align-items: stretch;
+        align-items: center;
         gap: 3px;
         margin-top: 9px;
-        padding-bottom: 5px;
+        min-height: 0;
+        padding-bottom: 7px;
+        overflow: visible !important;
       }
       .nav-link,
       .legal-button {
@@ -884,29 +932,52 @@
           8px 8px;
         font-size: .76rem;
       }
+      /*
+        Das Menü selbst ist auf Mobile
+        nicht mehr an die rechte Kante
+        des Buttons gebunden.
+      */
       .legal-menu {
+        position: static;
         margin-left: 0;
+        z-index: 99999;
       }
       /*
-        Auf Mobilgeräten nicht "fixed" positionieren.
-        Das Dropdown bleibt beim Rechtliches-Button.
+        Entscheidend:
+        Das Untermenü erstreckt sich
+        innerhalb des verfügbaren Bildschirms.
       */
       .legal-dropdown {
         position: absolute;
-        top: calc(100% + 3px);
-        left: auto;
-        right: 0;
-        width: 205px;
+        top: 100%;
+        left: 12px;
+        right: 12px;
+        width: auto;
+        margin-top: 5px;
+        padding: 7px;
+        background: #fff;
+        border:
+          1px solid var(--border);
+        border-radius: 13px;
+        box-shadow:
+          0 18px 40px
+          rgba(0,0,0,.25);
+        z-index: 999999;
+      }
+      .legal-dropdown button {
+        padding:
+          12px;
+        font-size: .88rem;
       }
       main {
         padding:
-          18px
-          12px
-          35px;
+          18px 12px 35px;
+        z-index: 1;
       }
       .hero {
         min-height: 245px;
-        padding: 23px 19px;
+        padding:
+          23px 19px;
       }
       .hero h1 {
         font-size: 1.95rem;
@@ -961,19 +1032,22 @@
         font-size: .65rem;
       }
       .main-nav {
-        /*
-          Noch etwas mehr Platz für das Dropdown.
-        */
-        padding-right: 3px;
+        gap: 2px;
       }
       .nav-link,
       .legal-button {
         font-size: .72rem;
         padding:
-          7px 7px;
+          7px;
       }
+      /*
+        Fast die gesamte Bildschirmbreite
+        für das Untermenü.
+      */
       .legal-dropdown {
-        width: 195px;
+        left: 8px;
+        right: 8px;
+        width: auto;
       }
       .stats-grid {
         grid-template-columns: 1fr;
@@ -1003,8 +1077,14 @@
 <header class="site-header">
   <div class="header-inner">
     <div class="brand-row">
-      <div class="brand-logo" aria-hidden="true">
-        <svg viewBox="0 0 64 64" fill="none">
+      <div
+        class="brand-logo"
+        aria-hidden="true"
+      >
+        <svg
+          viewBox="0 0 64 64"
+          fill="none"
+        >
           <path
             d="M7 38L32 17L57 38"
             stroke="#20252b"
@@ -1044,7 +1124,9 @@
         SCHORNSTEINFEGER
       </div>
     </div>
-    <!-- NAVIGATION -->
+    <!-- =================================================
+         NAVIGATION
+    ================================================== -->
     <nav
       class="main-nav"
       aria-label="Hauptnavigation"
@@ -1157,7 +1239,6 @@
           und sieh jederzeit, ob du im Soll liegst.
         </p>
       </div>
-      <!-- CSS SCHORNSTEIN -->
       <div
         class="chimney-art"
         aria-hidden="true"
@@ -1544,7 +1625,6 @@
          FREIE TAGE / FEIERTAGE
     ================================================== -->
     <div class="two-column">
-      <!-- FREIE TAGE -->
       <section class="card">
         <div class="card-header">
           <div>
@@ -1595,7 +1675,6 @@
           style="margin-top:15px;"
         ></div>
       </section>
-      <!-- FEIERTAGE -->
       <section
         class="card"
         id="feiertage"
@@ -1914,7 +1993,9 @@
     loadForm();
     if (!entryDateEl.value) {
       entryDateEl.value =
-        formatDateInput(new Date());
+        formatDateInput(
+          new Date()
+        );
     }
     setupEvents();
     setupNavigation();
@@ -2019,7 +2100,9 @@
       event => {
         event.preventDefault();
         event.stopPropagation();
-        if (legalDropdown.hidden) {
+        if (
+          legalDropdown.hidden
+        ) {
           openLegalMenu();
         } else {
           closeLegalMenu();
@@ -2043,11 +2126,13 @@
         const page =
           button.dataset.legal;
         closeLegalMenu();
-        showLegalPage(page);
+        showLegalPage(
+          page
+        );
       }
     );
     /*
-      Klick außerhalb schließt Menü
+      Klick außerhalb
     */
     document.addEventListener(
       "click",
@@ -2062,7 +2147,7 @@
       }
     );
     /*
-      ESC schließt Menü
+      ESC
     */
     document.addEventListener(
       "keydown",
@@ -2075,7 +2160,7 @@
       }
     );
     /*
-      Footer-Rechtslinks
+      Footer
     */
     document
       .querySelectorAll(
@@ -2093,7 +2178,7 @@
         );
       });
     /*
-      Zurück zur Startseite
+      Zurück
     */
     document
       .querySelectorAll(
@@ -2107,9 +2192,6 @@
           }
         );
       });
-    /*
-      Browser Zurück / Vor
-    */
     window.addEventListener(
       "hashchange",
       handleHash
@@ -2132,7 +2214,7 @@
     );
   }
   /* =====================================================
-     HASH
+     HASH / RECHTLICHE SEITEN
   ===================================================== */
   function handleHash() {
     const hash =
@@ -2196,7 +2278,9 @@
       });
     document
       .getElementById("homePage")
-      .classList.add("active");
+      .classList.add(
+        "active"
+      );
     closeLegalMenu();
     if (updateHash) {
       history.pushState(
@@ -2218,8 +2302,10 @@
       new Date().getFullYear();
     yearEl.innerHTML = "";
     for (
-      let year = currentYear - 2;
-      year <= currentYear + 5;
+      let year =
+        currentYear - 2;
+      year <=
+        currentYear + 5;
       year++
     ) {
       const option =
@@ -2306,7 +2392,9 @@
     return {
       ...plan,
       year:
-        Number(yearEl.value),
+        Number(
+          yearEl.value
+        ),
       state:
         stateEl.value,
       totalAmount:
@@ -2352,7 +2440,8 @@
       );
     const dailyAverage =
       workdays > 0
-        ? data.totalAmount / workdays
+        ? data.totalAmount /
+          workdays
         : 0;
     previewEl.innerHTML = `
       <strong>
@@ -2429,7 +2518,9 @@
         defaultPlan
       ),
       year:
-        Number(yearEl.value) ||
+        Number(
+          yearEl.value
+        ) ||
         new Date().getFullYear()
     };
     saveData();
@@ -2583,49 +2674,85 @@
     ) {
       holidays.push({
         date:
-          formatDateInput(date),
+          formatDateInput(
+            date
+          ),
         name
       });
     }
     const easter =
-      calculateEaster(year);
+      calculateEaster(
+        year
+      );
     /*
       Bundesweite Feiertage
     */
     add(
-      new Date(year, 0, 1),
+      new Date(
+        year,
+        0,
+        1
+      ),
       "Neujahr"
     );
     add(
-      new Date(year, 4, 1),
+      new Date(
+        year,
+        4,
+        1
+      ),
       "Tag der Arbeit"
     );
     add(
-      new Date(year, 9, 3),
+      new Date(
+        year,
+        9,
+        3
+      ),
       "Tag der Deutschen Einheit"
     );
     add(
-      new Date(year, 11, 25),
+      new Date(
+        year,
+        11,
+        25
+      ),
       "1. Weihnachtstag"
     );
     add(
-      new Date(year, 11, 26),
+      new Date(
+        year,
+        11,
+        26
+      ),
       "2. Weihnachtstag"
     );
     add(
-      addDays(easter, -2),
+      addDays(
+        easter,
+        -2
+      ),
       "Karfreitag"
     );
     add(
-      addDays(easter, 1),
+      addDays(
+        easter,
+        1
+      ),
       "Ostermontag"
     );
     add(
-      addDays(easter, 39),
+      addDays(
+        easter,
+        39
+      ),
       "Christi Himmelfahrt"
     );
     add(
-      addDays(easter, 50),
+      addDays(
+        easter,
+        50
+      ),
       "Pfingstmontag"
     );
     /*
@@ -2634,156 +2761,261 @@
     switch (state) {
       case "BW":
         add(
-          new Date(year, 0, 6),
+          new Date(
+            year,
+            0,
+            6
+          ),
           "Heilige Drei Könige"
         );
         add(
-          addDays(easter, 60),
+          addDays(
+            easter,
+            60
+          ),
           "Fronleichnam"
         );
         add(
-          new Date(year, 10, 1),
+          new Date(
+            year,
+            10,
+            1
+          ),
           "Allerheiligen"
         );
         break;
       case "BY":
         add(
-          new Date(year, 0, 6),
+          new Date(
+            year,
+            0,
+            6
+          ),
           "Heilige Drei Könige"
         );
         add(
-          addDays(easter, 60),
+          addDays(
+            easter,
+            60
+          ),
           "Fronleichnam"
         );
         add(
-          new Date(year, 7, 15),
+          new Date(
+            year,
+            7,
+            15
+          ),
           "Mariä Himmelfahrt"
         );
         add(
-          new Date(year, 10, 1),
+          new Date(
+            year,
+            10,
+            1
+          ),
           "Allerheiligen"
         );
         break;
       case "BE":
         add(
-          new Date(year, 2, 8),
+          new Date(
+            year,
+            2,
+            8
+          ),
           "Internationaler Frauentag"
         );
         break;
       case "BB":
         add(
-          new Date(year, 9, 31),
+          new Date(
+            year,
+            9,
+            31
+          ),
           "Reformationstag"
         );
         break;
       case "HB":
         add(
-          new Date(year, 9, 31),
+          new Date(
+            year,
+            9,
+            31
+          ),
           "Reformationstag"
         );
         break;
       case "HH":
         add(
-          new Date(year, 9, 31),
+          new Date(
+            year,
+            9,
+            31
+          ),
           "Reformationstag"
         );
         break;
       case "HE":
         add(
-          addDays(easter, 60),
+          addDays(
+            easter,
+            60
+          ),
           "Fronleichnam"
         );
         break;
       case "MV":
         add(
-          new Date(year, 2, 8),
+          new Date(
+            year,
+            2,
+            8
+          ),
           "Internationaler Frauentag"
         );
         add(
-          new Date(year, 9, 31),
+          new Date(
+            year,
+            9,
+            31
+          ),
           "Reformationstag"
         );
         break;
       case "NI":
         add(
-          new Date(year, 9, 31),
+          new Date(
+            year,
+            9,
+            31
+          ),
           "Reformationstag"
         );
         break;
       case "NW":
         add(
-          addDays(easter, 60),
+          addDays(
+            easter,
+            60
+          ),
           "Fronleichnam"
         );
         add(
-          new Date(year, 10, 1),
+          new Date(
+            year,
+            10,
+            1
+          ),
           "Allerheiligen"
         );
         break;
       case "RP":
         add(
-          addDays(easter, 60),
+          addDays(
+            easter,
+            60
+          ),
           "Fronleichnam"
         );
         add(
-          new Date(year, 10, 1),
+          new Date(
+            year,
+            10,
+            1
+          ),
           "Allerheiligen"
         );
         break;
       case "SL":
         add(
-          addDays(easter, 60),
+          addDays(
+            easter,
+            60
+          ),
           "Fronleichnam"
         );
         add(
-          new Date(year, 7, 15),
+          new Date(
+            year,
+            7,
+            15
+          ),
           "Mariä Himmelfahrt"
         );
         add(
-          new Date(year, 10, 1),
+          new Date(
+            year,
+            10,
+            1
+          ),
           "Allerheiligen"
         );
         break;
       case "SN":
         add(
-          new Date(year, 9, 31),
+          new Date(
+            year,
+            9,
+            31
+          ),
           "Reformationstag"
         );
         add(
-          getBußUndBettag(year),
+          getBußUndBettag(
+            year
+          ),
           "Buß- und Bettag"
         );
         break;
       case "ST":
         add(
-          new Date(year, 0, 6),
+          new Date(
+            year,
+            0,
+            6
+          ),
           "Heilige Drei Könige"
         );
         add(
-          new Date(year, 9, 31),
+          new Date(
+            year,
+            9,
+            31
+          ),
           "Reformationstag"
         );
         break;
       case "SH":
         add(
-          new Date(year, 9, 31),
+          new Date(
+            year,
+            9,
+            31
+          ),
           "Reformationstag"
         );
         break;
       case "TH":
         add(
-          new Date(year, 9, 31),
+          new Date(
+            year,
+            9,
+            31
+          ),
           "Reformationstag"
         );
         add(
-          new Date(year, 8, 20),
+          new Date(
+            year,
+            8,
+            20
+          ),
           "Weltkindertag"
         );
         break;
     }
-    /*
-      Doppelte Datumswerte entfernen
-    */
     const unique =
       new Map();
     holidays.forEach(
@@ -2795,7 +3027,9 @@
       }
     );
     return Array
-      .from(unique.values())
+      .from(
+        unique.values()
+      )
       .sort(
         (a, b) =>
           a.date.localeCompare(
@@ -2881,9 +3115,6 @@
     );
   }
   function getBußUndBettag(year) {
-    /*
-      Mittwoch vor dem 23. November
-    */
     for (
       let day = 22;
       day >= 16;
@@ -2916,9 +3147,6 @@
   ) {
     const day =
       date.getDay();
-    /*
-      Sonntag / Samstag
-    */
     if (
       day === 0 ||
       day === 6
@@ -2926,7 +3154,9 @@
       return false;
     }
     const dateString =
-      formatDateInput(date);
+      formatDateInput(
+        date
+      );
     const holidays =
       getHolidays(
         date.getFullYear(),
@@ -3029,7 +3259,9 @@
     }
     return getWorkdaysBetween(
       data.startDate,
-      formatDateInput(end),
+      formatDateInput(
+        end
+      ),
       data
     );
   }
@@ -3063,7 +3295,9 @@
       return 0;
     }
     return getWorkdaysBetween(
-      formatDateInput(tomorrow),
+      formatDateInput(
+        tomorrow
+      ),
       data.targetDate,
       data
     );
@@ -3151,7 +3385,9 @@
       Number(
         data.totalAmount || 0
       ) -
-      getCompletedAmount(data)
+      getCompletedAmount(
+        data
+      )
     );
   }
   function getAverage(
@@ -3194,8 +3430,7 @@
         plan
       );
     const difference =
-      actual -
-      soll;
+      actual - soll;
     const remaining =
       getRemainingAmount(
         plan
@@ -3368,7 +3603,9 @@
       )
       .textContent =
         formatNumber(
-          getCompletedAmount(plan)
+          getCompletedAmount(
+            plan
+          )
         );
     document
       .getElementById(
@@ -3384,7 +3621,9 @@
       )
       .textContent =
         formatNumber(
-          getAverage(plan)
+          getAverage(
+            plan
+          )
         );
   }
   function renderQuickInfo() {
@@ -3443,30 +3682,34 @@
     }
     container.innerHTML =
       plan.freeDays
-        .map(item => `
-          <div class="list-item">
-            <div class="list-item-main">
-              <div class="list-item-title">
-                ${
-                  escapeHtml(
-                    item.note ||
-                    "Freier Tag"
-                  )
-                }
+        .map(
+          item => `
+            <div class="list-item">
+              <div class="list-item-main">
+                <div class="list-item-title">
+                  ${
+                    escapeHtml(
+                      item.note ||
+                      "Freier Tag"
+                    )
+                  }
+                </div>
+                <div class="list-item-meta">
+                  ${formatDate(
+                    item.date
+                  )}
+                </div>
               </div>
-              <div class="list-item-meta">
-                ${formatDate(item.date)}
-              </div>
+              <button
+                class="btn btn-danger btn-small"
+                type="button"
+                data-delete-free="${escapeHtml(item.id)}"
+              >
+                Löschen
+              </button>
             </div>
-            <button
-              class="btn btn-danger btn-small"
-              type="button"
-              data-delete-free="${escapeHtml(item.id)}"
-            >
-              Löschen
-            </button>
-          </div>
-        `)
+          `
+        )
         .join("");
   }
   function renderHolidays() {
@@ -3585,7 +3828,10 @@
     let normalized =
       String(value)
         .trim()
-        .replace(/\s/g, "");
+        .replace(
+          /\s/g,
+          ""
+        );
     if (!normalized) {
       return NaN;
     }
@@ -3599,8 +3845,14 @@
       ) {
         normalized =
           normalized
-            .replace(/\./g, "")
-            .replace(",", ".");
+            .replace(
+              /\./g,
+              ""
+            )
+            .replace(
+              ",",
+              "."
+            );
       } else {
         normalized =
           normalized.replace(
@@ -3679,7 +3931,9 @@
       return "–";
     }
     const date =
-      parseDate(value);
+      parseDate(
+        value
+      );
     return new Intl.DateTimeFormat(
       "de-DE",
       {
@@ -3696,7 +3950,9 @@
     days
   ) {
     const result =
-      new Date(date);
+      new Date(
+        date
+      );
     result.setDate(
       result.getDate() +
       days
@@ -3738,7 +3994,9 @@
       "load",
       () => {
         navigator.serviceWorker
-          .register("sw.js")
+          .register(
+            "sw.js"
+          )
           .catch(
             error => {
               console.warn(
