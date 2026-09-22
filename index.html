@@ -1,0 +1,3673 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Schornstein Planer</title>
+
+  <meta name="theme-color" content="#111827">
+  <meta name="description" content="Automatische Jahresplanung für Schornsteinfeger">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Schornstein Planer">
+
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #f3f4f6;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #d1d5db;
+      --primary: #111827;
+      --primary-hover: #374151;
+      --green: #15803d;
+      --green-bg: #dcfce7;
+      --red: #b91c1c;
+      --red-bg: #fee2e2;
+      --orange: #c2410c;
+      --orange-bg: #ffedd5;
+      --blue: #1d4ed8;
+      --blue-bg: #dbeafe;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 22px 16px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+
+    header p {
+      margin: 6px 0 0;
+      opacity: 0.8;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 18px;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 18px;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+    }
+
+    h2 {
+      margin-top: 0;
+      font-size: 21px;
+    }
+
+    h3 {
+      margin-top: 0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 15px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 15px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    input,
+    select,
+    button {
+      width: 100%;
+      min-height: 44px;
+      border-radius: 9px;
+      font-size: 16px;
+    }
+
+    input,
+    select {
+      border: 1px solid var(--border);
+      padding: 9px 11px;
+      background: white;
+    }
+
+    button {
+      border: none;
+      background: var(--primary);
+      color: white;
+      padding: 9px 14px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: var(--primary-hover);
+    }
+
+    button.secondary {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    button.secondary:hover {
+      background: #d1d5db;
+    }
+
+    button.danger {
+      background: #dc2626;
+    }
+
+    button.danger:hover {
+      background: #b91c1c;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 14px;
+      margin-top: 5px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .stat {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .stat .label {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    .stat .value {
+      font-size: 25px;
+      font-weight: bold;
+    }
+
+    .status {
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    .status.green {
+      background: var(--green-bg);
+      color: var(--green);
+    }
+
+    .status.red {
+      background: var(--red-bg);
+      color: var(--red);
+    }
+
+    .status.orange {
+      background: var(--orange-bg);
+      color: var(--orange);
+    }
+
+    .status.blue {
+      background: var(--blue-bg);
+      color: var(--blue);
+    }
+
+    .progress-container {
+      width: 100%;
+      height: 22px;
+      background: #e5e7eb;
+      border-radius: 20px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: #16a34a;
+      transition: width 0.3s ease;
+    }
+
+    .today-box {
+      border: 2px solid #111827;
+      border-radius: 14px;
+      padding: 18px;
+      background: #fafafa;
+    }
+
+    .today-box input {
+      font-size: 22px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .today-result {
+      margin-top: 12px;
+      font-size: 17px;
+      font-weight: bold;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 620px;
+    }
+
+    th,
+    td {
+      padding: 10px;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+    }
+
+    th {
+      background: #f9fafb;
+    }
+
+    .positive {
+      color: var(--green);
+      font-weight: bold;
+    }
+
+    .negative {
+      color: var(--red);
+      font-weight: bold;
+    }
+
+    .neutral {
+      color: var(--muted);
+      font-weight: bold;
+    }
+
+    .holiday-weekend {
+      color: var(--muted);
+    }
+
+    .holiday-weekday {
+      font-weight: bold;
+    }
+
+    .small-button {
+      width: auto;
+      min-height: 36px;
+      padding: 6px 10px;
+      font-size: 14px;
+    }
+
+    .footer {
+      text-align: center;
+      color: var(--muted);
+      padding: 20px;
+      font-size: 14px;
+    }
+
+    .footer button {
+      width: auto;
+      background: transparent;
+      color: var(--muted);
+      font-weight: normal;
+      min-height: auto;
+      padding: 4px 7px;
+    }
+
+    .footer button:hover {
+      color: var(--text);
+      background: transparent;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 1000;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .modal.active {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      width: 100%;
+      max-width: 700px;
+      background: white;
+      border-radius: 14px;
+      padding: 24px;
+      position: relative;
+    }
+
+    .modal-close {
+      position: absolute;
+      right: 15px;
+      top: 12px;
+      width: 40px;
+      min-height: 40px;
+      border-radius: 50%;
+      font-size: 20px;
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    .regional-options {
+      margin-top: 15px;
+      padding: 14px;
+      background: #f9fafb;
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin: 8px 0;
+    }
+
+    .check-row input {
+      width: 18px;
+      min-height: 18px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .section-title {
+      margin-bottom: 12px;
+    }
+
+    .subtle {
+      color: var(--muted);
+    }
+
+    @media (max-width: 800px) {
+      .stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .grid,
+      .grid-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 500px) {
+      main {
+        padding: 10px;
+      }
+
+      .card {
+        padding: 15px;
+      }
+
+      .stats {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .stat {
+        padding: 12px;
+      }
+
+      .stat .value {
+        font-size: 21px;
+      }
+
+      header h1 {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1 id="appTitle">Schornstein Planer</h1>
+  <p id="appSubtitle">Automatische Jahresplanung für deine Arbeit</p>
+</header>
+
+<main>
+
+  <!-- GRUNDEINSTELLUNGEN -->
+  <section class="card">
+    <h2>1. Planung einstellen</h2>
+
+    <div class="grid">
+
+      <div>
+        <label for="yearSelect">Planungsjahr</label>
+        <select id="yearSelect"></select>
+      </div>
+
+      <div>
+        <label for="stateSelect">Bundesland</label>
+        <select id="stateSelect"></select>
+      </div>
+
+      <div>
+        <label for="totalInput">Gesamtmenge</label>
+        <input
+          id="totalInput"
+          type="number"
+          min="0"
+          step="1"
+          placeholder="z. B. 1298"
+        >
+        <div class="hint">
+          Gesamtzahl deiner geplanten Arbeiten für das Jahr.
+        </div>
+      </div>
+
+      <div>
+        <label for="startInput">Startdatum</label>
+        <input id="startInput" type="date">
+      </div>
+
+      <div>
+        <label for="targetInput">Wunsch-Enddatum</label>
+        <input id="targetInput" type="date">
+        <div class="hint">
+          Bis zu diesem Datum soll die Gesamtmenge erledigt sein.
+        </div>
+      </div>
+
+    </div>
+
+    <div id="regionalOptions" class="regional-options hidden">
+      <strong>Regionale Feiertage</strong>
+      <div id="regionalOptionsContent"></div>
+    </div>
+  </section>
+
+
+  <!-- AUTOMATISCHE PLANUNG -->
+  <section class="card">
+    <h2>2. Automatische Planung</h2>
+
+    <div class="stats">
+
+      <div class="stat">
+        <div class="label">Gesamtmenge</div>
+        <div class="value" id="statTotal">0</div>
+      </div>
+
+      <div class="stat">
+        <div class="label">Erledigt</div>
+        <div class="value" id="statDone">0</div>
+      </div>
+
+      <div class="stat">
+        <div class="label">Noch offen</div>
+        <div class="value" id="statRemaining">0</div>
+      </div>
+
+      <div class="stat">
+        <div class="label">Fortschritt</div>
+        <div class="value" id="statProgress">0 %</div>
+      </div>
+
+    </div>
+
+    <div class="progress-container">
+      <div id="progressBar" class="progress-bar"></div>
+    </div>
+
+    <div id="planningStatus" class="status blue">
+      Bitte Gesamtmenge, Startdatum und Wunsch-Enddatum eingeben.
+    </div>
+
+    <div class="stats" style="margin-top:15px;">
+
+      <div class="stat">
+        <div class="label">Arbeitstage bis Wunschdatum</div>
+        <div class="value" id="statWorkdays">0</div>
+      </div>
+
+      <div class="stat">
+        <div class="label">Aktueller Tagesbedarf</div>
+        <div class="value" id="statDailyNeed">0</div>
+      </div>
+
+      <div class="stat">
+        <div class="label">Wochenleistung</div>
+        <div class="value" id="statWeeklyNeed">0</div>
+      </div>
+
+      <div class="stat">
+        <div class="label">Errechnetes Enddatum</div>
+        <div class="value" id="statCalculatedEnd">–</div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- HEUTIGE LEISTUNG -->
+  <section class="card">
+    <h2>3. Heutige Leistung</h2>
+
+    <div class="today-box">
+
+      <label for="todayInput">
+        Was hast du heute gemacht?
+      </label>
+
+      <input
+        id="todayInput"
+        type="number"
+        min="0"
+        step="1"
+        placeholder="z. B. 25"
+      >
+
+      <div class="hint">
+        Deine heutige Leistung wird automatisch zu deinem Fortschritt addiert.
+      </div>
+
+      <div id="todayResult" class="today-result">
+        Noch keine heutige Leistung eingetragen.
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- TAGESVERGLEICH -->
+  <section class="card">
+    <h2>4. Aktueller Planstand</h2>
+
+    <div class="stats">
+
+      <div class="stat">
+        <div class="label">Soll bis heute</div>
+        <div class="value" id="statSollBisHeute">0</div>
+      </div>
+
+      <div class="stat">
+        <div class="label">Tatsächlich erledigt</div>
+        <div class="value" id="statIstBisHeute">0</div>
+      </div>
+
+      <div class="stat">
+        <div class="label">Abweichung</div>
+        <div class="value" id="statDifference">0</div>
+      </div>
+
+      <div class="stat">
+        <div class="label">Benötigt ab morgen</div>
+        <div class="value" id="statNeedFromTomorrow">0</div>
+      </div>
+
+    </div>
+
+    <div id="paceStatus" class="status blue">
+      Noch keine Planung vorhanden.
+    </div>
+  </section>
+
+
+  <!-- TAGESHISTORIE -->
+  <section class="card">
+    <h2>5. Deine eingetragenen Leistungen</h2>
+
+    <p class="subtle">
+      Hier werden die tatsächlichen Tagesleistungen gespeichert.
+      Du kannst einen Eintrag jederzeit ändern oder löschen.
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Datum</th>
+            <th>Leistung</th>
+            <th>Plan an diesem Tag</th>
+            <th>Abweichung</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="entriesTableBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+
+  <!-- FEIERTAGE -->
+  <section class="card">
+    <h2>6. Feiertage</h2>
+
+    <p class="subtle">
+      Die Feiertage werden automatisch für das ausgewählte Jahr und Bundesland berechnet.
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Datum</th>
+            <th>Wochentag</th>
+            <th>Feiertag</th>
+            <th>Arbeitstag?</th>
+          </tr>
+        </thead>
+        <tbody id="holidayTableBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+
+  <!-- PLANUNGSÜBERSICHT -->
+  <section class="card">
+    <h2>7. Planungsübersicht</h2>
+
+    <div id="planningOverview"></div>
+  </section>
+
+
+  <!-- FREIE TAGE -->
+  <section class="card">
+    <h2>8. Zusätzliche freie Tage</h2>
+
+    <p class="subtle">
+      Falls du Urlaub oder andere freie Tage hast, kannst du sie hier eintragen.
+      Diese Tage werden anschließend aus der Planung herausgerechnet.
+    </p>
+
+    <div class="grid">
+      <div>
+        <label for="offDateInput">Freier Tag</label>
+        <input id="offDateInput" type="date">
+      </div>
+
+      <div style="display:flex;align-items:end;">
+        <button id="addOffButton">
+          Freien Tag hinzufügen
+        </button>
+      </div>
+    </div>
+
+    <div class="table-wrapper" style="margin-top:15px;">
+      <table>
+        <thead>
+          <tr>
+            <th>Datum</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="offsTableBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+
+<footer class="footer">
+  <div>
+    © <span id="footerYear"></span> Marc-André Stein-Bakowski
+  </div>
+
+  <div>
+    <button onclick="openModal('impressumModal')">Impressum</button>
+    |
+    <button onclick="openModal('copyrightModal')">Urheberrecht</button>
+    |
+    <button onclick="openModal('privacyModal')">Datenschutz</button>
+  </div>
+</footer>
+
+
+<!-- IMPRESSUM -->
+<div id="impressumModal" class="modal">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal('impressumModal')">×</button>
+
+    <h2>Impressum</h2>
+
+    <p>
+      Angaben gemäß § 5 DDG:
+    </p>
+
+    <p>
+      <strong>Marc-André Stein-Bakowski</strong><br>
+      Kirchstraße 7<br>
+      65589 Hadamar<br>
+      Deutschland
+    </p>
+
+    <p>
+      E-Mail:
+      <a href="mailto:marc.stein2@icloud.com">
+        marc.stein2@icloud.com
+      </a>
+    </p>
+
+    <p>
+      Verantwortlich für die Inhalte dieser Website:
+      Marc-André Stein-Bakowski
+    </p>
+  </div>
+</div>
+
+
+<!-- URHEBERRECHT -->
+<div id="copyrightModal" class="modal">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal('copyrightModal')">×</button>
+
+    <h2>Urheberrecht</h2>
+
+    <p>
+      Die Inhalte und der Quellcode dieser Anwendung sind urheberrechtlich
+      geschützt.
+    </p>
+
+    <p>
+      Urheber:
+      <strong>Marc-André Stein-Bakowski</strong>
+    </p>
+
+    <p>
+      Eine Vervielfältigung, Bearbeitung, Verbreitung oder öffentliche
+      Wiedergabe ist nur im Rahmen der gesetzlichen Bestimmungen zulässig.
+    </p>
+
+    <p>
+      Maßgeblich sind insbesondere die Vorschriften der
+      §§ 69a ff. UrhG, soweit es sich um Computerprogramme handelt.
+    </p>
+  </div>
+</div>
+
+
+<!-- DATENSCHUTZ -->
+<div id="privacyModal" class="modal">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal('privacyModal')">×</button>
+
+    <h2>Datenschutz</h2>
+
+    <p>
+      Diese Anwendung speichert die von dir eingegebenen Planungsdaten
+      grundsätzlich lokal im Browser.
+    </p>
+
+    <p>
+      Dazu wird der lokale Speicher des Browsers (LocalStorage) verwendet.
+      Die Daten werden nicht durch diese Anwendung an einen eigenen Server
+      übertragen.
+    </p>
+
+    <p>
+      Wenn du die Browserdaten löschst oder die Website-Daten entfernst,
+      können die gespeicherten Planungsdaten verloren gehen.
+    </p>
+
+    <p>
+      Die Anwendung kann über GitHub Pages bereitgestellt werden.
+      Für die Verarbeitung durch den jeweiligen Hosting-Anbieter gelten
+      dessen eigene Datenschutzinformationen.
+    </p>
+
+    <p>
+      Verantwortlicher:
+    </p>
+
+    <p>
+      <strong>Marc-André Stein-Bakowski</strong><br>
+      Kirchstraße 7<br>
+      65589 Hadamar<br>
+      Deutschland<br>
+      E-Mail:
+      <a href="mailto:marc.stein2@icloud.com">
+        marc.stein2@icloud.com
+      </a>
+    </p>
+  </div>
+</div>
+
+
+<script>
+/* ============================================================
+   APP-KONFIGURATION
+   ============================================================ */
+
+const APP_NAME = "Schornstein Planer";
+const APP_SHORT_NAME = "Schornstein Planer";
+const APP_SUBTITLE = "Automatische Jahresplanung für deine Arbeit";
+
+const STORAGE_KEY = "schornstein-planer-v6";
+
+const CURRENT_YEAR = new Date().getFullYear();
+
+
+/* ============================================================
+   BUNDESLÄNDER
+   ============================================================ */
+
+const STATES = {
+  BW: "Baden-Württemberg",
+  BY: "Bayern",
+  BE: "Berlin",
+  BB: "Brandenburg",
+  HB: "Bremen",
+  HH: "Hamburg",
+  HE: "Hessen",
+  MV: "Mecklenburg-Vorpommern",
+  NI: "Niedersachsen",
+  NW: "Nordrhein-Westfalen",
+  RP: "Rheinland-Pfalz",
+  SL: "Saarland",
+  SN: "Sachsen",
+  ST: "Sachsen-Anhalt",
+  SH: "Schleswig-Holstein",
+  TH: "Thüringen"
+};
+
+
+/* ============================================================
+   DATENSTRUKTUR
+   ============================================================ */
+
+function defaultStorage() {
+  return {
+    selectedYear: CURRENT_YEAR,
+
+    settings: {
+      federalState: "RP",
+
+      regional: {
+        bavariaAssumption: false,
+        augsburgPeaceFestival: false,
+        saxonyCorpusChristi: false,
+        thuringiaCorpusChristi: false
+      }
+    },
+
+    years: {}
+  };
+}
+
+
+function defaultYearPlan(year) {
+  return {
+    total: 0,
+    start: `${year}-01-01`,
+    target: "",
+    entries: [],
+    offs: []
+  };
+}
+
+
+let storage = loadStorage();
+
+
+/* ============================================================
+   LOCAL STORAGE
+   ============================================================ */
+
+function loadStorage() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+
+    if (!saved) {
+      return defaultStorage();
+    }
+
+    const parsed = JSON.parse(saved);
+
+    const base = defaultStorage();
+
+    return {
+      ...base,
+      ...parsed,
+      settings: {
+        ...base.settings,
+        ...(parsed.settings || {}),
+        regional: {
+          ...base.settings.regional,
+          ...((parsed.settings || {}).regional || {})
+        }
+      },
+      years: parsed.years || {}
+    };
+
+  } catch (error) {
+    console.error("Fehler beim Laden:", error);
+    return defaultStorage();
+  }
+}
+
+
+function saveStorage() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
+}
+
+
+function getSelectedYear() {
+  return Number(storage.selectedYear);
+}
+
+
+function getYearPlan(year = getSelectedYear()) {
+
+  if (!storage.years[year]) {
+    storage.years[year] = defaultYearPlan(year);
+  }
+
+  return storage.years[year];
+}
+
+
+/* ============================================================
+   DATUMS-FUNKTIONEN
+   ============================================================ */
+
+function dateFromString(value) {
+  if (!value) return null;
+
+  const [year, month, day] = value.split("-").map(Number);
+
+  return new Date(year, month - 1, day);
+}
+
+
+function formatDate(value) {
+  const date = value instanceof Date
+    ? value
+    : dateFromString(value);
+
+  if (!date || Number.isNaN(date.getTime())) {
+    return "–";
+  }
+
+  return date.toLocaleDateString("de-DE");
+}
+
+
+function isoDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+
+function addDays(date, amount) {
+  const result = new Date(date);
+  result.setDate(result.getDate() + amount);
+  return result;
+}
+
+
+function sameOrBefore(a, b) {
+  return a.getTime() <= b.getTime();
+}
+
+
+function isWeekday(date) {
+  const day = date.getDay();
+
+  return day >= 1 && day <= 5;
+}
+
+
+function getWeekdayName(date) {
+  return date.toLocaleDateString("de-DE", {
+    weekday: "long"
+  });
+}
+
+
+/* ============================================================
+   OSTERN
+   ============================================================ */
+
+function calculateEaster(year) {
+
+  const a = year % 19;
+  const b = Math.floor(year / 100);
+  const c = year % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h =
+    (19 * a + b - d - g + 15) % 30;
+
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+
+  const l =
+    (32 + 2 * e + 2 * i - h - k) % 7;
+
+  const m =
+    Math.floor((a + 11 * h + 22 * l) / 451);
+
+  const month =
+    Math.floor((h + l - 7 * m + 114) / 31);
+
+  const day =
+    ((h + l - 7 * m + 114) % 31) + 1;
+
+  return new Date(year, month - 1, day);
+}
+
+
+/* ============================================================
+   FEIERTAGE
+   ============================================================ */
+
+function addHoliday(list, date, name) {
+
+  list.push({
+    date: new Date(date),
+    name
+  });
+}
+
+
+function getHolidays(year, stateCode) {
+
+  const holidays = [];
+
+  const easter = calculateEaster(year);
+
+  // Bundesweit
+  addHoliday(
+    holidays,
+    new Date(year, 0, 1),
+    "Neujahr"
+  );
+
+  addHoliday(
+    holidays,
+    addDays(easter, -2),
+    "Karfreitag"
+  );
+
+  addHoliday(
+    holidays,
+    addDays(easter, 1),
+    "Ostermontag"
+  );
+
+  addHoliday(
+    holidays,
+    new Date(year, 4, 1),
+    "Tag der Arbeit"
+  );
+
+  addHoliday(
+    holidays,
+    addDays(easter, 39),
+    "Christi Himmelfahrt"
+  );
+
+  addHoliday(
+    holidays,
+    addDays(easter, 50),
+    "Pfingstmontag"
+  );
+
+  addHoliday(
+    holidays,
+    new Date(year, 9, 3),
+    "Tag der Deutschen Einheit"
+  );
+
+  addHoliday(
+    holidays,
+    new Date(year, 11, 25),
+    "1. Weihnachtsfeiertag"
+  );
+
+  addHoliday(
+    holidays,
+    new Date(year, 11, 26),
+    "2. Weihnachtsfeiertag"
+  );
+
+
+  // Baden-Württemberg
+  if (stateCode === "BW") {
+
+    addHoliday(
+      holidays,
+      new Date(year, 0, 6),
+      "Heilige Drei Könige"
+    );
+
+    addHoliday(
+      holidays,
+      addDays(easter, 60),
+      "Fronleichnam"
+    );
+
+    addHoliday(
+      holidays,
+      new Date(year, 10, 1),
+      "Allerheiligen"
+    );
+  }
+
+
+  // Bayern
+  if (stateCode === "BY") {
+
+    addHoliday(
+      holidays,
+      new Date(year, 0, 6),
+      "Heilige Drei Könige"
+    );
+
+    addHoliday(
+      holidays,
+      addDays(easter, 60),
+      "Fronleichnam"
+    );
+
+    addHoliday(
+      holidays,
+      new Date(year, 10, 1),
+      "Allerheiligen"
+    );
+
+    if (storage.settings.regional.bavariaAssumption) {
+
+      addHoliday(
+        holidays,
+        new Date(year, 7, 15),
+        "Mariä Himmelfahrt"
+      );
+    }
+
+    if (storage.settings.regional.augsburgPeaceFestival) {
+
+      addHoliday(
+        holidays,
+        new Date(year, 7, 8),
+        "Augsburger Friedensfest"
+      );
+    }
+  }
+
+
+  // Berlin
+  if (stateCode === "BE") {
+
+    addHoliday(
+      holidays,
+      new Date(year, 2, 8),
+      "Internationaler Frauentag"
+    );
+  }
+
+
+  // Brandenburg
+  if (stateCode === "BB") {
+
+    addHoliday(
+      holidays,
+      addDays(easter, 0),
+      "Ostersonntag"
+    );
+
+    addHoliday(
+      holidays,
+      addDays(easter, 49),
+      "Pfingstsonntag"
+    );
+
+    addHoliday(
+      holidays,
+      new Date(year, 9, 31),
+      "Reformationstag"
+    );
+  }
+
+
+  // Bremen
+  if (stateCode === "HB") {
+
+    addHoliday(
+      holidays,
+      new Date(year, 9, 31),
+      "Reformationstag"
+    );
+  }
+
+
+  // Hamburg
+  if (stateCode === "HH") {
+
+    addHoliday(
+      holidays,
+      new Date(year, 9, 31),
+      "Reformationstag"
+    );
+  }
+
+
+  // Hessen
+  if (stateCode === "HE") {
+
+    addHoliday(
+      holidays,
+      addDays(easter, 60),
+      "Fronleichnam"
+    );
+  }
+
+
+  // Mecklenburg-Vorpommern
+  if (stateCode === "MV") {
+
+    addHoliday(
+      holidays,
+      new Date(year, 2, 8),
+      "Internationaler Frauentag"
+    );
+
+    addHoliday(
+      holidays,
+      new Date(year, 9, 31),
+      "Reformationstag"
+    );
+  }
+
+
+  // Niedersachsen
+  if (stateCode === "NI") {
+
+    addHoliday(
+      holidays,
+      new Date(year, 9, 31),
+      "Reformationstag"
+    );
+  }
+
+
+  // Nordrhein-Westfalen
+  if (stateCode === "NW") {
+
+    addHoliday(
+      holidays,
+      addDays(easter, 60),
+      "Fronleichnam"
+    );
+
+    addHoliday(
+      holidays,
+      new Date(year, 10, 1),
+      "Allerheiligen"
+    );
+  }
+
+
+  // Rheinland-Pfalz
+  if (stateCode === "RP") {
+
+    addHoliday(
+      holidays,
+      addDays(easter, 60),
+      "Fronleichnam"
+    );
+
+    addHoliday(
+      holidays,
+      new Date(year, 10, 1),
+      "Allerheiligen"
+    );
+  }
+
+
+  // Saarland
+  if (stateCode === "SL") {
+
+    addHoliday(
+      holidays,
+      addDays(easter, 60),
+      "Fronleichnam"
+    );
+
+    addHoliday(
+      holidays,
+      new Date(year, 7, 15),
+      "Mariä Himmelfahrt"
+    );
+
+    addHoliday(
+      holidays,
+      new Date(year, 10, 1),
+      "Allerheiligen"
+    );
+  }
+
+
+  // Sachsen
+  if (stateCode === "SN") {
+
+    addHoliday(
+      holidays,
+      new Date(year, 9, 31),
+      "Reformationstag"
+    );
+
+    if (storage.settings.regional.saxonyCorpusChristi) {
+
+      addHoliday(
+        holidays,
+        addDays(easter, 60),
+        "Fronleichnam"
+      );
+    }
+
+    // Buß- und Bettag:
+    // Mittwoch vor dem Ewigkeitssonntag
+    const nov23 = new Date(year, 10, 23);
+
+    let day = nov23.getDay();
+
+    const daysBack = (day + 7 - 3) % 7;
+
+    let bussUndBettag = addDays(
+      nov23,
+      -daysBack
+    );
+
+    if (bussUndBettag >= new Date(year, 10, 16)) {
+
+      addHoliday(
+        holidays,
+        bussUndBettag,
+        "Buß- und Bettag"
+      );
+    }
+  }
+
+
+  // Sachsen-Anhalt
+  if (stateCode === "ST") {
+
+    addHoliday(
+      holidays,
+      new Date(year, 0, 6),
+      "Heilige Drei Könige"
+    );
+
+    addHoliday(
+      holidays,
+      new Date(year, 9, 31),
+      "Reformationstag"
+    );
+  }
+
+
+  // Schleswig-Holstein
+  if (stateCode === "SH") {
+
+    addHoliday(
+      holidays,
+      new Date(year, 9, 31),
+      "Reformationstag"
+    );
+  }
+
+
+  // Thüringen
+  if (stateCode === "TH") {
+
+    addHoliday(
+      holidays,
+      new Date(year, 8, 20),
+      "Weltkindertag"
+    );
+
+    addHoliday(
+      holidays,
+      new Date(year, 9, 31),
+      "Reformationstag"
+    );
+
+    if (storage.settings.regional.thuringiaCorpusChristi) {
+
+      addHoliday(
+        holidays,
+        addDays(easter, 60),
+        "Fronleichnam"
+      );
+    }
+  }
+
+
+  // Doppelte Feiertage vermeiden
+  const unique = [];
+
+  for (const holiday of holidays) {
+
+    const key =
+      isoDate(holiday.date);
+
+    if (
+      !unique.some(
+        item =>
+          isoDate(item.date) === key
+      )
+    ) {
+      unique.push(holiday);
+    }
+  }
+
+
+  unique.sort(
+    (a, b) =>
+      a.date.getTime() - b.date.getTime()
+  );
+
+  return unique;
+}
+
+
+function getHolidayMap(year, stateCode) {
+
+  const map = new Map();
+
+  for (const holiday of getHolidays(year, stateCode)) {
+
+    map.set(
+      isoDate(holiday.date),
+      holiday.name
+    );
+  }
+
+  return map;
+}
+
+
+/* ============================================================
+   FREIE TAGE
+   ============================================================ */
+
+function isAdditionalFreeDay(date, plan) {
+
+  const key = isoDate(date);
+
+  return plan.offs.includes(key);
+}
+
+
+function isHoliday(date) {
+
+  const year = date.getFullYear();
+
+  const holidays =
+    getHolidayMap(
+      year,
+      storage.settings.federalState
+    );
+
+  return holidays.has(isoDate(date));
+}
+
+
+function isWorkday(date, plan) {
+
+  if (!isWeekday(date)) {
+    return false;
+  }
+
+  if (isHoliday(date)) {
+    return false;
+  }
+
+  if (isAdditionalFreeDay(date)) {
+    return false;
+  }
+
+  return true;
+}
+
+
+/* ============================================================
+   ARBEITSTAGE ZÄHLEN
+   ============================================================ */
+
+function countWorkdaysBetween(
+  startDate,
+  endDate,
+  plan
+) {
+
+  if (!startDate || !endDate) {
+    return 0;
+  }
+
+  if (startDate > endDate) {
+    return 0;
+  }
+
+  let count = 0;
+
+  let current =
+    new Date(startDate);
+
+  while (
+    current <= endDate
+  ) {
+
+    if (
+      isWorkday(
+        current,
+        plan
+      )
+    ) {
+      count++;
+    }
+
+    current =
+      addDays(current, 1);
+  }
+
+  return count;
+}
+
+
+/* ============================================================
+   TAGESLEISTUNG
+   ============================================================ */
+
+function getEntryForDate(
+  plan,
+  dateString
+) {
+
+  return plan.entries.find(
+    entry =>
+      entry.date === dateString
+  );
+}
+
+
+function getTotalDone(plan) {
+
+  return plan.entries.reduce(
+    (sum, entry) =>
+      sum + Number(entry.amount || 0),
+    0
+  );
+}
+
+
+/* ============================================================
+   SOLLWERTE
+   ============================================================ */
+
+function getPlanningValues() {
+
+  const year = getSelectedYear();
+
+  const plan = getYearPlan(year);
+
+  const total =
+    Math.max(
+      0,
+      Number(plan.total || 0)
+    );
+
+  const start =
+    dateFromString(plan.start);
+
+  const target =
+    dateFromString(plan.target);
+
+  const done =
+    getTotalDone(plan);
+
+  const remaining =
+    Math.max(
+      0,
+      total - done
+    );
+
+
+  let workdaysToTarget = 0;
+
+  if (
+    start &&
+    target &&
+    target >= start
+  ) {
+
+    workdaysToTarget =
+      countWorkdaysBetween(
+        start,
+        target,
+        plan
+      );
+  }
+
+
+  let currentDailyNeed = 0;
+
+  if (
+    remaining > 0 &&
+    workdaysToTarget > 0
+  ) {
+
+    currentDailyNeed =
+      remaining /
+      workdaysToTarget;
+  }
+
+
+  return {
+    year,
+    plan,
+    total,
+    done,
+    remaining,
+    start,
+    target,
+    workdaysToTarget,
+    currentDailyNeed
+  };
+}
+
+
+/* ============================================================
+   ERRECHNETES ENDDATUM
+   ============================================================ */
+
+function calculateFinishDate() {
+
+  const values =
+    getPlanningValues();
+
+  const {
+    plan,
+    remaining,
+    currentDailyNeed
+  } = values;
+
+  if (
+    remaining <= 0
+  ) {
+
+    return new Date();
+  }
+
+  if (
+    !plan.start ||
+    currentDailyNeed <= 0
+  ) {
+
+    return null;
+  }
+
+
+  let date =
+    dateFromString(plan.start);
+
+  let accumulated = 0;
+
+  let safety = 0;
+
+  while (
+    accumulated < remaining &&
+    safety < 5000
+  ) {
+
+    if (
+      isWorkday(
+        date,
+        plan
+      )
+    ) {
+
+      accumulated +=
+        currentDailyNeed;
+    }
+
+    if (
+      accumulated >= remaining
+    ) {
+      return date;
+    }
+
+    date =
+      addDays(date, 1);
+
+    safety++;
+  }
+
+  return null;
+}
+
+
+/* ============================================================
+   SOLL BIS HEUTE
+   ============================================================ */
+
+function getSollBisDate(
+  date,
+  values
+) {
+
+  const {
+    total,
+    start,
+    target,
+    plan
+  } = values;
+
+  if (
+    !start ||
+    !target ||
+    !date
+  ) {
+    return 0;
+  }
+
+  if (
+    date < start
+  ) {
+    return 0;
+  }
+
+  const effectiveDate =
+    date < target
+      ? date
+      : target;
+
+  const totalWorkdays =
+    countWorkdaysBetween(
+      start,
+      target,
+      plan
+    );
+
+  if (
+    totalWorkdays <= 0
+  ) {
+    return 0;
+  }
+
+  const elapsedWorkdays =
+    countWorkdaysBetween(
+      start,
+      effectiveDate,
+      plan
+    );
+
+  return (
+    total *
+    elapsedWorkdays /
+    totalWorkdays
+  );
+}
+
+
+/* ============================================================
+   HEUTE
+   ============================================================ */
+
+function getTodayDateString() {
+
+  return isoDate(
+    new Date()
+  );
+}
+
+
+function getTodayEntry(plan) {
+
+  return getEntryForDate(
+    plan,
+    getTodayDateString()
+  );
+}
+
+
+/* ============================================================
+   RENDER: GRUNDEINSTELLUNGEN
+   ============================================================ */
+
+function renderSettings() {
+
+  const year =
+    getSelectedYear();
+
+  const plan =
+    getYearPlan(year);
+
+
+  document.getElementById(
+    "totalInput"
+  ).value =
+    plan.total || "";
+
+
+  document.getElementById(
+    "startInput"
+  ).value =
+    plan.start || "";
+
+
+  document.getElementById(
+    "targetInput"
+  ).value =
+    plan.target || "";
+
+
+  document.getElementById(
+    "stateSelect"
+  ).value =
+    storage.settings.federalState;
+
+
+  renderRegionalOptions();
+}
+
+
+/* ============================================================
+   RENDER: REGIONALE OPTIONEN
+   ============================================================ */
+
+function renderRegionalOptions() {
+
+  const state =
+    storage.settings.federalState;
+
+  const box =
+    document.getElementById(
+      "regionalOptions"
+    );
+
+  const content =
+    document.getElementById(
+      "regionalOptionsContent"
+    );
+
+  let html = "";
+
+  if (state === "BY") {
+
+    html += `
+      <label class="check-row">
+        <input
+          type="checkbox"
+          id="bavariaAssumption"
+          ${storage.settings.regional.bavariaAssumption ? "checked" : ""}
+        >
+        <span>Mariä Himmelfahrt berücksichtigen</span>
+      </label>
+
+      <label class="check-row">
+        <input
+          type="checkbox"
+          id="augsburgPeaceFestival"
+          ${storage.settings.regional.augsburgPeaceFestival ? "checked" : ""}
+        >
+        <span>Augsburger Friedensfest berücksichtigen</span>
+      </label>
+    `;
+  }
+
+  if (state === "SN") {
+
+    html += `
+      <label class="check-row">
+        <input
+          type="checkbox"
+          id="saxonyCorpusChristi"
+          ${storage.settings.regional.saxonyCorpusChristi ? "checked" : ""}
+        >
+        <span>Fronleichnam berücksichtigen</span>
+      </label>
+    `;
+  }
+
+  if (state === "TH") {
+
+    html += `
+      <label class="check-row">
+        <input
+          type="checkbox"
+          id="thuringiaCorpusChristi"
+          ${storage.settings.regional.thuringiaCorpusChristi ? "checked" : ""}
+        >
+        <span>Fronleichnam berücksichtigen</span>
+      </label>
+    `;
+  }
+
+
+  if (!html) {
+
+    box.classList.add("hidden");
+    content.innerHTML = "";
+    return;
+  }
+
+
+  box.classList.remove("hidden");
+
+  content.innerHTML = html;
+
+
+  const bavaria =
+    document.getElementById(
+      "bavariaAssumption"
+    );
+
+  if (bavaria) {
+
+    bavaria.addEventListener(
+      "change",
+      () => {
+
+        storage.settings.regional.bavariaAssumption =
+          bavaria.checked;
+
+        saveStorage();
+        renderAll();
+      }
+    );
+  }
+
+
+  const augsburg =
+    document.getElementById(
+      "augsburgPeaceFestival"
+    );
+
+  if (augsburg) {
+
+    augsburg.addEventListener(
+      "change",
+      () => {
+
+        storage.settings.regional.augsburgPeaceFestival =
+          augsburg.checked;
+
+        saveStorage();
+        renderAll();
+      }
+    );
+  }
+
+
+  const saxony =
+    document.getElementById(
+      "saxonyCorpusChristi"
+    );
+
+  if (saxony) {
+
+    saxony.addEventListener(
+      "change",
+      () => {
+
+        storage.settings.regional.saxonyCorpusChristi =
+          saxony.checked;
+
+        saveStorage();
+        renderAll();
+      }
+    );
+  }
+
+
+  const thuringia =
+    document.getElementById(
+      "thuringiaCorpusChristi"
+    );
+
+  if (thuringia) {
+
+    thuringia.addEventListener(
+      "change",
+      () => {
+
+        storage.settings.regional.thuringiaCorpusChristi =
+          thuringia.checked;
+
+        saveStorage();
+        renderAll();
+      }
+    );
+  }
+}
+
+
+/* ============================================================
+   RENDER: HAUPTSTATISTIK
+   ============================================================ */
+
+function renderMainStats() {
+
+  const values =
+    getPlanningValues();
+
+
+  document.getElementById(
+    "statTotal"
+  ).textContent =
+    formatNumber(values.total);
+
+
+  document.getElementById(
+    "statDone"
+  ).textContent =
+    formatNumber(values.done);
+
+
+  document.getElementById(
+    "statRemaining"
+  ).textContent =
+    formatNumber(values.remaining);
+
+
+  const progress =
+    values.total > 0
+      ? Math.min(
+          100,
+          values.done /
+          values.total *
+          100
+        )
+      : 0;
+
+
+  document.getElementById(
+    "statProgress"
+  ).textContent =
+    `${progress.toFixed(1)} %`;
+
+
+  document.getElementById(
+    "progressBar"
+  ).style.width =
+    `${progress}%`;
+
+
+  document.getElementById(
+    "statWorkdays"
+  ).textContent =
+    values.workdaysToTarget;
+
+
+  document.getElementById(
+    "statDailyNeed"
+  ).textContent =
+    values.currentDailyNeed > 0
+      ? formatDecimal(
+          values.currentDailyNeed
+        )
+      : "0";
+
+
+  document.getElementById(
+    "statWeeklyNeed"
+  ).textContent =
+    values.currentDailyNeed > 0
+      ? formatDecimal(
+          values.currentDailyNeed * 5
+        )
+      : "0";
+
+
+  const finish =
+    calculateFinishDate();
+
+
+  document.getElementById(
+    "statCalculatedEnd"
+  ).textContent =
+    finish
+      ? formatDate(finish)
+      : "–";
+
+
+  renderPlanningStatus(
+    values,
+    finish
+  );
+}
+
+
+function renderPlanningStatus(
+  values,
+  finish
+) {
+
+  const element =
+    document.getElementById(
+      "planningStatus"
+    );
+
+
+  if (
+    values.total <= 0
+  ) {
+
+    element.className =
+      "status blue";
+
+    element.textContent =
+      "Bitte eine Gesamtmenge eingeben.";
+
+    return;
+  }
+
+
+  if (
+    !values.start
+  ) {
+
+    element.className =
+      "status blue";
+
+    element.textContent =
+      "Bitte ein Startdatum eingeben.";
+
+    return;
+  }
+
+
+  if (
+    !values.target
+  ) {
+
+    element.className =
+      "status blue";
+
+    element.textContent =
+      "Bitte ein Wunsch-Enddatum eingeben.";
+
+    return;
+  }
+
+
+  if (
+    values.target < values.start
+  ) {
+
+    element.className =
+      "status red";
+
+    element.textContent =
+      "Das Wunsch-Enddatum liegt vor dem Startdatum.";
+
+    return;
+  }
+
+
+  if (
+    values.workdaysToTarget <= 0
+  ) {
+
+    element.className =
+      "status red";
+
+    element.textContent =
+      "Zwischen Start und Wunsch-Enddatum gibt es keine verfügbaren Arbeitstage.";
+
+    return;
+  }
+
+
+  if (
+    values.remaining <= 0
+  ) {
+
+    element.className =
+      "status green";
+
+    element.textContent =
+      "Die gesamte geplante Menge ist bereits erledigt.";
+
+    return;
+  }
+
+
+  if (finish) {
+
+    element.className =
+      "status green";
+
+    element.textContent =
+      `Bei der aktuell erforderlichen Durchschnittsleistung ist das Wunsch-Enddatum ${formatDate(values.target)} rechnerisch erreichbar.`;
+
+  } else {
+
+    element.className =
+      "status orange";
+
+    element.textContent =
+      "Die Planung konnte nicht berechnet werden.";
+  }
+}
+
+
+/* ============================================================
+   RENDER: HEUTIGE LEISTUNG
+   ============================================================ */
+
+function renderToday() {
+
+  const year =
+    getSelectedYear();
+
+  const plan =
+    getYearPlan(year);
+
+
+  const today =
+    getTodayDateString();
+
+
+  const todayEntry =
+    getTodayEntry(plan);
+
+
+  const input =
+    document.getElementById(
+      "todayInput"
+    );
+
+
+  if (todayEntry) {
+
+    input.value =
+      todayEntry.amount;
+
+  } else {
+
+    input.value = "";
+  }
+
+
+  const result =
+    document.getElementById(
+      "todayResult"
+    );
+
+
+  if (!todayEntry) {
+
+    result.className =
+      "today-result";
+
+    result.textContent =
+      "Noch keine heutige Leistung eingetragen.";
+
+    return;
+  }
+
+
+  const values =
+    getPlanningValues();
+
+
+  const today =
+    dateFromString(
+      getTodayDateString()
+    );
+
+
+  const should =
+    getSollBisDate(
+      today,
+      values
+    );
+
+
+  const previousDone =
+    values.done -
+    Number(todayEntry.amount || 0);
+
+
+  const todayTarget =
+    Math.max(
+      0,
+      should -
+      previousDone
+    );
+
+
+  const difference =
+    Number(todayEntry.amount || 0) -
+    todayTarget;
+
+
+  if (difference > 0) {
+
+    result.className =
+      "today-result positive";
+
+    result.textContent =
+      `Heute ${formatNumber(todayEntry.amount)} geschafft – ${formatNumber(difference)} über dem rechnerischen Tagesziel.`;
+
+  } else if (difference < 0) {
+
+    result.className =
+      "today-result negative";
+
+    result.textContent =
+      `Heute ${formatNumber(todayEntry.amount)} geschafft – ${formatNumber(Math.abs(difference))} unter dem rechnerischen Tagesziel.`;
+
+  } else {
+
+    result.className =
+      "today-result neutral";
+
+    result.textContent =
+      `Heute ${formatNumber(todayEntry.amount)} geschafft – genau im rechnerischen Plan.`;
+  }
+}
+
+
+/* ============================================================
+   RENDER: PLANSTAND
+   ============================================================ */
+
+function renderPace() {
+
+  const values =
+    getPlanningValues();
+
+
+  const today =
+    dateFromString(
+      getTodayDateString()
+    );
+
+
+  const soll =
+    getSollBisDate(
+      today,
+      values
+    );
+
+
+  const ist =
+    values.done;
+
+
+  const difference =
+    ist - soll;
+
+
+  document.getElementById(
+    "statSollBisHeute"
+  ).textContent =
+    formatDecimal(soll);
+
+
+  document.getElementById(
+    "statIstBisHeute"
+  ).textContent =
+    formatNumber(ist);
+
+
+  const differenceElement =
+    document.getElementById(
+      "statDifference"
+    );
+
+
+  differenceElement.textContent =
+    `${difference >= 0 ? "+" : ""}${formatDecimal(difference)}`;
+
+
+  if (difference > 0) {
+
+    differenceElement.className =
+      "value positive";
+
+  } else if (difference < 0) {
+
+    differenceElement.className =
+      "value negative";
+
+  } else {
+
+    differenceElement.className =
+      "value neutral";
+  }
+
+
+  let tomorrowNeed = 0;
+
+
+  if (
+    values.remaining > 0 &&
+    values.target
+  ) {
+
+    let tomorrow =
+      addDays(
+        today,
+        1
+      );
+
+
+    if (
+      tomorrow <= values.target
+    ) {
+
+      const workdaysRemaining =
+        countWorkdaysBetween(
+          tomorrow,
+          values.target,
+          values.plan
+        );
+
+
+      if (
+        workdaysRemaining > 0
+      ) {
+
+        tomorrowNeed =
+          values.remaining /
+          workdaysRemaining;
+      }
+    }
+  }
+
+
+  document.getElementById(
+    "statNeedFromTomorrow"
+  ).textContent =
+    tomorrowNeed > 0
+      ? formatDecimal(tomorrowNeed)
+      : "0";
+
+
+  const status =
+    document.getElementById(
+      "paceStatus"
+    );
+
+
+  if (
+    values.total <= 0 ||
+    !values.target
+  ) {
+
+    status.className =
+      "status blue";
+
+    status.textContent =
+      "Gib Gesamtmenge, Startdatum und Wunsch-Enddatum ein.";
+
+    return;
+  }
+
+
+  if (
+    values.done >=
+    values.total
+  ) {
+
+    status.className =
+      "status green";
+
+    status.textContent =
+      "Du hast dein Jahresziel bereits erreicht.";
+
+    return;
+  }
+
+
+  if (
+    difference > 0
+  ) {
+
+    status.className =
+      "status green";
+
+    status.textContent =
+      `Du liegst aktuell ${formatDecimal(difference)} über deinem rechnerischen Soll.`;
+
+  } else if (
+    difference < 0
+  ) {
+
+    status.className =
+      "status red";
+
+    status.textContent =
+      `Du liegst aktuell ${formatDecimal(Math.abs(difference))} unter deinem rechnerischen Soll.`;
+
+  } else {
+
+    status.className =
+      "status blue";
+
+    status.textContent =
+      "Du liegst aktuell genau auf deinem rechnerischen Soll.";
+  }
+}
+
+
+/* ============================================================
+   RENDER: TAGESHISTORIE
+   ============================================================ */
+
+function renderEntries() {
+
+  const year =
+    getSelectedYear();
+
+  const plan =
+    getYearPlan(year);
+
+
+  const tbody =
+    document.getElementById(
+      "entriesTableBody"
+    );
+
+
+  tbody.innerHTML = "";
+
+
+  const entries =
+    [...plan.entries]
+      .sort(
+        (a, b) =>
+          a.date.localeCompare(b.date)
+      );
+
+
+  if (
+    entries.length === 0
+  ) {
+
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" class="subtle">
+          Noch keine Tagesleistungen eingetragen.
+        </td>
+      </tr>
+    `;
+
+    return;
+  }
+
+
+  const values =
+    getPlanningValues();
+
+
+  for (
+    const entry of entries
+  ) {
+
+    const date =
+      dateFromString(
+        entry.date
+      );
+
+
+    const planUntilDate =
+      getSollBisDate(
+        date,
+        values
+      );
+
+
+    const previousEntries =
+      entries
+        .filter(
+          item =>
+            item.date <=
+            entry.date
+        )
+        .reduce(
+          (
+            sum,
+            item
+          ) =>
+            sum +
+            Number(item.amount || 0),
+          0
+        );
+
+
+    const shouldToday =
+      getSollBisDate(
+        date,
+        values
+      );
+
+
+    const actual =
+      previousEntries;
+
+
+    const difference =
+      actual -
+      shouldToday;
+
+
+    const tr =
+      document.createElement(
+        "tr"
+      );
+
+
+    let differenceClass =
+      "neutral";
+
+    if (
+      difference > 0
+    ) {
+      differenceClass =
+        "positive";
+    } else if (
+      difference < 0
+    ) {
+      differenceClass =
+        "negative";
+    }
+
+
+    tr.innerHTML = `
+      <td>
+        ${formatDate(entry.date)}
+      </td>
+
+      <td>
+        <strong>
+          ${formatNumber(entry.amount)}
+        </strong>
+      </td>
+
+      <td>
+        ${formatDecimal(planUntilDate)}
+      </td>
+
+      <td class="${differenceClass}">
+        ${difference >= 0 ? "+" : ""}
+        ${formatDecimal(difference)}
+      </td>
+
+      <td>
+        <button
+          class="small-button danger"
+          data-delete-entry="${entry.date}"
+        >
+          Löschen
+        </button>
+      </td>
+    `;
+
+
+    tbody.appendChild(tr);
+  }
+
+
+  tbody
+    .querySelectorAll(
+      "[data-delete-entry]"
+    )
+    .forEach(
+      button => {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            const date =
+              button.dataset.deleteEntry;
+
+
+            if (
+              !confirm(
+                `Leistung vom ${formatDate(date)} wirklich löschen?`
+              )
+            ) {
+              return;
+            }
+
+
+            plan.entries =
+              plan.entries.filter(
+                entry =>
+                  entry.date !== date
+              );
+
+
+            saveStorage();
+            renderAll();
+          }
+        );
+      }
+    );
+}
+
+
+/* ============================================================
+   RENDER: FEIERTAGE
+   ============================================================ */
+
+function renderHolidays() {
+
+  const year =
+    getSelectedYear();
+
+
+  const state =
+    storage.settings.federalState;
+
+
+  const holidays =
+    getHolidays(
+      year,
+      state
+    );
+
+
+  const tbody =
+    document.getElementById(
+      "holidayTableBody"
+    );
+
+
+  tbody.innerHTML = "";
+
+
+  for (
+    const holiday of holidays
+  ) {
+
+    const weekday =
+      isWeekday(
+        holiday.date
+      );
+
+
+    const tr =
+      document.createElement(
+        "tr"
+      );
+
+
+    tr.className =
+      weekday
+        ? "holiday-weekday"
+        : "holiday-weekend";
+
+
+    tr.innerHTML = `
+      <td>
+        ${formatDate(holiday.date)}
+      </td>
+
+      <td>
+        ${getWeekdayName(holiday.date)}
+      </td>
+
+      <td>
+        ${holiday.name}
+      </td>
+
+      <td>
+        ${weekday ? "Nein" : "Wochenende"}
+      </td>
+    `;
+
+
+    tbody.appendChild(tr);
+  }
+}
+
+
+/* ============================================================
+   RENDER: FREIE TAGE
+   ============================================================ */
+
+function renderOffs() {
+
+  const year =
+    getSelectedYear();
+
+  const plan =
+    getYearPlan(year);
+
+
+  const tbody =
+    document.getElementById(
+      "offsTableBody"
+    );
+
+
+  tbody.innerHTML = "";
+
+
+  const offs =
+    [...plan.offs]
+      .sort();
+
+
+  if (
+    offs.length === 0
+  ) {
+
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="2" class="subtle">
+          Keine zusätzlichen freien Tage eingetragen.
+        </td>
+      </tr>
+    `;
+
+    return;
+  }
+
+
+  for (
+    const date of offs
+  ) {
+
+    const tr =
+      document.createElement(
+        "tr"
+      );
+
+
+    tr.innerHTML = `
+      <td>
+        ${formatDate(date)}
+      </td>
+
+      <td>
+        <button
+          class="small-button danger"
+          data-delete-off="${date}"
+        >
+          Löschen
+        </button>
+      </td>
+    `;
+
+
+    tbody.appendChild(tr);
+  }
+
+
+  tbody
+    .querySelectorAll(
+      "[data-delete-off]"
+    )
+    .forEach(
+      button => {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            const date =
+              button.dataset.deleteOff;
+
+
+            plan.offs =
+              plan.offs.filter(
+                item =>
+                  item !== date
+              );
+
+
+            saveStorage();
+            renderAll();
+          }
+        );
+      }
+    );
+}
+
+
+/* ============================================================
+   RENDER: PLANUNGSÜBERSICHT
+   ============================================================ */
+
+function renderPlanningOverview() {
+
+  const values =
+    getPlanningValues();
+
+
+  const container =
+    document.getElementById(
+      "planningOverview"
+    );
+
+
+  if (
+    values.total <= 0
+  ) {
+
+    container.innerHTML = `
+      <p class="subtle">
+        Noch keine Gesamtmenge eingetragen.
+      </p>
+    `;
+
+    return;
+  }
+
+
+  if (
+    !values.start ||
+    !values.target
+  ) {
+
+    container.innerHTML = `
+      <p class="subtle">
+        Bitte Startdatum und Wunsch-Enddatum eintragen.
+      </p>
+    `;
+
+    return;
+  }
+
+
+  const finish =
+    calculateFinishDate();
+
+
+  const stateName =
+    STATES[
+      storage.settings.federalState
+    ];
+
+
+  const today =
+    dateFromString(
+      getTodayDateString()
+    );
+
+
+  const shouldToday =
+    getSollBisDate(
+      today,
+      values
+    );
+
+
+  const remaining =
+    values.remaining;
+
+
+  const tomorrow =
+    addDays(
+      today,
+      1
+    );
+
+
+  let remainingWorkdays =
+    0;
+
+
+  if (
+    tomorrow <= values.target
+  ) {
+
+    remainingWorkdays =
+      countWorkdaysBetween(
+        tomorrow,
+        values.target,
+        values.plan
+      );
+  }
+
+
+  let requiredFromTomorrow =
+    0;
+
+
+  if (
+    remainingWorkdays > 0 &&
+    remaining > 0
+  ) {
+
+    requiredFromTomorrow =
+      remaining /
+      remainingWorkdays;
+  }
+
+
+  container.innerHTML = `
+
+    <div class="grid">
+
+      <div class="stat">
+        <div class="label">
+          Bundesland
+        </div>
+        <div class="value" style="font-size:20px;">
+          ${stateName}
+        </div>
+      </div>
+
+      <div class="stat">
+        <div class="label">
+          Startdatum
+        </div>
+        <div class="value" style="font-size:20px;">
+          ${formatDate(values.start)}
+        </div>
+      </div>
+
+      <div class="stat">
+        <div class="label">
+          Wunsch-Enddatum
+        </div>
+        <div class="value" style="font-size:20px;">
+          ${formatDate(values.target)}
+        </div>
+      </div>
+
+      <div class="stat">
+        <div class="label">
+          Errechnetes Enddatum
+        </div>
+        <div class="value" style="font-size:20px;">
+          ${finish ? formatDate(finish) : "–"}
+        </div>
+      </div>
+
+    </div>
+
+    <div style="margin-top:15px;">
+
+      <p>
+        <strong>Gesamtmenge:</strong>
+        ${formatNumber(values.total)}
+      </p>
+
+      <p>
+        <strong>Bereits erledigt:</strong>
+        ${formatNumber(values.done)}
+      </p>
+
+      <p>
+        <strong>Noch offen:</strong>
+        ${formatNumber(values.remaining)}
+      </p>
+
+      <p>
+        <strong>Arbeitstage bis Wunschdatum:</strong>
+        ${values.workdaysToTarget}
+      </p>
+
+      <p>
+        <strong>Rechnerischer Tagesbedarf aktuell:</strong>
+        ${formatDecimal(values.currentDailyNeed)}
+      </p>
+
+      <p>
+        <strong>Soll bis heute:</strong>
+        ${formatDecimal(shouldToday)}
+      </p>
+
+      <p>
+        <strong>Arbeitstage ab morgen:</strong>
+        ${remainingWorkdays}
+      </p>
+
+      <p>
+        <strong>Benötigte Leistung ab morgen:</strong>
+        ${formatDecimal(requiredFromTomorrow)}
+      </p>
+
+    </div>
+  `;
+}
+
+
+/* ============================================================
+   FORMATIERUNG
+   ============================================================ */
+
+function formatNumber(value) {
+
+  return Number(
+    value || 0
+  ).toLocaleString(
+    "de-DE",
+    {
+      maximumFractionDigits: 0
+    }
+  );
+}
+
+
+function formatDecimal(value) {
+
+  return Number(
+    value || 0
+  ).toLocaleString(
+    "de-DE",
+    {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1
+    }
+  );
+}
+
+
+/* ============================================================
+   JAHR-LISTE
+   ============================================================ */
+
+function renderYearSelect() {
+
+  const select =
+    document.getElementById(
+      "yearSelect"
+    );
+
+
+  select.innerHTML = "";
+
+
+  for (
+    let year = CURRENT_YEAR - 5;
+    year <= CURRENT_YEAR + 10;
+    year++
+  ) {
+
+    const option =
+      document.createElement(
+        "option"
+      );
+
+
+    option.value =
+      year;
+
+    option.textContent =
+      year;
+
+
+    if (
+      year === getSelectedYear()
+    ) {
+      option.selected = true;
+    }
+
+
+    select.appendChild(option);
+  }
+}
+
+
+/* ============================================================
+   BUNDESLAND-LISTE
+   ============================================================ */
+
+function renderStateSelect() {
+
+  const select =
+    document.getElementById(
+      "stateSelect"
+    );
+
+
+  select.innerHTML = "";
+
+
+  for (
+    const [
+      code,
+      name
+    ] of Object.entries(STATES)
+  ) {
+
+    const option =
+      document.createElement(
+        "option"
+      );
+
+
+    option.value =
+      code;
+
+    option.textContent =
+      name;
+
+
+    if (
+      code ===
+      storage.settings.federalState
+    ) {
+      option.selected = true;
+    }
+
+
+    select.appendChild(option);
+  }
+}
+
+
+/* ============================================================
+   ALLES RENDERN
+   ============================================================ */
+
+function renderAll() {
+
+  try {
+
+    renderYearSelect();
+    renderStateSelect();
+    renderSettings();
+
+    renderMainStats();
+    renderToday();
+    renderPace();
+    renderEntries();
+    renderHolidays();
+    renderPlanningOverview();
+    renderOffs();
+
+  } catch (error) {
+
+    console.error(
+      "Render-Fehler:",
+      error
+    );
+  }
+}
+
+
+/* ============================================================
+   EINGABE: JAHR
+   ============================================================ */
+
+document
+  .getElementById("yearSelect")
+  .addEventListener(
+    "change",
+    event => {
+
+      storage.selectedYear =
+        Number(event.target.value);
+
+      saveStorage();
+
+      renderAll();
+    }
+  );
+
+
+/* ============================================================
+   EINGABE: BUNDESLAND
+   ============================================================ */
+
+document
+  .getElementById("stateSelect")
+  .addEventListener(
+    "change",
+    event => {
+
+      storage.settings.federalState =
+        event.target.value;
+
+      saveStorage();
+
+      renderAll();
+    }
+  );
+
+
+/* ============================================================
+   EINGABE: GESAMTMENGE
+   ============================================================ */
+
+document
+  .getElementById("totalInput")
+  .addEventListener(
+    "input",
+    event => {
+
+      const plan =
+        getYearPlan();
+
+
+      plan.total =
+        Math.max(
+          0,
+          Number(event.target.value || 0)
+        );
+
+
+      saveStorage();
+
+      renderMainStats();
+      renderToday();
+      renderPace();
+      renderEntries();
+      renderPlanningOverview();
+    }
+  );
+
+
+/* ============================================================
+   EINGABE: STARTDATUM
+   ============================================================ */
+
+document
+  .getElementById("startInput")
+  .addEventListener(
+    "change",
+    event => {
+
+      const plan =
+        getYearPlan();
+
+
+      plan.start =
+        event.target.value;
+
+
+      saveStorage();
+
+      renderAll();
+    }
+  );
+
+
+/* ============================================================
+   EINGABE: WUNSCH-ENDDATUM
+   ============================================================ */
+
+document
+  .getElementById("targetInput")
+  .addEventListener(
+    "change",
+    event => {
+
+      const plan =
+        getYearPlan();
+
+
+      plan.target =
+        event.target.value;
+
+
+      saveStorage();
+
+      renderAll();
+    }
+  );
+
+
+/* ============================================================
+   HEUTIGE LEISTUNG SPEICHERN
+   ============================================================ */
+
+document
+  .getElementById("todayInput")
+  .addEventListener(
+    "change",
+    event => {
+
+      const amount =
+        Math.max(
+          0,
+          Number(
+            event.target.value || 0
+          )
+        );
+
+
+      const plan =
+        getYearPlan();
+
+
+      const today =
+        getTodayDateString();
+
+
+      const existing =
+        getEntryForDate(
+          plan,
+          today
+        );
+
+
+      if (
+        amount <= 0
+      ) {
+
+        if (existing) {
+
+          plan.entries =
+            plan.entries.filter(
+              entry =>
+                entry.date !== today
+            );
+        }
+
+      } else {
+
+        if (existing) {
+
+          existing.amount =
+            amount;
+
+        } else {
+
+          plan.entries.push({
+            date: today,
+            amount
+          });
+        }
+      }
+
+
+      saveStorage();
+
+      renderAll();
+    }
+  );
+
+
+/* ============================================================
+   FREIEN TAG HINZUFÜGEN
+   ============================================================ */
+
+document
+  .getElementById("addOffButton")
+  .addEventListener(
+    "click",
+    () => {
+
+      const input =
+        document.getElementById(
+          "offDateInput"
+        );
+
+
+      const date =
+        input.value;
+
+
+      if (!date) {
+
+        alert(
+          "Bitte zuerst ein Datum auswählen."
+        );
+
+        return;
+      }
+
+
+      const plan =
+        getYearPlan();
+
+
+      if (
+        !plan.offs.includes(date)
+      ) {
+
+        plan.offs.push(date);
+      }
+
+
+      input.value = "";
+
+
+      saveStorage();
+
+      renderAll();
+    }
+  );
+
+
+/* ============================================================
+   MODALS
+   ============================================================ */
+
+function openModal(id) {
+
+  const modal =
+    document.getElementById(id);
+
+  if (modal) {
+    modal.classList.add("active");
+  }
+}
+
+
+function closeModal(id) {
+
+  const modal =
+    document.getElementById(id);
+
+  if (modal) {
+    modal.classList.remove("active");
+  }
+}
+
+
+document
+  .querySelectorAll(".modal")
+  .forEach(
+    modal => {
+
+      modal.addEventListener(
+        "click",
+        event => {
+
+          if (
+            event.target === modal
+          ) {
+
+            modal.classList.remove(
+              "active"
+            );
+          }
+        }
+      );
+    }
+  );
+
+
+document.addEventListener(
+  "keydown",
+  event => {
+
+    if (
+      event.key === "Escape"
+    ) {
+
+      document
+        .querySelectorAll(
+          ".modal.active"
+        )
+        .forEach(
+          modal =>
+            modal.classList.remove(
+              "active"
+            )
+        );
+    }
+  }
+);
+
+
+/* ============================================================
+   APP-NAME
+   ============================================================ */
+
+document.title =
+  APP_NAME;
+
+
+document.getElementById(
+  "appTitle"
+).textContent =
+  APP_NAME;
+
+
+document.getElementById(
+  "appSubtitle"
+).textContent =
+  APP_SUBTITLE;
+
+
+document.getElementById(
+  "footerYear"
+).textContent =
+  CURRENT_YEAR;
+
+
+/* ============================================================
+   START
+   ============================================================ */
+
+renderAll();
+
+
+/* ============================================================
+   SERVICE WORKER
+   ============================================================ */
+
+if (
+  "serviceWorker" in navigator
+) {
+
+  window.addEventListener(
+    "load",
+    () => {
+
+      navigator.serviceWorker
+        .register("sw.js")
+        .catch(
+          error =>
+            console.log(
+              "Service Worker konnte nicht registriert werden:",
+              error
+            )
+        );
+    }
+  );
+}
+
+</script>
+
+</body>
+</html>
