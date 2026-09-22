@@ -43,6 +43,7 @@
 
     html {
       scroll-behavior: smooth;
+      scroll-padding-top: 20px;
     }
 
     body {
@@ -164,12 +165,14 @@
       margin: auto;
 
       display: flex;
+      align-items: center;
       gap: 4px;
 
       overflow-x: auto;
     }
 
-    .nav a {
+    .nav a,
+    .nav-dropdown-button {
       color: rgba(255,255,255,0.72);
       text-decoration: none;
 
@@ -181,8 +184,73 @@
       white-space: nowrap;
     }
 
-    .nav a:hover {
+    .nav a:hover,
+    .nav-dropdown-button:hover {
       color: white;
+    }
+
+    .nav-dropdown {
+      position: relative;
+    }
+
+    .nav-dropdown-button {
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .nav-arrow {
+      font-size: 10px;
+      transition: transform .15s ease;
+    }
+
+    .nav-dropdown.open .nav-arrow {
+      transform: rotate(180deg);
+    }
+
+    .nav-submenu {
+      position: absolute;
+      top: 100%;
+      right: 0;
+
+      min-width: 210px;
+
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+
+      box-shadow: 0 15px 35px rgba(15,23,42,0.18);
+
+      padding: 7px;
+
+      display: none;
+
+      z-index: 1000;
+    }
+
+    .nav-dropdown.open .nav-submenu {
+      display: block;
+    }
+
+    .nav-submenu a {
+      display: block;
+
+      color: var(--text);
+
+      padding: 10px 12px;
+
+      border-radius: 8px;
+
+      font-size: 13px;
+    }
+
+    .nav-submenu a:hover {
+      background: var(--surface-soft);
+      color: var(--primary);
     }
 
     /* =====================================================
@@ -225,24 +293,6 @@
       margin: 4px 0 0;
       color: var(--muted);
       font-size: 13px;
-    }
-
-    .section-number {
-      width: 34px;
-      height: 34px;
-      border-radius: 10px;
-
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      background: var(--primary-light);
-      color: var(--primary);
-
-      font-size: 14px;
-      font-weight: 800;
-
-      flex-shrink: 0;
     }
 
     .title-left {
@@ -772,6 +822,16 @@
       .card-title h2 {
         font-size: 18px;
       }
+
+      .nav-submenu {
+        position: fixed;
+
+        top: auto;
+        left: 12px;
+        right: 12px;
+
+        min-width: 0;
+      }
     }
 
     @media (max-width: 390px) {
@@ -815,6 +875,7 @@
     </div>
 
     <div class="header-year">
+
       <div class="header-year-label">
         Planungsjahr
       </div>
@@ -825,21 +886,78 @@
       >
         -
       </div>
+
     </div>
 
   </div>
+
 
   <nav class="nav">
 
     <div class="nav-inner">
 
-      <a href="#planung">Planung</a>
-      <a href="#leistung">Leistung</a>
-      <a href="#uebersicht">Übersicht</a>
-      <a href="#feiertage">Feiertage</a>
-      <a href="#historie">Historie</a>
-      <a href="#impressum">Impressum</a>
-      <a href="#datenschutz">Datenschutz</a>
+      <a href="#planung">
+        Planung
+      </a>
+
+      <a href="#leistung">
+        Leistung
+      </a>
+
+      <a href="#uebersicht">
+        Übersicht
+      </a>
+
+      <a href="#feiertage">
+        Feiertage
+      </a>
+
+      <a href="#historie">
+        Historie
+      </a>
+
+
+      <!-- RECHTLICHES UNTERMENÜ -->
+
+      <div
+        class="nav-dropdown"
+        id="legalDropdown"
+      >
+
+        <button
+          type="button"
+          class="nav-dropdown-button"
+          id="legalDropdownButton"
+          aria-expanded="false"
+          aria-haspopup="true"
+        >
+
+          Rechtliches
+
+          <span class="nav-arrow">
+            ▼
+          </span>
+
+        </button>
+
+
+        <div class="nav-submenu">
+
+          <a href="#impressum">
+            Impressum
+          </a>
+
+          <a href="#datenschutz">
+            Datenschutz
+          </a>
+
+          <a href="#rechtliche-hinweise">
+            Rechtliche Hinweise
+          </a>
+
+        </div>
+
+      </div>
 
     </div>
 
@@ -862,10 +980,6 @@
     <div class="card-title">
 
       <div class="title-left">
-
-        <div class="section-number">
-          01
-        </div>
 
         <div>
           <h2>Planung festlegen</h2>
@@ -999,16 +1113,14 @@
 
       <div class="title-left">
 
-        <div class="section-number">
-          02
-        </div>
-
         <div>
+
           <h2>Jahresziel</h2>
 
           <p>
             Der Planer berechnet deinen benötigten Tagesdurchschnitt automatisch.
           </p>
+
         </div>
 
       </div>
@@ -1068,6 +1180,7 @@
     <div class="info">
 
       <strong>Automatische Berechnung:</strong>
+
       Du musst nicht vorher festlegen, was du an jedem einzelnen
       Tag schaffen möchtest. Der Planer errechnet aus Gesamtmenge,
       Zeitraum, Feiertagen und freien Tagen deinen erforderlichen
@@ -1095,16 +1208,14 @@
 
       <div class="title-left">
 
-        <div class="section-number">
-          03
-        </div>
-
         <div>
+
           <h2>Tatsächliche Leistung</h2>
 
           <p>
             Trage ein, was du an einem bestimmten Tag tatsächlich geschafft hast.
           </p>
+
         </div>
 
       </div>
@@ -1157,9 +1268,11 @@
 
 
     <div class="info">
+
       Bereits gespeicherte Leistungen werden automatisch addiert.
       Die verbleibende Menge und dein benötigter Tagesdurchschnitt
       werden danach sofort neu berechnet.
+
     </div>
 
   </div>
@@ -1182,16 +1295,14 @@
 
       <div class="title-left">
 
-        <div class="section-number">
-          04
-        </div>
-
         <div>
+
           <h2>Deine Jahresübersicht</h2>
 
           <p>
             Aktueller Stand deiner Planung.
           </p>
+
         </div>
 
       </div>
@@ -1257,7 +1368,9 @@
 
     <div class="progress-header">
 
-      <span>Jahresfortschritt</span>
+      <span>
+        Jahresfortschritt
+      </span>
 
       <span id="progressText">
         0 %
@@ -1360,16 +1473,14 @@
 
       <div class="title-left">
 
-        <div class="section-number">
-          05
-        </div>
-
         <div>
+
           <h2>Feiertage</h2>
 
           <p>
             Feiertage des ausgewählten Jahres und Bundeslandes.
           </p>
+
         </div>
 
       </div>
@@ -1402,16 +1513,14 @@
 
       <div class="title-left">
 
-        <div class="section-number">
-          06
-        </div>
-
         <div>
+
           <h2>Zusätzliche freie Tage</h2>
 
           <p>
             Urlaub, Betriebsferien oder sonstige freie Tage.
           </p>
+
         </div>
 
       </div>
@@ -1449,16 +1558,14 @@
 
       <div class="title-left">
 
-        <div class="section-number">
-          07
-        </div>
-
         <div>
+
           <h2>Tageshistorie</h2>
 
           <p>
             Deine bisher eingetragenen Leistungen.
           </p>
+
         </div>
 
       </div>
@@ -1508,16 +1615,14 @@
 
       <div class="title-left">
 
-        <div class="section-number">
-          08
-        </div>
-
         <div>
+
           <h2>Impressum</h2>
 
           <p>
             Angaben zum Anbieter
           </p>
+
         </div>
 
       </div>
@@ -1530,6 +1635,7 @@
       <h3>Angaben gemäß § 5 DDG</h3>
 
       <p>
+
         <strong>
           Marc-André Stein-Bakowski
         </strong><br>
@@ -1537,25 +1643,31 @@
         Kirchstraße 7<br>
         65589 Hadamar<br>
         Deutschland
+
       </p>
 
 
       <h3>Kontakt</h3>
 
       <p>
+
         E-Mail:
+
         <a href="mailto:marc.stein2@icloud.com">
           marc.stein2@icloud.com
         </a>
+
       </p>
 
 
       <h3>Verantwortlich für den Inhalt</h3>
 
       <p>
+
         Marc-André Stein-Bakowski<br>
         Kirchstraße 7<br>
         65589 Hadamar
+
       </p>
 
     </div>
@@ -1580,16 +1692,14 @@
 
       <div class="title-left">
 
-        <div class="section-number">
-          09
-        </div>
-
         <div>
+
           <h2>Datenschutz</h2>
 
           <p>
             Informationen zur Verarbeitung von Daten
           </p>
+
         </div>
 
       </div>
@@ -1607,6 +1717,7 @@
       </p>
 
       <p>
+
         <strong>
           Marc-André Stein-Bakowski
         </strong><br>
@@ -1616,9 +1727,11 @@
         Deutschland<br>
 
         E-Mail:
+
         <a href="mailto:marc.stein2@icloud.com">
           marc.stein2@icloud.com
         </a>
+
       </p>
 
 
@@ -1712,7 +1825,10 @@
      RECHTLICHE HINWEISE
 ===================================================== -->
 
-<section class="section">
+<section
+  class="section"
+  id="rechtliche-hinweise"
+>
 
   <div class="card legal-card">
 
@@ -1720,16 +1836,14 @@
 
       <div class="title-left">
 
-        <div class="section-number">
-          10
-        </div>
-
         <div>
+
           <h2>Rechtliche Hinweise</h2>
 
           <p>
             Hinweise zur Verwendung des Planers
           </p>
+
         </div>
 
       </div>
@@ -1798,14 +1912,27 @@
 <footer>
 
   <div>
-    <a href="#impressum">Impressum</a>
-    <a href="#datenschutz">Datenschutz</a>
-    <a href="#rechtliches">Rechtliche Hinweise</a>
+
+    <a href="#impressum">
+      Impressum
+    </a>
+
+    <a href="#datenschutz">
+      Datenschutz
+    </a>
+
+    <a href="#rechtliche-hinweise">
+      Rechtliche Hinweise
+    </a>
+
   </div>
 
+
   <div style="margin-top:10px;">
+
     © <span id="footerYear"></span>
     Schornstein Planer
+
   </div>
 
 </footer>
@@ -4204,6 +4331,106 @@ function render() {
   renderHistory();
 
 }
+
+
+/* =========================================================
+   LEGAL DROPDOWN
+========================================================= */
+
+const legalDropdown =
+  document.getElementById(
+    "legalDropdown"
+  );
+
+const legalDropdownButton =
+  document.getElementById(
+    "legalDropdownButton"
+  );
+
+
+legalDropdownButton.addEventListener(
+  "click",
+  event => {
+
+    event.stopPropagation();
+
+    const isOpen =
+      legalDropdown.classList.toggle(
+        "open"
+      );
+
+    legalDropdownButton
+      .setAttribute(
+        "aria-expanded",
+        String(isOpen)
+      );
+
+  }
+);
+
+
+/*
+   Menü schließen, wenn außerhalb
+   geklickt wird.
+*/
+
+document.addEventListener(
+  "click",
+  event => {
+
+    if (
+      !legalDropdown.contains(
+        event.target
+      )
+    ) {
+
+      legalDropdown.classList.remove(
+        "open"
+      );
+
+      legalDropdownButton
+        .setAttribute(
+          "aria-expanded",
+          "false"
+        );
+
+    }
+
+  }
+);
+
+
+/*
+   Menü nach Auswahl eines Punktes
+   automatisch schließen.
+*/
+
+document
+  .querySelectorAll(
+    ".nav-submenu a"
+  )
+  .forEach(
+    link => {
+
+      link.addEventListener(
+        "click",
+        () => {
+
+          legalDropdown.classList.remove(
+            "open"
+          );
+
+          legalDropdownButton
+            .setAttribute(
+              "aria-expanded",
+              "false"
+            );
+
+        }
+      );
+
+    }
+  );
 
 
 /* =========================================================
