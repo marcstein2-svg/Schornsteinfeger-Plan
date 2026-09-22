@@ -3,384 +3,1027 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#1f2937">
+  <meta name="theme-color" content="#111827">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
   <title>Schornstein Planer</title>
 
   <link rel="manifest" href="manifest.webmanifest">
 
   <style>
+    :root {
+      --bg: #eef2f6;
+      --surface: #ffffff;
+      --surface-soft: #f8fafc;
+      --border: #e2e8f0;
+
+      --text: #172033;
+      --muted: #64748b;
+
+      --primary: #1e3a5f;
+      --primary-light: #e8f0f8;
+
+      --success: #087f5b;
+      --success-bg: #e8f7f1;
+
+      --warning: #b45309;
+      --warning-bg: #fff7e8;
+
+      --danger: #b42318;
+      --danger-bg: #fff0ef;
+
+      --shadow: 0 8px 30px rgba(15, 23, 42, 0.07);
+      --radius: 18px;
+    }
+
     * {
       box-sizing: border-box;
     }
 
+    html {
+      scroll-behavior: smooth;
+    }
+
     body {
       margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background: #f3f4f6;
-      color: #111827;
+      font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Arial,
+        sans-serif;
+
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
     }
 
-    header {
-      background: #1f2937;
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    /* =====================================================
+       HEADER
+    ===================================================== */
+
+    .topbar {
+      background:
+        linear-gradient(
+          135deg,
+          #0f172a 0%,
+          #1e3a5f 55%,
+          #274d73 100%
+        );
+
       color: white;
-      padding: 22px 16px;
-      text-align: center;
+      padding: 0;
     }
 
-    header h1 {
-      margin: 0;
+    .topbar-inner {
+      width: min(1180px, calc(100% - 32px));
+      margin: auto;
+
+      min-height: 150px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 30px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-icon {
+      width: 58px;
+      height: 58px;
+      border-radius: 16px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.18);
+
       font-size: 28px;
     }
 
-    header p {
-      margin: 7px 0 0;
-      opacity: 0.85;
+    .brand h1 {
+      margin: 0;
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: -0.6px;
     }
 
+    .brand p {
+      margin: 4px 0 0;
+      color: rgba(255,255,255,0.72);
+      font-size: 14px;
+    }
+
+    .header-year {
+      text-align: right;
+    }
+
+    .header-year-label {
+      font-size: 12px;
+      color: rgba(255,255,255,0.65);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .header-year-value {
+      font-size: 32px;
+      font-weight: 800;
+    }
+
+    /* =====================================================
+       NAVIGATION
+    ===================================================== */
+
+    .nav {
+      background: rgba(15,23,42,0.95);
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .nav-inner {
+      width: min(1180px, calc(100% - 32px));
+      margin: auto;
+
+      display: flex;
+      gap: 4px;
+
+      overflow-x: auto;
+    }
+
+    .nav a {
+      color: rgba(255,255,255,0.72);
+      text-decoration: none;
+
+      padding: 13px 15px;
+
+      font-size: 13px;
+      font-weight: 600;
+
+      white-space: nowrap;
+    }
+
+    .nav a:hover {
+      color: white;
+    }
+
+    /* =====================================================
+       MAIN
+    ===================================================== */
+
     main {
-      width: min(1100px, calc(100% - 24px));
-      margin: 20px auto 40px;
+      width: min(1180px, calc(100% - 32px));
+      margin: 28px auto 50px;
+    }
+
+    .section {
+      margin-bottom: 22px;
     }
 
     .card {
-      background: white;
-      border-radius: 14px;
-      padding: 20px;
-      margin-bottom: 18px;
-      box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
     }
 
-    h2 {
-      margin-top: 0;
-      color: #1f2937;
-      font-size: 21px;
+    .card-title {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 15px;
+
+      margin-bottom: 20px;
     }
 
-    h3 {
-      color: #374151;
-      margin-top: 24px;
+    .card-title h2 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: -0.2px;
     }
 
-    .grid {
+    .card-title p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .section-number {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      background: var(--primary-light);
+      color: var(--primary);
+
+      font-size: 14px;
+      font-weight: 800;
+
+      flex-shrink: 0;
+    }
+
+    .title-left {
+      display: flex;
+      gap: 12px;
+    }
+
+    /* =====================================================
+       YEAR / STATE
+    ===================================================== */
+
+    .hero-settings {
+      background:
+        linear-gradient(
+          135deg,
+          #ffffff 0%,
+          #f6f9fc 100%
+        );
+    }
+
+    .selection-grid {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: 1fr 1.6fr;
+      gap: 16px;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 7px;
+
+      font-size: 13px;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    input,
+    select {
+      width: 100%;
+      height: 48px;
+
+      padding: 0 13px;
+
+      background: white;
+
+      border: 1px solid #cbd5e1;
+      border-radius: 11px;
+
+      color: var(--text);
+
+      outline: none;
+
+      transition:
+        border-color .15s ease,
+        box-shadow .15s ease;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: #35658f;
+
+      box-shadow:
+        0 0 0 3px rgba(30,58,95,0.10);
+    }
+
+    .selected-plan {
+      margin-top: 17px;
+
+      padding: 13px 15px;
+
+      border-radius: 11px;
+
+      background: var(--primary-light);
+      color: var(--primary);
+
+      font-size: 14px;
+    }
+
+    /* =====================================================
+       GRID
+    ===================================================== */
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
       gap: 16px;
     }
 
     .grid-3 {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0,1fr));
       gap: 16px;
     }
 
-    @media (max-width: 700px) {
-      .grid,
-      .grid-3 {
-        grid-template-columns: 1fr;
-      }
-    }
+    /* =====================================================
+       BUTTONS
+    ===================================================== */
 
-    label {
-      display: block;
-      font-weight: 700;
-      margin-bottom: 7px;
-      color: #374151;
-    }
+    .btn {
+      border: 0;
+      border-radius: 11px;
 
-    input,
-    select,
-    button {
-      width: 100%;
       min-height: 46px;
-      border-radius: 9px;
-      border: 1px solid #d1d5db;
-      padding: 10px 12px;
-      font-size: 16px;
-      background: white;
-    }
 
-    select {
-      cursor: pointer;
-    }
+      padding: 0 17px;
 
-    input:focus,
-    select:focus {
-      outline: none;
-      border-color: #2563eb;
-      box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
-    }
-
-    button {
-      border: none;
-      background: #2563eb;
-      color: white;
       font-weight: 700;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: #1d4ed8;
-    }
-
-    button.secondary {
-      background: #6b7280;
-    }
-
-    button.danger {
-      background: #dc2626;
-    }
-
-    button.small {
-      min-height: 36px;
-      width: auto;
-      padding: 7px 12px;
       font-size: 14px;
+
+      transition:
+        transform .12s ease,
+        background .12s ease;
     }
 
-    .info-box {
-      background: #eff6ff;
-      border-left: 5px solid #2563eb;
-      padding: 13px 15px;
-      border-radius: 8px;
-      margin-top: 15px;
+    .btn:hover {
+      transform: translateY(-1px);
     }
 
-    .warning-box {
-      background: #fff7ed;
-      border-left: 5px solid #f97316;
-      padding: 13px 15px;
-      border-radius: 8px;
-      margin-top: 15px;
+    .btn-primary {
+      background: var(--primary);
+      color: white;
     }
 
-    .success-box {
-      background: #ecfdf5;
-      border-left: 5px solid #10b981;
-      padding: 13px 15px;
-      border-radius: 8px;
-      margin-top: 15px;
+    .btn-primary:hover {
+      background: #162f4d;
     }
+
+    .btn-secondary {
+      background: #e9eef4;
+      color: #334155;
+    }
+
+    .btn-danger {
+      background: var(--danger-bg);
+      color: var(--danger);
+    }
+
+    /* =====================================================
+       INFO
+    ===================================================== */
+
+    .info {
+      margin-top: 18px;
+      padding: 14px 16px;
+
+      border-radius: 12px;
+
+      background: var(--primary-light);
+      color: #274766;
+
+      font-size: 13px;
+    }
+
+    .success {
+      background: var(--success-bg);
+      color: var(--success);
+    }
+
+    .warning {
+      background: var(--warning-bg);
+      color: var(--warning);
+    }
+
+    .danger-box {
+      background: var(--danger-bg);
+      color: var(--danger);
+    }
+
+    /* =====================================================
+       STATS
+    ===================================================== */
 
     .stats {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 12px;
-    }
-
-    @media (max-width: 800px) {
-      .stats {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-
-    @media (max-width: 450px) {
-      .stats {
-        grid-template-columns: 1fr;
-      }
+      grid-template-columns: repeat(4, minmax(0,1fr));
+      gap: 13px;
     }
 
     .stat {
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-radius: 11px;
-      padding: 15px;
+      background: var(--surface-soft);
+      border: 1px solid var(--border);
+
+      border-radius: 14px;
+      padding: 16px;
     }
 
-    .stat-title {
-      font-size: 13px;
-      color: #6b7280;
-      margin-bottom: 6px;
+    .stat-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+
+      margin-bottom: 5px;
     }
 
     .stat-value {
-      font-size: 24px;
+      font-size: 25px;
       font-weight: 800;
-      color: #111827;
+      letter-spacing: -0.5px;
     }
 
-    .progress {
-      height: 18px;
-      width: 100%;
-      background: #e5e7eb;
+    .stat-unit {
+      color: var(--muted);
+      font-size: 12px;
+      margin-left: 2px;
+    }
+
+    /* =====================================================
+       PROGRESS
+    ===================================================== */
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+
+      margin-top: 24px;
+      margin-bottom: 8px;
+
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .progress-track {
+      height: 13px;
+
+      background: #e5eaf0;
+
       border-radius: 999px;
+
       overflow: hidden;
-      margin-top: 12px;
     }
 
     .progress-bar {
       height: 100%;
-      width: 0%;
-      background: #2563eb;
-      transition: width 0.3s ease;
+      width: 0;
+
+      background:
+        linear-gradient(
+          90deg,
+          #1e3a5f,
+          #3c6f9d
+        );
+
+      border-radius: 999px;
+
+      transition: width .35s ease;
     }
 
+    /* =====================================================
+       STATUS
+    ===================================================== */
+
+    .status-card {
+      margin-top: 18px;
+
+      padding: 17px;
+
+      border-radius: 13px;
+
+      border: 1px solid var(--border);
+
+      font-size: 14px;
+    }
+
+    /* =====================================================
+       HOLIDAYS
+    ===================================================== */
+
     .holiday-list {
+      list-style: none;
       margin: 0;
-      padding-left: 20px;
+      padding: 0;
+
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 8px;
     }
 
     .holiday-list li {
-      margin-bottom: 7px;
+      padding: 11px 13px;
+
+      background: var(--surface-soft);
+      border: 1px solid var(--border);
+
+      border-radius: 10px;
+
+      font-size: 13px;
     }
 
-    .free-day-row {
+    .holiday-date {
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    /* =====================================================
+       CHECKBOXES
+    ===================================================== */
+
+    .check-list {
+      margin-top: 20px;
+
       display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 8px;
-      margin-bottom: 9px;
-    }
-
-    .free-day-row button {
-      width: auto;
-      padding: 0 15px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 12px;
-    }
-
-    th,
-    td {
-      text-align: left;
-      padding: 10px 8px;
-      border-bottom: 1px solid #e5e7eb;
-      vertical-align: middle;
-    }
-
-    th {
-      background: #f9fafb;
-      color: #374151;
-    }
-
-    .table-wrapper {
-      overflow-x: auto;
-    }
-
-    .muted {
-      color: #6b7280;
-    }
-
-    .big-number {
-      font-size: 32px;
-      font-weight: 800;
-      color: #2563eb;
-    }
-
-    .settings-highlight {
-      border: 2px solid #2563eb;
-      background: #f8fbff;
+      gap: 9px;
     }
 
     .check-row {
       display: flex;
       align-items: center;
       gap: 10px;
-      margin: 10px 0;
+
+      padding: 11px 13px;
+
+      border: 1px solid var(--border);
+      border-radius: 10px;
+
+      background: var(--surface-soft);
+
+      font-size: 13px;
     }
 
     .check-row input {
-      width: 20px;
-      min-height: 20px;
-      margin: 0;
+      width: 18px;
+      height: 18px;
+      min-height: 18px;
+
+      accent-color: var(--primary);
     }
 
-    footer {
-      text-align: center;
-      color: #6b7280;
-      font-size: 13px;
-      padding: 20px;
+    /* =====================================================
+       FREE DAYS
+    ===================================================== */
+
+    .free-day-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+
+      gap: 9px;
+
+      margin-bottom: 9px;
     }
 
     .empty {
-      color: #6b7280;
-      padding: 15px 0;
+      color: var(--muted);
+      font-size: 13px;
+      padding: 5px 0 12px;
     }
 
-    .status {
+    /* =====================================================
+       TABLE
+    ===================================================== */
+
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+
+      font-size: 13px;
+    }
+
+    th {
+      text-align: left;
+
+      padding: 12px;
+
+      color: #475569;
+
+      background: var(--surface-soft);
+
+      font-size: 12px;
+      font-weight: 700;
+
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 13px 12px;
+
+      border-bottom: 1px solid var(--border);
+
+      white-space: nowrap;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .positive {
+      color: var(--success);
       font-weight: 700;
     }
 
-    .status.good {
-      color: #059669;
+    .negative {
+      color: var(--danger);
+      font-weight: 700;
     }
 
-    .status.bad {
-      color: #dc2626;
+    /* =====================================================
+       LEGAL
+    ===================================================== */
+
+    .legal-card {
+      box-shadow: none;
     }
 
-    .status.neutral {
-      color: #6b7280;
+    .legal-content {
+      color: #475569;
+      font-size: 13px;
+    }
+
+    .legal-content h3 {
+      color: var(--text);
+      font-size: 15px;
+      margin: 22px 0 7px;
+    }
+
+    .legal-content h3:first-child {
+      margin-top: 0;
+    }
+
+    .legal-content p {
+      margin: 7px 0;
+    }
+
+    .legal-content a {
+      color: var(--primary);
+    }
+
+    /* =====================================================
+       FOOTER
+    ===================================================== */
+
+    footer {
+      background: #0f172a;
+      color: #94a3b8;
+
+      text-align: center;
+
+      padding: 28px 16px;
+
+      font-size: 12px;
+    }
+
+    footer a {
+      color: #cbd5e1;
+      text-decoration: none;
+      margin: 0 5px;
+    }
+
+    footer a:hover {
+      color: white;
+    }
+
+    /* =====================================================
+       MOBILE
+    ===================================================== */
+
+    @media (max-width: 850px) {
+
+      .topbar-inner {
+        min-height: 125px;
+      }
+
+      .header-year {
+        display: none;
+      }
+
+      .selection-grid,
+      .grid-3 {
+        grid-template-columns: 1fr;
+      }
+
+      .stats {
+        grid-template-columns: repeat(2, minmax(0,1fr));
+      }
+    }
+
+    @media (max-width: 600px) {
+
+      .topbar-inner {
+        width: min(100% - 24px, 1180px);
+      }
+
+      .brand-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 23px;
+      }
+
+      .brand h1 {
+        font-size: 23px;
+      }
+
+      .brand p {
+        font-size: 12px;
+      }
+
+      main {
+        width: min(100% - 20px, 1180px);
+        margin-top: 15px;
+      }
+
+      .card {
+        padding: 17px;
+        border-radius: 15px;
+      }
+
+      .grid-2,
+      .holiday-list {
+        grid-template-columns: 1fr;
+      }
+
+      .stats {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .stat {
+        padding: 13px;
+      }
+
+      .stat-value {
+        font-size: 21px;
+      }
+
+      .card-title h2 {
+        font-size: 18px;
+      }
+    }
+
+    @media (max-width: 390px) {
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .free-day-row {
+        grid-template-columns: 1fr;
+      }
+
+      .free-day-row button {
+        width: 100%;
+      }
     }
   </style>
 </head>
 
 <body>
 
-<header>
-  <h1>Schornstein Planer</h1>
-  <p>Automatische Jahresplanung für deine Arbeit</p>
+<!-- =====================================================
+     HEADER
+===================================================== -->
+
+<header class="topbar">
+
+  <div class="topbar-inner">
+
+    <div class="brand">
+
+      <div class="brand-icon">
+        🔥
+      </div>
+
+      <div>
+        <h1>Schornstein Planer</h1>
+        <p>Deine Jahresplanung auf einen Blick</p>
+      </div>
+
+    </div>
+
+    <div class="header-year">
+      <div class="header-year-label">
+        Planungsjahr
+      </div>
+
+      <div
+        class="header-year-value"
+        id="headerYear"
+      >
+        -
+      </div>
+    </div>
+
+  </div>
+
+  <nav class="nav">
+
+    <div class="nav-inner">
+
+      <a href="#planung">Planung</a>
+      <a href="#leistung">Leistung</a>
+      <a href="#uebersicht">Übersicht</a>
+      <a href="#feiertage">Feiertage</a>
+      <a href="#historie">Historie</a>
+      <a href="#impressum">Impressum</a>
+      <a href="#datenschutz">Datenschutz</a>
+
+    </div>
+
+  </nav>
+
 </header>
+
 
 <main>
 
-  <!-- JAHR UND BUNDESLAND -->
-  <section class="card settings-highlight">
-    <h2>1. Jahr und Bundesland</h2>
 
-    <div class="grid">
+<!-- =====================================================
+     JAHR / BUNDESLAND
+===================================================== -->
 
-      <div>
-        <label for="yearSelect">Planungsjahr</label>
+<section class="section">
 
-        <select id="yearSelect">
-          <!-- Wird per JavaScript gefüllt -->
-        </select>
+  <div class="card hero-settings">
+
+    <div class="card-title">
+
+      <div class="title-left">
+
+        <div class="section-number">
+          01
+        </div>
+
+        <div>
+          <h2>Planung festlegen</h2>
+
+          <p>
+            Wähle zuerst das Jahr und dein Bundesland.
+          </p>
+        </div>
+
       </div>
 
-      <div>
-        <label for="stateSelect">Bundesland</label>
+    </div>
+
+
+    <div class="selection-grid">
+
+      <div class="field">
+
+        <label for="yearSelect">
+          Planungsjahr
+        </label>
+
+        <select id="yearSelect"></select>
+
+      </div>
+
+
+      <div class="field">
+
+        <label for="stateSelect">
+          Bundesland
+        </label>
 
         <select id="stateSelect">
-          <option value="BW">Baden-Württemberg</option>
-          <option value="BY">Bayern</option>
-          <option value="BE">Berlin</option>
-          <option value="BB">Brandenburg</option>
-          <option value="HB">Bremen</option>
-          <option value="HH">Hamburg</option>
-          <option value="HE">Hessen</option>
-          <option value="MV">Mecklenburg-Vorpommern</option>
-          <option value="NI">Niedersachsen</option>
-          <option value="NW">Nordrhein-Westfalen</option>
-          <option value="RP">Rheinland-Pfalz</option>
-          <option value="SL">Saarland</option>
-          <option value="SN">Sachsen</option>
-          <option value="ST">Sachsen-Anhalt</option>
-          <option value="SH">Schleswig-Holstein</option>
-          <option value="TH">Thüringen</option>
+
+          <option value="BW">
+            Baden-Württemberg
+          </option>
+
+          <option value="BY">
+            Bayern
+          </option>
+
+          <option value="BE">
+            Berlin
+          </option>
+
+          <option value="BB">
+            Brandenburg
+          </option>
+
+          <option value="HB">
+            Bremen
+          </option>
+
+          <option value="HH">
+            Hamburg
+          </option>
+
+          <option value="HE">
+            Hessen
+          </option>
+
+          <option value="MV">
+            Mecklenburg-Vorpommern
+          </option>
+
+          <option value="NI">
+            Niedersachsen
+          </option>
+
+          <option value="NW">
+            Nordrhein-Westfalen
+          </option>
+
+          <option value="RP">
+            Rheinland-Pfalz
+          </option>
+
+          <option value="SL">
+            Saarland
+          </option>
+
+          <option value="SN">
+            Sachsen
+          </option>
+
+          <option value="ST">
+            Sachsen-Anhalt
+          </option>
+
+          <option value="SH">
+            Schleswig-Holstein
+          </option>
+
+          <option value="TH">
+            Thüringen
+          </option>
+
         </select>
+
       </div>
 
     </div>
 
-    <div class="info-box">
-      <strong>Ausgewählte Planung:</strong>
+
+    <div class="selected-plan">
+
+      <strong>Aktuelle Planung:</strong>
       <span id="selectedPlanningText"></span>
+
     </div>
-  </section>
+
+  </div>
+
+</section>
 
 
-  <!-- GRUNDPLANUNG -->
-  <section class="card">
-    <h2>2. Jahresplanung</h2>
+<!-- =====================================================
+     PLANUNG
+===================================================== -->
 
-    <div class="grid">
+<section
+  class="section"
+  id="planung"
+>
 
-      <div>
-        <label for="totalInput">Gesamtmenge im Jahr</label>
+  <div class="card">
+
+    <div class="card-title">
+
+      <div class="title-left">
+
+        <div class="section-number">
+          02
+        </div>
+
+        <div>
+          <h2>Jahresziel</h2>
+
+          <p>
+            Der Planer berechnet deinen benötigten Tagesdurchschnitt automatisch.
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="grid-3">
+
+      <div class="field">
+
+        <label for="totalInput">
+          Gesamtmenge
+        </label>
+
         <input
           id="totalInput"
           type="number"
@@ -388,42 +1031,109 @@
           step="1"
           placeholder="z. B. 1200"
         >
+
       </div>
 
-      <div>
-        <label for="startInput">Startdatum</label>
-        <input id="startInput" type="date">
+
+      <div class="field">
+
+        <label for="startInput">
+          Startdatum
+        </label>
+
+        <input
+          id="startInput"
+          type="date"
+        >
+
       </div>
 
-      <div>
-        <label for="targetInput">Gewünschtes Enddatum</label>
-        <input id="targetInput" type="date">
+
+      <div class="field">
+
+        <label for="targetInput">
+          Gewünschtes Enddatum
+        </label>
+
+        <input
+          id="targetInput"
+          type="date"
+        >
+
       </div>
 
     </div>
 
-    <div class="info-box">
-      <strong>Wichtig:</strong>
-      Du musst nicht eingeben, was du jeden einzelnen Tag machen möchtest.
-      Der Planer berechnet automatisch, wie viel du durchschnittlich pro Arbeitstag
-      schaffen musst, damit du dein gewünschtes Enddatum erreichst.
+
+    <div class="info">
+
+      <strong>Automatische Berechnung:</strong>
+      Du musst nicht vorher festlegen, was du an jedem einzelnen
+      Tag schaffen möchtest. Der Planer errechnet aus Gesamtmenge,
+      Zeitraum, Feiertagen und freien Tagen deinen erforderlichen
+      Tagesdurchschnitt.
+
     </div>
-  </section>
+
+  </div>
+
+</section>
 
 
-  <!-- TAGESLEISTUNG -->
-  <section class="card">
-    <h2>3. Tatsächliche Leistung</h2>
+<!-- =====================================================
+     LEISTUNG
+===================================================== -->
 
-    <div class="grid">
+<section
+  class="section"
+  id="leistung"
+>
 
-      <div>
-        <label for="entryDate">Datum</label>
-        <input id="entryDate" type="date">
+  <div class="card">
+
+    <div class="card-title">
+
+      <div class="title-left">
+
+        <div class="section-number">
+          03
+        </div>
+
+        <div>
+          <h2>Tatsächliche Leistung</h2>
+
+          <p>
+            Trage ein, was du an einem bestimmten Tag tatsächlich geschafft hast.
+          </p>
+        </div>
+
       </div>
 
-      <div>
-        <label for="entryAmount">Heute / an diesem Tag erledigte Menge</label>
+    </div>
+
+
+    <div class="grid-2">
+
+      <div class="field">
+
+        <label for="entryDate">
+          Datum
+        </label>
+
+        <input
+          id="entryDate"
+          type="date"
+        >
+
+      </div>
+
+
+      <div class="field">
+
+        <label for="entryAmount">
+          Erledigte Menge
+        </label>
+
         <input
           id="entryAmount"
           type="number"
@@ -431,183 +1141,694 @@
           step="1"
           placeholder="z. B. 35"
         >
+
       </div>
 
     </div>
 
-    <button id="saveEntryButton" style="margin-top:15px;">
+
+    <button
+      id="saveEntryButton"
+      class="btn btn-primary"
+      style="margin-top:16px;"
+    >
       Leistung speichern
     </button>
 
-    <div class="info-box">
-      Bereits eingetragene Leistungen werden automatisch zur Gesamtleistung
-      addiert. Dadurch wird die noch benötigte Tagesleistung neu berechnet.
+
+    <div class="info">
+      Bereits gespeicherte Leistungen werden automatisch addiert.
+      Die verbleibende Menge und dein benötigter Tagesdurchschnitt
+      werden danach sofort neu berechnet.
     </div>
-  </section>
+
+  </div>
+
+</section>
 
 
-  <!-- ÜBERSICHT -->
-  <section class="card">
-    <h2>4. Planungsübersicht</h2>
+<!-- =====================================================
+     ÜBERSICHT
+===================================================== -->
+
+<section
+  class="section"
+  id="uebersicht"
+>
+
+  <div class="card">
+
+    <div class="card-title">
+
+      <div class="title-left">
+
+        <div class="section-number">
+          04
+        </div>
+
+        <div>
+          <h2>Deine Jahresübersicht</h2>
+
+          <p>
+            Aktueller Stand deiner Planung.
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+
 
     <div class="stats">
 
       <div class="stat">
-        <div class="stat-title">Gesamtmenge</div>
-        <div class="stat-value" id="statTotal">0</div>
+
+        <div class="stat-label">
+          GESAMTZIEL
+        </div>
+
+        <div class="stat-value">
+          <span id="statTotal">0</span>
+        </div>
+
       </div>
 
-      <div class="stat">
-        <div class="stat-title">Bereits erledigt</div>
-        <div class="stat-value" id="statDone">0</div>
-      </div>
 
       <div class="stat">
-        <div class="stat-title">Noch offen</div>
-        <div class="stat-value" id="statRemaining">0</div>
+
+        <div class="stat-label">
+          ERLEDIGT
+        </div>
+
+        <div class="stat-value">
+          <span id="statDone">0</span>
+        </div>
+
       </div>
 
+
       <div class="stat">
-        <div class="stat-title">Arbeitstage bis Ziel</div>
-        <div class="stat-value" id="statWorkdays">0</div>
+
+        <div class="stat-label">
+          NOCH OFFEN
+        </div>
+
+        <div class="stat-value">
+          <span id="statRemaining">0</span>
+        </div>
+
+      </div>
+
+
+      <div class="stat">
+
+        <div class="stat-label">
+          ARBEITSTAGE BIS ZIEL
+        </div>
+
+        <div class="stat-value">
+          <span id="statWorkdays">0</span>
+        </div>
+
       </div>
 
     </div>
 
-    <h3>Fortschritt</h3>
 
-    <div class="progress">
-      <div id="progressBar" class="progress-bar"></div>
-    </div>
+    <div class="progress-header">
 
-    <p id="progressText" class="muted">0 %</p>
+      <span>Jahresfortschritt</span>
 
-    <div class="stats">
-
-      <div class="stat">
-        <div class="stat-title">Geplant pro Arbeitstag</div>
-        <div class="stat-value" id="statDailyNeed">0</div>
-      </div>
-
-      <div class="stat">
-        <div class="stat-title">Geplant pro Woche</div>
-        <div class="stat-value" id="statWeeklyNeed">0</div>
-      </div>
-
-      <div class="stat">
-        <div class="stat-title">Soll bis heute</div>
-        <div class="stat-value" id="statSollToday">0</div>
-      </div>
-
-      <div class="stat">
-        <div class="stat-title">Benötigt ab morgen</div>
-        <div class="stat-value" id="statFromTomorrow">0</div>
-      </div>
+      <span id="progressText">
+        0 %
+      </span>
 
     </div>
 
-    <div id="planningStatus" class="info-box"></div>
-  </section>
+
+    <div class="progress-track">
+
+      <div
+        id="progressBar"
+        class="progress-bar"
+      ></div>
+
+    </div>
 
 
-  <!-- FEIERTAGE -->
-  <section class="card">
-    <h2>5. Feiertage im gewählten Jahr</h2>
+    <div
+      class="stats"
+      style="margin-top:15px;"
+    >
 
-    <p class="muted">
-      Diese Feiertage werden bei der Berechnung der verfügbaren Arbeitstage
-      berücksichtigt.
-    </p>
+      <div class="stat">
 
-    <ul id="holidayList" class="holiday-list"></ul>
+        <div class="stat-label">
+          BENÖTIGT / ARBEITSTAG
+        </div>
+
+        <div class="stat-value">
+          <span id="statDailyNeed">0</span>
+        </div>
+
+      </div>
+
+
+      <div class="stat">
+
+        <div class="stat-label">
+          BENÖTIGT / WOCHE
+        </div>
+
+        <div class="stat-value">
+          <span id="statWeeklyNeed">0</span>
+        </div>
+
+      </div>
+
+
+      <div class="stat">
+
+        <div class="stat-label">
+          SOLL BIS HEUTE
+        </div>
+
+        <div class="stat-value">
+          <span id="statSollToday">0</span>
+        </div>
+
+      </div>
+
+
+      <div class="stat">
+
+        <div class="stat-label">
+          AB MORGEN BENÖTIGT
+        </div>
+
+        <div class="stat-value">
+          <span id="statFromTomorrow">0</span>
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div
+      id="planningStatus"
+      class="status-card"
+    ></div>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     FEIERTAGE
+===================================================== -->
+
+<section
+  class="section"
+  id="feiertage"
+>
+
+  <div class="card">
+
+    <div class="card-title">
+
+      <div class="title-left">
+
+        <div class="section-number">
+          05
+        </div>
+
+        <div>
+          <h2>Feiertage</h2>
+
+          <p>
+            Feiertage des ausgewählten Jahres und Bundeslandes.
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <ul
+      id="holidayList"
+      class="holiday-list"
+    ></ul>
+
 
     <div id="regionalOptions"></div>
-  </section>
+
+  </div>
+
+</section>
 
 
-  <!-- ZUSÄTZLICHE FREIE TAGE -->
-  <section class="card">
-    <h2>6. Zusätzliche freie Tage</h2>
+<!-- =====================================================
+     FREIE TAGE
+===================================================== -->
 
-    <p class="muted">
-      Hier kannst du Urlaub, Betriebsferien oder andere freie Tage eintragen.
-      Diese Tage werden nicht als Arbeitstage gezählt.
-    </p>
+<section class="section">
+
+  <div class="card">
+
+    <div class="card-title">
+
+      <div class="title-left">
+
+        <div class="section-number">
+          06
+        </div>
+
+        <div>
+          <h2>Zusätzliche freie Tage</h2>
+
+          <p>
+            Urlaub, Betriebsferien oder sonstige freie Tage.
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+
 
     <div id="freeDaysContainer"></div>
 
-    <button id="addFreeDayButton" class="secondary">
+
+    <button
+      id="addFreeDayButton"
+      class="btn btn-secondary"
+    >
       + Freien Tag hinzufügen
     </button>
-  </section>
+
+  </div>
+
+</section>
 
 
-  <!-- HISTORIE -->
-  <section class="card">
-    <h2>7. Tageshistorie</h2>
+<!-- =====================================================
+     HISTORIE
+===================================================== -->
+
+<section
+  class="section"
+  id="historie"
+>
+
+  <div class="card">
+
+    <div class="card-title">
+
+      <div class="title-left">
+
+        <div class="section-number">
+          07
+        </div>
+
+        <div>
+          <h2>Tageshistorie</h2>
+
+          <p>
+            Deine bisher eingetragenen Leistungen.
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+
 
     <div class="table-wrapper">
+
       <table>
+
         <thead>
+
           <tr>
             <th>Datum</th>
             <th>Ist</th>
             <th>Soll bis dahin</th>
             <th>Abweichung</th>
-            <th>Aktion</th>
+            <th></th>
           </tr>
+
         </thead>
 
         <tbody id="historyBody"></tbody>
+
       </table>
+
     </div>
-  </section>
+
+  </div>
+
+</section>
 
 
-  <!-- RECHTLICHES -->
-  <section class="card">
-    <h2>Über den Schornstein Planer</h2>
+<!-- =====================================================
+     IMPRESSUM
+===================================================== -->
 
-    <p>
-      Schornstein Planer ist ein persönliches Planungswerkzeug zur
-      Unterstützung bei der Jahres- und Arbeitsplanung.
-    </p>
+<section
+  class="section"
+  id="impressum"
+>
 
-    <p>
-      Die Berechnungen dienen als Orientierung. Feiertage und regionale
-      Besonderheiten sollten bei Bedarf zusätzlich geprüft werden.
-    </p>
+  <div class="card legal-card">
 
-    <p>
-      <strong>Angaben zum Betreiber:</strong><br>
-      Marc-André Stein-Bakowski<br>
-      Kirchstraße 7<br>
-      65589 Hadamar<br>
-      Deutschland<br>
-      E-Mail: marc.stein2@icloud.com
-    </p>
-  </section>
+    <div class="card-title">
+
+      <div class="title-left">
+
+        <div class="section-number">
+          08
+        </div>
+
+        <div>
+          <h2>Impressum</h2>
+
+          <p>
+            Angaben zum Anbieter
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="legal-content">
+
+      <h3>Angaben gemäß § 5 DDG</h3>
+
+      <p>
+        <strong>
+          Marc-André Stein-Bakowski
+        </strong><br>
+
+        Kirchstraße 7<br>
+        65589 Hadamar<br>
+        Deutschland
+      </p>
+
+
+      <h3>Kontakt</h3>
+
+      <p>
+        E-Mail:
+        <a href="mailto:marc.stein2@icloud.com">
+          marc.stein2@icloud.com
+        </a>
+      </p>
+
+
+      <h3>Verantwortlich für den Inhalt</h3>
+
+      <p>
+        Marc-André Stein-Bakowski<br>
+        Kirchstraße 7<br>
+        65589 Hadamar
+      </p>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     DATENSCHUTZ
+===================================================== -->
+
+<section
+  class="section"
+  id="datenschutz"
+>
+
+  <div class="card legal-card">
+
+    <div class="card-title">
+
+      <div class="title-left">
+
+        <div class="section-number">
+          09
+        </div>
+
+        <div>
+          <h2>Datenschutz</h2>
+
+          <p>
+            Informationen zur Verarbeitung von Daten
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="legal-content">
+
+      <h3>1. Verantwortlicher</h3>
+
+      <p>
+        Verantwortlicher für die Verarbeitung personenbezogener
+        Daten im Zusammenhang mit diesem Angebot ist:
+      </p>
+
+      <p>
+        <strong>
+          Marc-André Stein-Bakowski
+        </strong><br>
+
+        Kirchstraße 7<br>
+        65589 Hadamar<br>
+        Deutschland<br>
+
+        E-Mail:
+        <a href="mailto:marc.stein2@icloud.com">
+          marc.stein2@icloud.com
+        </a>
+      </p>
+
+
+      <h3>2. Nutzung der Anwendung</h3>
+
+      <p>
+        Der Schornstein Planer kann grundsätzlich ohne Benutzerkonto
+        verwendet werden.
+      </p>
+
+      <p>
+        Die von dir eingegebenen Planungsdaten werden benötigt,
+        damit die Anwendung Jahresziele, Arbeitstage,
+        Tagesleistungen und Fortschritte berechnen kann.
+      </p>
+
+
+      <h3>3. Lokale Speicherung</h3>
+
+      <p>
+        Die Planungsdaten werden grundsätzlich lokal im Browser
+        auf deinem Gerät gespeichert.
+      </p>
+
+      <p>
+        Hierzu verwendet die Anwendung den Local Storage des
+        Browsers. Die Daten werden für die Funktion der Anwendung
+        benötigt und bleiben auf deinem Gerät gespeichert, solange
+        du die entsprechenden Browserdaten nicht löschst.
+      </p>
+
+
+      <h3>4. Hosting</h3>
+
+      <p>
+        Die Anwendung wird über GitHub Pages bereitgestellt.
+        Beim Aufruf einer Website können technisch erforderliche
+        Daten durch den Hosting-Anbieter verarbeitet werden.
+      </p>
+
+
+      <h3>5. Cookies und Tracking</h3>
+
+      <p>
+        Der Schornstein Planer verwendet für seine eigene
+        Planungsfunktion keine Werbe- oder Tracking-Cookies und
+        erstellt keine personenbezogenen Nutzerprofile.
+      </p>
+
+
+      <h3>6. Kontaktaufnahme</h3>
+
+      <p>
+        Wenn du per E-Mail Kontakt aufnimmst, werden die von dir
+        übermittelten Angaben zur Bearbeitung deiner Anfrage
+        verarbeitet.
+      </p>
+
+
+      <h3>7. Deine Rechte</h3>
+
+      <p>
+        Im Rahmen der gesetzlichen Voraussetzungen bestehen
+        insbesondere Rechte auf Auskunft, Berichtigung, Löschung,
+        Einschränkung der Verarbeitung, Widerspruch gegen bestimmte
+        Verarbeitungen sowie Datenübertragbarkeit.
+      </p>
+
+      <p>
+        Darüber hinaus besteht das Recht, sich bei einer
+        zuständigen Datenschutzaufsichtsbehörde zu beschweren.
+      </p>
+
+
+      <h3>8. Aktualität</h3>
+
+      <p>
+        Diese Informationen können angepasst werden, wenn sich
+        die technische oder rechtliche Grundlage der Anwendung
+        ändert.
+      </p>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     RECHTLICHE HINWEISE
+===================================================== -->
+
+<section class="section">
+
+  <div class="card legal-card">
+
+    <div class="card-title">
+
+      <div class="title-left">
+
+        <div class="section-number">
+          10
+        </div>
+
+        <div>
+          <h2>Rechtliche Hinweise</h2>
+
+          <p>
+            Hinweise zur Verwendung des Planers
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="legal-content">
+
+      <h3>Planungsberechnung</h3>
+
+      <p>
+        Der Schornstein Planer dient der organisatorischen
+        Unterstützung bei der Jahresplanung.
+        Die automatisch berechneten Werte sind Richtwerte und
+        ersetzen keine individuelle betriebliche Planung.
+      </p>
+
+
+      <h3>Feiertage und Arbeitstage</h3>
+
+      <p>
+        Die Anwendung berücksichtigt die hinterlegten Feiertage
+        des ausgewählten Bundeslandes sowie ausgewählte regionale
+        Besonderheiten.
+      </p>
+
+      <p>
+        Betriebliche, tarifliche oder persönliche Regelungen können
+        von dieser Berechnung abweichen.
+      </p>
+
+
+      <h3>Keine Rechts- oder Steuerberatung</h3>
+
+      <p>
+        Die Inhalte dieser Anwendung stellen keine Rechts-,
+        Steuer- oder sonstige professionelle Beratung dar.
+        Für verbindliche Fragen sollte eine entsprechend
+        qualifizierte Fachperson hinzugezogen werden.
+      </p>
+
+
+      <h3>Urheberrecht</h3>
+
+      <p>
+        Die Inhalte und die technische Umsetzung dieser Anwendung
+        sind, soweit gesetzlich geschützt, urheberrechtlich geschützt.
+        Eine Nutzung außerhalb der gesetzlichen Grenzen bedarf der
+        Zustimmung des jeweiligen Rechteinhabers.
+      </p>
+
+    </div>
+
+  </div>
+
+</section>
 
 </main>
 
+
+<!-- =====================================================
+     FOOTER
+===================================================== -->
+
 <footer>
-  Schornstein Planer
+
+  <div>
+    <a href="#impressum">Impressum</a>
+    <a href="#datenschutz">Datenschutz</a>
+    <a href="#rechtliches">Rechtliche Hinweise</a>
+  </div>
+
+  <div style="margin-top:10px;">
+    © <span id="footerYear"></span>
+    Schornstein Planer
+  </div>
+
 </footer>
 
 
 <script>
+
 "use strict";
 
+
 /* =========================================================
-   GRUNDEINSTELLUNGEN
+   APP
 ========================================================= */
 
-const APP_NAME = "Schornstein Planer";
-const STORAGE_KEY = "schornstein-planer-v7";
+const STORAGE_KEY =
+  "schornstein-planer-v8";
 
-const CURRENT_YEAR = new Date().getFullYear();
+const CURRENT_YEAR =
+  new Date().getFullYear();
+
 
 const STATES = {
+
   BW: "Baden-Württemberg",
   BY: "Bayern",
   BE: "Berlin",
@@ -624,136 +1845,230 @@ const STATES = {
   ST: "Sachsen-Anhalt",
   SH: "Schleswig-Holstein",
   TH: "Thüringen"
+
 };
 
 
 /* =========================================================
-   STANDARD-DATEN
+   DEFAULTS
 ========================================================= */
 
-function createEmptyYearPlan(year) {
+function createYearPlan(year) {
+
   return {
+
     total: 0,
-    start: `${year}-01-01`,
+
+    start:
+      `${year}-01-01`,
+
     target: "",
+
     entries: [],
+
     offs: []
+
   };
+
 }
 
 
 function createDefaultData() {
-  return {
-    selectedYear: CURRENT_YEAR,
 
-    federalState: "HE",
+  return {
+
+    selectedYear:
+      CURRENT_YEAR,
+
+    federalState:
+      "HE",
 
     regional: {
-      bavariaAssumption: false,
-      augsburgPeaceFestival: false,
-      saxonyCorpusChristi: false,
-      thuringiaCorpusChristi: false
+
+      bavariaAssumption:
+        false,
+
+      augsburgPeaceFestival:
+        false,
+
+      saxonyCorpusChristi:
+        false,
+
+      thuringiaCorpusChristi:
+        false
+
     },
 
     years: {}
+
   };
+
 }
 
 
 /* =========================================================
-   DATEN LADEN / SPEICHERN
+   STORAGE
 ========================================================= */
 
 function loadData() {
+
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+
+    const raw =
+      localStorage.getItem(
+        STORAGE_KEY
+      );
 
     if (!raw) {
+
       return createDefaultData();
+
     }
 
-    const data = JSON.parse(raw);
+    const saved =
+      JSON.parse(raw);
 
-    const defaults = createDefaultData();
+    const defaults =
+      createDefaultData();
 
     return {
+
       ...defaults,
-      ...data,
+
+      ...saved,
+
       regional: {
+
         ...defaults.regional,
-        ...(data.regional || {})
+
+        ...(saved.regional || {})
+
       },
+
       years: {
-        ...(data.years || {})
+
+        ...(saved.years || {})
+
       }
+
     };
 
   } catch (error) {
-    console.error("Fehler beim Laden:", error);
+
+    console.error(
+      "Speicher konnte nicht geladen werden:",
+      error
+    );
+
     return createDefaultData();
+
   }
+
 }
 
 
-let appData = loadData();
+let appData =
+  loadData();
 
 
 function saveData() {
+
   localStorage.setItem(
+
     STORAGE_KEY,
+
     JSON.stringify(appData)
+
   );
+
 }
 
 
 /* =========================================================
-   JAHR PLAN HOLEN
+   CURRENT PLAN
 ========================================================= */
 
-function getCurrentYearPlan() {
+function getPlan() {
 
-  const year = Number(appData.selectedYear);
+  const year =
+    Number(
+      appData.selectedYear
+    );
 
   if (!appData.years[year]) {
-    appData.years[year] = createEmptyYearPlan(year);
+
+    appData.years[year] =
+      createYearPlan(year);
+
   }
 
   return appData.years[year];
+
 }
 
 
 /* =========================================================
-   DATUMS-FUNKTIONEN
+   DATES
 ========================================================= */
 
-function pad(number) {
-  return String(number).padStart(2, "0");
+function pad(value) {
+
+  return String(value)
+    .padStart(2, "0");
+
 }
 
 
 function dateToString(date) {
+
   return (
-    date.getFullYear() +
-    "-" +
-    pad(date.getMonth() + 1) +
-    "-" +
-    pad(date.getDate())
+
+    date.getFullYear()
+    + "-"
+    + pad(date.getMonth() + 1)
+    + "-"
+    + pad(date.getDate())
+
   );
+
 }
 
 
 function stringToDate(value) {
-  if (!value) return null;
 
-  const parts = value.split("-");
+  if (!value) {
+    return null;
+  }
 
-  if (parts.length !== 3) return null;
+  const parts =
+    value.split("-");
+
+  if (parts.length !== 3) {
+    return null;
+  }
 
   return new Date(
+
     Number(parts[0]),
     Number(parts[1]) - 1,
     Number(parts[2])
+
   );
+
+}
+
+
+function addDays(date, days) {
+
+  const result =
+    new Date(date);
+
+  result.setDate(
+    result.getDate() + days
+  );
+
+  return result;
+
 }
 
 
@@ -764,7 +2079,7 @@ function formatDate(value) {
       ? value
       : stringToDate(value);
 
-  if (!date || Number.isNaN(date.getTime())) {
+  if (!date) {
     return "-";
   }
 
@@ -776,61 +2091,101 @@ function formatDate(value) {
       year: "numeric"
     }
   );
-}
 
-
-function addDays(date, amount) {
-
-  const result = new Date(date);
-
-  result.setDate(
-    result.getDate() + amount
-  );
-
-  return result;
 }
 
 
 /* =========================================================
-   OSTERN
+   EASTER
 ========================================================= */
 
 function easterSunday(year) {
 
-  const a = year % 19;
-  const b = Math.floor(year / 100);
-  const c = year % 100;
-  const d = Math.floor(b / 4);
-  const e = b % 4;
-  const f = Math.floor((b + 8) / 25);
-  const g = Math.floor((b - f + 1) / 3);
+  const a =
+    year % 19;
+
+  const b =
+    Math.floor(year / 100);
+
+  const c =
+    year % 100;
+
+  const d =
+    Math.floor(b / 4);
+
+  const e =
+    b % 4;
+
+  const f =
+    Math.floor((b + 8) / 25);
+
+  const g =
+    Math.floor((b - f + 1) / 3);
+
   const h =
-    (19 * a + b - d - g + 15) % 30;
-  const i = Math.floor(c / 4);
-  const k = c % 4;
+    (
+      19 * a
+      + b
+      - d
+      - g
+      + 15
+    ) % 30;
+
+  const i =
+    Math.floor(c / 4);
+
+  const k =
+    c % 4;
+
   const l =
-    (32 + 2 * e + 2 * i - h - k) % 7;
+    (
+      32
+      + 2 * e
+      + 2 * i
+      - h
+      - k
+    ) % 7;
+
   const m =
-    Math.floor((a + 11 * h + 22 * l) / 451);
+    Math.floor(
+      (
+        a
+        + 11 * h
+        + 22 * l
+      ) / 451
+    );
 
   const month =
     Math.floor(
-      (h + l - 7 * m + 114) / 31
+      (
+        h
+        + l
+        - 7 * m
+        + 114
+      ) / 31
     );
 
   const day =
-    ((h + l - 7 * m + 114) % 31) + 1;
+    (
+      (
+        h
+        + l
+        - 7 * m
+        + 114
+      ) % 31
+    ) + 1;
 
   return new Date(
     year,
     month - 1,
     day
   );
+
 }
 
 
 /* =========================================================
-   FEIERTAGE
+   HOLIDAYS
 ========================================================= */
 
 function getHolidays(year, state) {
@@ -838,15 +2193,24 @@ function getHolidays(year, state) {
   const holidays = [];
 
   function add(date, name) {
+
     holidays.push({
-      date: dateToString(date),
+
+      date:
+        dateToString(date),
+
       name
+
     });
+
   }
 
-  const easter = easterSunday(year);
 
-  /* Bundesweit */
+  const easter =
+    easterSunday(year);
+
+
+  /* Deutschland */
 
   add(
     new Date(year, 0, 1),
@@ -912,6 +2276,7 @@ function getHolidays(year, state) {
       new Date(year, 10, 1),
       "Allerheiligen"
     );
+
   }
 
 
@@ -934,19 +2299,30 @@ function getHolidays(year, state) {
       "Allerheiligen"
     );
 
-    if (appData.regional.bavariaAssumption) {
+    if (
+      appData.regional
+        .bavariaAssumption
+    ) {
+
       add(
         new Date(year, 7, 15),
         "Mariä Himmelfahrt"
       );
+
     }
 
-    if (appData.regional.augsburgPeaceFestival) {
+    if (
+      appData.regional
+        .augsburgPeaceFestival
+    ) {
+
       add(
         new Date(year, 7, 8),
         "Augsburger Friedensfest"
       );
+
     }
+
   }
 
 
@@ -958,6 +2334,7 @@ function getHolidays(year, state) {
       new Date(year, 2, 8),
       "Internationaler Frauentag"
     );
+
   }
 
 
@@ -979,6 +2356,7 @@ function getHolidays(year, state) {
       new Date(year, 9, 31),
       "Reformationstag"
     );
+
   }
 
 
@@ -990,6 +2368,7 @@ function getHolidays(year, state) {
       new Date(year, 9, 31),
       "Reformationstag"
     );
+
   }
 
 
@@ -1001,6 +2380,7 @@ function getHolidays(year, state) {
       new Date(year, 9, 31),
       "Reformationstag"
     );
+
   }
 
 
@@ -1012,6 +2392,7 @@ function getHolidays(year, state) {
       addDays(easter, 60),
       "Fronleichnam"
     );
+
   }
 
 
@@ -1028,6 +2409,7 @@ function getHolidays(year, state) {
       new Date(year, 9, 31),
       "Reformationstag"
     );
+
   }
 
 
@@ -1039,6 +2421,7 @@ function getHolidays(year, state) {
       new Date(year, 9, 31),
       "Reformationstag"
     );
+
   }
 
 
@@ -1055,6 +2438,7 @@ function getHolidays(year, state) {
       new Date(year, 10, 1),
       "Allerheiligen"
     );
+
   }
 
 
@@ -1071,6 +2455,7 @@ function getHolidays(year, state) {
       new Date(year, 10, 1),
       "Allerheiligen"
     );
+
   }
 
 
@@ -1092,6 +2477,7 @@ function getHolidays(year, state) {
       new Date(year, 10, 1),
       "Allerheiligen"
     );
+
   }
 
 
@@ -1104,19 +2490,20 @@ function getHolidays(year, state) {
       "Reformationstag"
     );
 
-    /*
-      Buß- und Bettag:
-      Mittwoch vor dem 23. November.
-    */
-
     const november23 =
       new Date(year, 10, 23);
 
     let date =
       new Date(november23);
 
-    while (date.getDay() !== 3) {
-      date.setDate(date.getDate() - 1);
+    while (
+      date.getDay() !== 3
+    ) {
+
+      date.setDate(
+        date.getDate() - 1
+      );
+
     }
 
     add(
@@ -1124,12 +2511,19 @@ function getHolidays(year, state) {
       "Buß- und Bettag"
     );
 
-    if (appData.regional.saxonyCorpusChristi) {
+
+    if (
+      appData.regional
+        .saxonyCorpusChristi
+    ) {
+
       add(
         addDays(easter, 60),
         "Fronleichnam"
       );
+
     }
+
   }
 
 
@@ -1146,6 +2540,7 @@ function getHolidays(year, state) {
       new Date(year, 9, 31),
       "Reformationstag"
     );
+
   }
 
 
@@ -1157,6 +2552,7 @@ function getHolidays(year, state) {
       new Date(year, 9, 31),
       "Reformationstag"
     );
+
   }
 
 
@@ -1174,99 +2570,127 @@ function getHolidays(year, state) {
       "Reformationstag"
     );
 
-    if (appData.regional.thuringiaCorpusChristi) {
+    if (
+      appData.regional
+        .thuringiaCorpusChristi
+    ) {
+
       add(
         addDays(easter, 60),
         "Fronleichnam"
       );
+
     }
+
   }
 
-
-  /* Doppelte Einträge entfernen */
 
   const unique = {};
 
   holidays.forEach(item => {
-    unique[item.date] = item;
+
+    unique[item.date] =
+      item;
+
   });
 
+
   return Object.values(unique)
-    .sort((a, b) =>
-      a.date.localeCompare(b.date)
+    .sort(
+      (a,b) =>
+        a.date.localeCompare(b.date)
     );
+
 }
 
 
 /* =========================================================
-   ARBEITSTAGE
+   WORKING DAYS
 ========================================================= */
 
 function isWeekend(date) {
 
-  const day = date.getDay();
+  const day =
+    date.getDay();
 
-  return day === 0 || day === 6;
+  return (
+    day === 0 ||
+    day === 6
+  );
+
 }
 
 
 function isHoliday(date, holidays) {
 
-  const value = dateToString(date);
+  const value =
+    dateToString(date);
 
   return holidays.some(
-    holiday => holiday.date === value
+    holiday =>
+      holiday.date === value
   );
+
 }
 
 
-function isAdditionalFreeDay(date, plan) {
-
-  const value = dateToString(date);
-
-  return plan.offs.includes(value);
-}
-
-
-function isWorkingDay(date, holidays, plan) {
-
-  if (isWeekend(date)) {
-    return false;
-  }
-
-  if (isHoliday(date, holidays)) {
-    return false;
-  }
-
-  if (isAdditionalFreeDay(date, plan)) {
-    return false;
-  }
-
-  return true;
-}
-
-
-function countWorkingDays(
-  startDate,
-  endDate,
+function isWorkingDay(
+  date,
   holidays,
   plan
 ) {
 
-  if (!startDate || !endDate) {
+  if (
+    isWeekend(date)
+  ) {
+    return false;
+  }
+
+  if (
+    isHoliday(
+      date,
+      holidays
+    )
+  ) {
+    return false;
+  }
+
+  if (
+    plan.offs.includes(
+      dateToString(date)
+    )
+  ) {
+    return false;
+  }
+
+  return true;
+
+}
+
+
+function countWorkingDays(
+  start,
+  end,
+  holidays,
+  plan
+) {
+
+  if (!start || !end) {
     return 0;
   }
 
-  if (endDate < startDate) {
+  if (end < start) {
     return 0;
   }
 
   let count = 0;
 
   let current =
-    new Date(startDate);
+    new Date(start);
 
-  while (current <= endDate) {
+  while (
+    current <= end
+  ) {
 
     if (
       isWorkingDay(
@@ -1275,110 +2699,35 @@ function countWorkingDays(
         plan
       )
     ) {
+
       count++;
+
     }
 
     current =
       addDays(current, 1);
+
   }
 
   return count;
+
 }
 
 
 /* =========================================================
-   LEISTUNGEN
+   COMPLETED
 ========================================================= */
 
 function getCompleted(plan) {
 
   return plan.entries.reduce(
     (sum, entry) =>
-      sum + Number(entry.amount || 0),
+      sum + Number(
+        entry.amount || 0
+      ),
     0
   );
-}
 
-
-function getEntryAmount(plan, dateString) {
-
-  const entry =
-    plan.entries.find(
-      entry => entry.date === dateString
-    );
-
-  return entry
-    ? Number(entry.amount || 0)
-    : 0;
-}
-
-
-function saveEntry() {
-
-  const plan = getCurrentYearPlan();
-
-  const date =
-    document.getElementById("entryDate").value;
-
-  const amount =
-    Number(
-      document.getElementById("entryAmount").value
-    );
-
-  if (!date) {
-    alert("Bitte ein Datum auswählen.");
-    return;
-  }
-
-  if (!Number.isFinite(amount) || amount < 0) {
-    alert("Bitte eine gültige Menge eingeben.");
-    return;
-  }
-
-  const existingIndex =
-    plan.entries.findIndex(
-      entry => entry.date === date
-    );
-
-  if (amount === 0) {
-
-    if (existingIndex !== -1) {
-      plan.entries.splice(
-        existingIndex,
-        1
-      );
-    }
-
-  } else {
-
-    const entry = {
-      date,
-      amount
-    };
-
-    if (existingIndex !== -1) {
-
-      plan.entries[existingIndex] =
-        entry;
-
-    } else {
-
-      plan.entries.push(entry);
-    }
-  }
-
-  plan.entries.sort(
-    (a, b) =>
-      a.date.localeCompare(b.date)
-  );
-
-  saveData();
-
-  document.getElementById(
-    "entryAmount"
-  ).value = "";
-
-  render();
 }
 
 
@@ -1392,17 +2741,25 @@ function getSollBisDate(
   date
 ) {
 
-  if (!plan.total || !plan.start || !plan.target) {
+  if (
+    !plan.total ||
+    !plan.start ||
+    !plan.target
+  ) {
     return 0;
   }
 
   const start =
-    stringToDate(plan.start);
+    stringToDate(
+      plan.start
+    );
 
   const target =
-    stringToDate(plan.target);
+    stringToDate(
+      plan.target
+    );
 
-  if (!start || !target || !date) {
+  if (!start || !target) {
     return 0;
   }
 
@@ -1415,7 +2772,7 @@ function getSollBisDate(
       ? target
       : date;
 
-  const totalWorkdays =
+  const totalDays =
     countWorkingDays(
       start,
       target,
@@ -1423,7 +2780,7 @@ function getSollBisDate(
       plan
     );
 
-  const elapsedWorkdays =
+  const elapsedDays =
     countWorkingDays(
       start,
       effectiveDate,
@@ -1431,34 +2788,43 @@ function getSollBisDate(
       plan
     );
 
-  if (totalWorkdays <= 0) {
+  if (totalDays <= 0) {
     return 0;
   }
 
   return (
     plan.total *
-    (elapsedWorkdays / totalWorkdays)
+    elapsedDays /
+    totalDays
   );
+
 }
 
 
 /* =========================================================
-   PLANUNG BERECHNEN
+   CALCULATION
 ========================================================= */
 
-function calculatePlanning() {
+function calculate() {
 
   const plan =
-    getCurrentYearPlan();
+    getPlan();
+
+  const year =
+    Number(
+      appData.selectedYear
+    );
 
   const holidays =
     getHolidays(
-      Number(appData.selectedYear),
+      year,
       appData.federalState
     );
 
   const total =
-    Number(plan.total || 0);
+    Number(
+      plan.total || 0
+    );
 
   const completed =
     getCompleted(plan);
@@ -1470,42 +2836,55 @@ function calculatePlanning() {
     );
 
   const start =
-    stringToDate(plan.start);
+    stringToDate(
+      plan.start
+    );
 
   const target =
-    stringToDate(plan.target);
+    stringToDate(
+      plan.target
+    );
 
-  const today =
-    new Date();
+  let workdays =
+    0;
 
-  today.setHours(0, 0, 0, 0);
+  if (
+    start &&
+    target
+  ) {
 
-  let workdaysToTarget = 0;
-
-  if (start && target) {
-
-    workdaysToTarget =
+    workdays =
       countWorkingDays(
         start,
         target,
         holidays,
         plan
       );
+
   }
 
-  let dailyNeed = 0;
+  let daily =
+    0;
 
   if (
     remaining > 0 &&
-    workdaysToTarget > 0
+    workdays > 0
   ) {
 
-    dailyNeed =
-      remaining / workdaysToTarget;
+    daily =
+      remaining / workdays;
+
   }
 
-  const weeklyNeed =
-    dailyNeed * 5;
+  const weekly =
+    daily * 5;
+
+  const today =
+    new Date();
+
+  today.setHours(
+    0,0,0,0
+  );
 
   const sollToday =
     getSollBisDate(
@@ -1515,49 +2894,64 @@ function calculatePlanning() {
     );
 
   const tomorrow =
-    addDays(today, 1);
+    addDays(
+      today,
+      1
+    );
 
-  let workdaysFromTomorrow = 0;
+  let remainingDays =
+    0;
 
-  if (target && tomorrow <= target) {
+  if (
+    target &&
+    tomorrow <= target
+  ) {
 
-    workdaysFromTomorrow =
+    remainingDays =
       countWorkingDays(
         tomorrow,
         target,
         holidays,
         plan
       );
+
   }
 
-  let fromTomorrow = 0;
+  let fromTomorrow =
+    0;
 
   if (
     remaining > 0 &&
-    workdaysFromTomorrow > 0
+    remainingDays > 0
   ) {
 
     fromTomorrow =
       remaining /
-      workdaysFromTomorrow;
+      remainingDays;
+
   }
 
   return {
+
     total,
     completed,
     remaining,
-    workdaysToTarget,
-    dailyNeed,
-    weeklyNeed,
+
+    workdays,
+
+    daily,
+    weekly,
+
     sollToday,
-    fromTomorrow,
-    today
+    fromTomorrow
+
   };
+
 }
 
 
 /* =========================================================
-   JAHR AUSWAHL AUFBAUEN
+   YEARS
 ========================================================= */
 
 function populateYears() {
@@ -1569,126 +2963,49 @@ function populateYears() {
 
   select.innerHTML = "";
 
-  /*
-    Zeige 5 Jahre zurück und
-    10 Jahre in die Zukunft.
-  */
-
-  const firstYear =
-    CURRENT_YEAR - 5;
-
-  const lastYear =
-    CURRENT_YEAR + 10;
-
   for (
-    let year = firstYear;
-    year <= lastYear;
+    let year =
+      CURRENT_YEAR - 5;
+
+    year <=
+      CURRENT_YEAR + 10;
+
     year++
   ) {
 
     const option =
-      document.createElement("option");
+      document.createElement(
+        "option"
+      );
 
-    option.value = String(year);
-    option.textContent = String(year);
+    option.value =
+      String(year);
 
-    select.appendChild(option);
+    option.textContent =
+      String(year);
+
+    select.appendChild(
+      option
+    );
+
   }
 
   select.value =
-    String(appData.selectedYear);
-
-  /*
-    Sicherheitsprüfung:
-    Falls das gespeicherte Jahr
-    nicht vorhanden ist.
-  */
-
-  if (select.value !== String(appData.selectedYear)) {
-
-    appData.selectedYear =
-      CURRENT_YEAR;
-
-    select.value =
-      String(CURRENT_YEAR);
-  }
-}
-
-
-/* =========================================================
-   JAHR WECHSELN
-========================================================= */
-
-function changeYear() {
-
-  const select =
-    document.getElementById(
-      "yearSelect"
+    String(
+      appData.selectedYear
     );
 
-  const year =
-    Number(select.value);
-
-  if (!Number.isFinite(year)) {
-    return;
-  }
-
-  appData.selectedYear =
-    year;
-
-  /*
-    Plan für das Jahr erzeugen,
-    falls noch keiner existiert.
-  */
-
-  if (!appData.years[year]) {
-    appData.years[year] =
-      createEmptyYearPlan(year);
-  }
-
-  saveData();
-
-  loadFormFromPlan();
-
-  render();
 }
 
 
 /* =========================================================
-   BUNDESLAND WECHSELN
+   LOAD FORM
 ========================================================= */
 
-function changeState() {
-
-  const select =
-    document.getElementById(
-      "stateSelect"
-    );
-
-  const state =
-    select.value;
-
-  if (!STATES[state]) {
-    return;
-  }
-
-  appData.federalState =
-    state;
-
-  saveData();
-
-  render();
-}
-
-
-/* =========================================================
-   FORMULAR AUS PLAN LADEN
-========================================================= */
-
-function loadFormFromPlan() {
+function loadForm() {
 
   const plan =
-    getCurrentYearPlan();
+    getPlan();
 
   document.getElementById(
     "totalInput"
@@ -1710,25 +3027,88 @@ function loadFormFromPlan() {
   ).value =
     appData.federalState;
 
-  const today =
+
+  document.getElementById(
+    "entryDate"
+  ).value =
     dateToString(
       new Date()
     );
 
-  document.getElementById(
-    "entryDate"
-  ).value = today;
 }
 
 
 /* =========================================================
-   PLANFORMULAR SPEICHERN
+   YEAR CHANGE
 ========================================================= */
 
-function savePlanningFields() {
+function changeYear() {
+
+  const value =
+    Number(
+      document.getElementById(
+        "yearSelect"
+      ).value
+    );
+
+  if (!Number.isFinite(value)) {
+    return;
+  }
+
+  appData.selectedYear =
+    value;
+
+  if (
+    !appData.years[value]
+  ) {
+
+    appData.years[value] =
+      createYearPlan(value);
+
+  }
+
+  saveData();
+
+  loadForm();
+
+  render();
+
+}
+
+
+/* =========================================================
+   STATE CHANGE
+========================================================= */
+
+function changeState() {
+
+  const value =
+    document.getElementById(
+      "stateSelect"
+    ).value;
+
+  if (!STATES[value]) {
+    return;
+  }
+
+  appData.federalState =
+    value;
+
+  saveData();
+
+  render();
+
+}
+
+
+/* =========================================================
+   SAVE PLAN
+========================================================= */
+
+function savePlanFields() {
 
   const plan =
-    getCurrentYearPlan();
+    getPlan();
 
   const total =
     Number(
@@ -1737,35 +3117,140 @@ function savePlanningFields() {
       ).value
     );
 
-  const start =
+  plan.total =
+    Number.isFinite(total)
+      ? Math.max(0,total)
+      : 0;
+
+  plan.start =
     document.getElementById(
       "startInput"
     ).value;
 
-  const target =
+  plan.target =
     document.getElementById(
       "targetInput"
     ).value;
 
-  plan.total =
-    Number.isFinite(total) && total >= 0
-      ? total
-      : 0;
-
-  plan.start =
-    start || "";
-
-  plan.target =
-    target || "";
-
   saveData();
 
   render();
+
 }
 
 
 /* =========================================================
-   FEIERTAGE DARSTELLEN
+   SAVE ENTRY
+========================================================= */
+
+function saveEntry() {
+
+  const plan =
+    getPlan();
+
+  const date =
+    document.getElementById(
+      "entryDate"
+    ).value;
+
+  const amount =
+    Number(
+      document.getElementById(
+        "entryAmount"
+      ).value
+    );
+
+  if (!date) {
+
+    alert(
+      "Bitte ein Datum auswählen."
+    );
+
+    return;
+
+  }
+
+  if (
+    !Number.isFinite(amount) ||
+    amount < 0
+  ) {
+
+    alert(
+      "Bitte eine gültige Menge eingeben."
+    );
+
+    return;
+
+  }
+
+
+  const index =
+    plan.entries.findIndex(
+      entry =>
+        entry.date === date
+    );
+
+
+  if (amount === 0) {
+
+    if (index !== -1) {
+
+      plan.entries.splice(
+        index,
+        1
+      );
+
+    }
+
+  } else {
+
+    const entry = {
+
+      date,
+      amount
+
+    };
+
+
+    if (index !== -1) {
+
+      plan.entries[index] =
+        entry;
+
+    } else {
+
+      plan.entries.push(
+        entry
+      );
+
+    }
+
+  }
+
+
+  plan.entries.sort(
+    (a,b) =>
+      a.date.localeCompare(
+        b.date
+      )
+  );
+
+
+  saveData();
+
+
+  document.getElementById(
+    "entryAmount"
+  ).value = "";
+
+
+  render();
+
+}
+
+
+/* =========================================================
+   RENDER HOLIDAYS
 ========================================================= */
 
 function renderHolidays() {
@@ -1777,30 +3262,50 @@ function renderHolidays() {
 
   const holidays =
     getHolidays(
-      Number(appData.selectedYear),
+      Number(
+        appData.selectedYear
+      ),
       appData.federalState
     );
 
   list.innerHTML = "";
 
-  holidays.forEach(holiday => {
 
-    const li =
-      document.createElement("li");
+  holidays.forEach(
+    holiday => {
 
-    li.textContent =
-      `${formatDate(holiday.date)} – ${holiday.name}`;
+      const li =
+        document.createElement(
+          "li"
+        );
 
-    list.appendChild(li);
-  });
+      li.innerHTML = `
+
+        <span class="holiday-date">
+          ${formatDate(
+            holiday.date
+          )}
+        </span>
+
+        &nbsp;–&nbsp;
+
+        ${holiday.name}
+
+      `;
+
+      list.appendChild(li);
+
+    }
+  );
 
 
   renderRegionalOptions();
+
 }
 
 
 /* =========================================================
-   REGIONALE OPTIONEN
+   REGIONAL OPTIONS
 ========================================================= */
 
 function renderRegionalOptions() {
@@ -1812,32 +3317,60 @@ function renderRegionalOptions() {
 
   container.innerHTML = "";
 
+
   const state =
     appData.federalState;
+
 
   if (state === "BY") {
 
     container.innerHTML = `
-      <h3>Regionale Besonderheiten Bayern</h3>
 
-      <label class="check-row">
-        <input
-          type="checkbox"
-          id="bavariaAssumption"
-          ${appData.regional.bavariaAssumption ? "checked" : ""}
-        >
-        <span>Mariä Himmelfahrt berücksichtigen</span>
-      </label>
+      <div class="check-list">
 
-      <label class="check-row">
-        <input
-          type="checkbox"
-          id="augsburgPeaceFestival"
-          ${appData.regional.augsburgPeaceFestival ? "checked" : ""}
-        >
-        <span>Augsburger Friedensfest berücksichtigen</span>
-      </label>
+        <label class="check-row">
+
+          <input
+            type="checkbox"
+            id="bavariaAssumption"
+            ${
+              appData.regional
+                .bavariaAssumption
+                ? "checked"
+                : ""
+            }
+          >
+
+          <span>
+            Mariä Himmelfahrt berücksichtigen
+          </span>
+
+        </label>
+
+
+        <label class="check-row">
+
+          <input
+            type="checkbox"
+            id="augsburgPeaceFestival"
+            ${
+              appData.regional
+                .augsburgPeaceFestival
+                ? "checked"
+                : ""
+            }
+          >
+
+          <span>
+            Augsburger Friedensfest berücksichtigen
+          </span>
+
+        </label>
+
+      </div>
+
     `;
+
 
     document
       .getElementById(
@@ -1847,13 +3380,16 @@ function renderRegionalOptions() {
         "change",
         event => {
 
-          appData.regional.bavariaAssumption =
+          appData.regional
+            .bavariaAssumption =
             event.target.checked;
 
           saveData();
           render();
+
         }
       );
+
 
     document
       .getElementById(
@@ -1863,30 +3399,48 @@ function renderRegionalOptions() {
         "change",
         event => {
 
-          appData.regional.augsburgPeaceFestival =
+          appData.regional
+            .augsburgPeaceFestival =
             event.target.checked;
 
           saveData();
           render();
+
         }
       );
+
   }
 
 
   if (state === "SN") {
 
     container.innerHTML = `
-      <h3>Regionale Besonderheit Sachsen</h3>
 
-      <label class="check-row">
-        <input
-          type="checkbox"
-          id="saxonyCorpusChristi"
-          ${appData.regional.saxonyCorpusChristi ? "checked" : ""}
-        >
-        <span>Fronleichnam berücksichtigen</span>
-      </label>
+      <div class="check-list">
+
+        <label class="check-row">
+
+          <input
+            type="checkbox"
+            id="saxonyCorpusChristi"
+            ${
+              appData.regional
+                .saxonyCorpusChristi
+                ? "checked"
+                : ""
+            }
+          >
+
+          <span>
+            Fronleichnam berücksichtigen
+          </span>
+
+        </label>
+
+      </div>
+
     `;
+
 
     document
       .getElementById(
@@ -1896,30 +3450,48 @@ function renderRegionalOptions() {
         "change",
         event => {
 
-          appData.regional.saxonyCorpusChristi =
+          appData.regional
+            .saxonyCorpusChristi =
             event.target.checked;
 
           saveData();
           render();
+
         }
       );
+
   }
 
 
   if (state === "TH") {
 
     container.innerHTML = `
-      <h3>Regionale Besonderheit Thüringen</h3>
 
-      <label class="check-row">
-        <input
-          type="checkbox"
-          id="thuringiaCorpusChristi"
-          ${appData.regional.thuringiaCorpusChristi ? "checked" : ""}
-        >
-        <span>Fronleichnam berücksichtigen</span>
-      </label>
+      <div class="check-list">
+
+        <label class="check-row">
+
+          <input
+            type="checkbox"
+            id="thuringiaCorpusChristi"
+            ${
+              appData.regional
+                .thuringiaCorpusChristi
+                ? "checked"
+                : ""
+            }
+          >
+
+          <span>
+            Fronleichnam berücksichtigen
+          </span>
+
+        </label>
+
+      </div>
+
     `;
+
 
     document
       .getElementById(
@@ -1929,19 +3501,23 @@ function renderRegionalOptions() {
         "change",
         event => {
 
-          appData.regional.thuringiaCorpusChristi =
+          appData.regional
+            .thuringiaCorpusChristi =
             event.target.checked;
 
           saveData();
           render();
+
         }
       );
+
   }
+
 }
 
 
 /* =========================================================
-   FREIE TAGE
+   FREE DAYS
 ========================================================= */
 
 function renderFreeDays() {
@@ -1952,132 +3528,199 @@ function renderFreeDays() {
     );
 
   const plan =
-    getCurrentYearPlan();
+    getPlan();
 
   container.innerHTML = "";
 
-  if (plan.offs.length === 0) {
 
-    container.innerHTML =
-      `<p class="empty">Noch keine zusätzlichen freien Tage eingetragen.</p>`;
+  if (
+    plan.offs.length === 0
+  ) {
+
+    container.innerHTML = `
+
+      <div class="empty">
+        Noch keine zusätzlichen freien Tage eingetragen.
+      </div>
+
+    `;
 
     return;
+
   }
+
 
   plan.offs
     .sort()
-    .forEach(date => {
+    .forEach(
+      date => {
 
-      const row =
-        document.createElement("div");
+        const row =
+          document.createElement(
+            "div"
+          );
 
-      row.className =
-        "free-day-row";
+        row.className =
+          "free-day-row";
 
-      row.innerHTML = `
-        <input
-          type="date"
-          value="${date}"
-        >
 
-        <button
-          type="button"
-          class="danger"
-        >
-          Entfernen
-        </button>
-      `;
+        row.innerHTML = `
 
-      const input =
-        row.querySelector("input");
+          <input
+            type="date"
+            value="${date}"
+          >
 
-      const button =
-        row.querySelector("button");
+          <button
+            type="button"
+            class="btn btn-danger"
+          >
+            Entfernen
+          </button>
 
-      input.addEventListener(
-        "change",
-        () => {
+        `;
 
-          const index =
-            plan.offs.indexOf(date);
 
-          if (index !== -1) {
+        const input =
+          row.querySelector(
+            "input"
+          );
 
-            const newDate =
-              input.value;
+        const button =
+          row.querySelector(
+            "button"
+          );
+
+
+        input.addEventListener(
+          "change",
+          () => {
+
+            const index =
+              plan.offs.indexOf(
+                date
+              );
 
             if (
-              newDate &&
-              !plan.offs.includes(newDate)
+              index !== -1 &&
+              input.value &&
+              !plan.offs.includes(
+                input.value
+              )
             ) {
 
               plan.offs[index] =
-                newDate;
+                input.value;
+
             }
+
+            saveData();
+
+            render();
+
           }
+        );
 
-          saveData();
-          render();
-        }
-      );
 
-      button.addEventListener(
-        "click",
-        () => {
+        button.addEventListener(
+          "click",
+          () => {
 
-          plan.offs =
-            plan.offs.filter(
-              value => value !== date
-            );
+            plan.offs =
+              plan.offs.filter(
+                value =>
+                  value !== date
+              );
 
-          saveData();
-          render();
-        }
-      );
+            saveData();
 
-      container.appendChild(row);
-    });
+            render();
+
+          }
+        );
+
+
+        container.appendChild(
+          row
+        );
+
+      }
+    );
+
 }
 
 
 function addFreeDay() {
 
   const plan =
-    getCurrentYearPlan();
+    getPlan();
 
   const year =
-    Number(appData.selectedYear);
+    Number(
+      appData.selectedYear
+    );
 
-  const date =
+  let date =
     `${year}-01-01`;
 
-  if (!plan.offs.includes(date)) {
-    plan.offs.push(date);
+  let counter = 0;
+
+  while (
+    plan.offs.includes(date) &&
+    counter < 366
+  ) {
+
+    const next =
+      addDays(
+        stringToDate(date),
+        1
+      );
+
+    date =
+      dateToString(next);
+
+    counter++;
+
   }
+
+
+  if (
+    !plan.offs.includes(date)
+  ) {
+
+    plan.offs.push(
+      date
+    );
+
+  }
+
 
   saveData();
 
   render();
+
 }
 
 
 /* =========================================================
-   HISTORIE
+   HISTORY
 ========================================================= */
 
 function deleteEntry(date) {
 
   const plan =
-    getCurrentYearPlan();
+    getPlan();
 
   plan.entries =
     plan.entries.filter(
-      entry => entry.date !== date
+      entry =>
+        entry.date !== date
     );
 
   saveData();
 
   render();
+
 }
 
 
@@ -2089,184 +3732,262 @@ function renderHistory() {
     );
 
   const plan =
-    getCurrentYearPlan();
+    getPlan();
 
   const holidays =
     getHolidays(
-      Number(appData.selectedYear),
+      Number(
+        appData.selectedYear
+      ),
       appData.federalState
     );
 
+
   body.innerHTML = "";
 
-  if (plan.entries.length === 0) {
+
+  if (
+    plan.entries.length === 0
+  ) {
 
     body.innerHTML = `
+
       <tr>
-        <td colspan="5" class="empty">
+
+        <td
+          colspan="5"
+          class="empty"
+        >
           Noch keine Leistungen eingetragen.
         </td>
+
       </tr>
+
     `;
 
     return;
+
   }
 
-  const entries =
-    [...plan.entries]
-      .sort(
-        (a, b) =>
-          b.date.localeCompare(a.date)
-      );
 
-  entries.forEach(entry => {
+  [...plan.entries]
+    .sort(
+      (a,b) =>
+        b.date.localeCompare(
+          a.date
+        )
+    )
+    .forEach(
+      entry => {
 
-    const date =
-      stringToDate(entry.date);
+        const date =
+          stringToDate(
+            entry.date
+          );
 
-    const amount =
-      Number(entry.amount || 0);
+        const amount =
+          Number(
+            entry.amount || 0
+          );
 
-    const soll =
-      getSollBisDate(
-        plan,
-        holidays,
-        date
-      );
+        const soll =
+          getSollBisDate(
+            plan,
+            holidays,
+            date
+          );
 
-    const deviation =
-      amount - soll;
+        const deviation =
+          amount - soll;
 
-    const row =
-      document.createElement("tr");
 
-    let deviationClass =
-      "neutral";
+        const row =
+          document.createElement(
+            "tr"
+          );
 
-    if (deviation > 0.01) {
-      deviationClass = "good";
-    }
 
-    if (deviation < -0.01) {
-      deviationClass = "bad";
-    }
+        let className =
+          "";
 
-    row.innerHTML = `
-      <td>${formatDate(entry.date)}</td>
+        if (
+          deviation > 0
+        ) {
 
-      <td>
-        <strong>${amount.toFixed(0)}</strong>
-      </td>
+          className =
+            "positive";
 
-      <td>
-        ${soll.toFixed(1)}
-      </td>
+        } else if (
+          deviation < 0
+        ) {
 
-      <td>
-        <span class="status ${deviationClass}">
-          ${deviation >= 0 ? "+" : ""}
-          ${deviation.toFixed(1)}
-        </span>
-      </td>
+          className =
+            "negative";
 
-      <td>
-        <button
-          class="small danger"
-          type="button"
-        >
-          Löschen
-        </button>
-      </td>
-    `;
+        }
 
-    row
-      .querySelector("button")
-      .addEventListener(
-        "click",
-        () => deleteEntry(entry.date)
-      );
 
-    body.appendChild(row);
-  });
+        row.innerHTML = `
+
+          <td>
+            <strong>
+              ${formatDate(
+                entry.date
+              )}
+            </strong>
+          </td>
+
+          <td>
+            ${amount.toFixed(0)}
+          </td>
+
+          <td>
+            ${soll.toFixed(1)}
+          </td>
+
+          <td
+            class="${className}"
+          >
+            ${
+              deviation >= 0
+                ? "+"
+                : ""
+            }${deviation.toFixed(1)}
+          </td>
+
+          <td>
+
+            <button
+              class="btn btn-danger"
+              style="min-height:36px;padding:0 11px;"
+              type="button"
+            >
+              Löschen
+            </button>
+
+          </td>
+
+        `;
+
+
+        row
+          .querySelector(
+            "button"
+          )
+          .addEventListener(
+            "click",
+            () =>
+              deleteEntry(
+                entry.date
+              )
+          );
+
+
+        body.appendChild(
+          row
+        );
+
+      }
+    );
+
 }
 
 
 /* =========================================================
-   ÜBERSICHT DARSTELLEN
+   PLANNING RENDER
 ========================================================= */
 
 function renderPlanning() {
 
-  const calculation =
-    calculatePlanning();
+  const result =
+    calculate();
+
 
   document.getElementById(
     "statTotal"
   ).textContent =
-    calculation.total.toFixed(0);
+    result.total.toFixed(0);
+
 
   document.getElementById(
     "statDone"
   ).textContent =
-    calculation.completed.toFixed(0);
+    result.completed.toFixed(0);
+
 
   document.getElementById(
     "statRemaining"
   ).textContent =
-    calculation.remaining.toFixed(0);
+    result.remaining.toFixed(0);
+
 
   document.getElementById(
     "statWorkdays"
   ).textContent =
-    calculation.workdaysToTarget;
+    result.workdays;
+
 
   document.getElementById(
     "statDailyNeed"
   ).textContent =
-    calculation.dailyNeed.toFixed(1);
+    result.daily.toFixed(1);
+
 
   document.getElementById(
     "statWeeklyNeed"
   ).textContent =
-    calculation.weeklyNeed.toFixed(1);
+    result.weekly.toFixed(1);
+
 
   document.getElementById(
     "statSollToday"
   ).textContent =
-    calculation.sollToday.toFixed(1);
+    result.sollToday.toFixed(1);
+
 
   document.getElementById(
     "statFromTomorrow"
   ).textContent =
-    calculation.fromTomorrow.toFixed(1);
+    result.fromTomorrow.toFixed(1);
 
 
-  let percent = 0;
+  let percent =
+    0;
 
-  if (calculation.total > 0) {
+
+  if (
+    result.total > 0
+  ) {
 
     percent =
       (
-        calculation.completed /
-        calculation.total
+        result.completed /
+        result.total
       ) * 100;
+
   }
+
 
   percent =
     Math.max(
       0,
-      Math.min(100, percent)
+      Math.min(
+        100,
+        percent
+      )
     );
+
 
   document.getElementById(
     "progressBar"
   ).style.width =
     `${percent}%`;
 
+
   document.getElementById(
     "progressText"
   ).textContent =
-    `${percent.toFixed(1)} % abgeschlossen`;
+    `${percent.toFixed(1)} %`;
 
 
   const status =
@@ -2274,152 +3995,205 @@ function renderPlanning() {
       "planningStatus"
     );
 
+
   const plan =
-    getCurrentYearPlan();
+    getPlan();
+
 
   if (!plan.total) {
 
     status.className =
-      "info-box";
+      "status-card";
 
     status.innerHTML =
-      "Bitte zunächst die Gesamtmenge eingeben.";
+      "Bitte zunächst dein Jahresziel eingeben.";
 
     return;
+
   }
+
 
   if (!plan.target) {
 
     status.className =
-      "warning-box";
+      "status-card warning";
 
     status.innerHTML =
-      "Bitte ein gewünschtes Enddatum auswählen.";
+      "Bitte ein gewünschtes Enddatum festlegen.";
 
     return;
+
   }
 
+
   if (
-    calculation.workdaysToTarget <= 0
+    result.workdays <= 0
   ) {
 
     status.className =
-      "warning-box";
+      "status-card danger-box";
 
     status.innerHTML =
-      "Im ausgewählten Zeitraum stehen keine Arbeitstage zur Verfügung.";
+      "Für den gewählten Zeitraum wurden keine verfügbaren Arbeitstage gefunden.";
 
     return;
+
   }
 
+
   if (
-    calculation.completed >=
-    calculation.total
+    result.completed >=
+    result.total
   ) {
 
     status.className =
-      "success-box";
+      "status-card success";
 
     status.innerHTML = `
-      <strong>Jahresziel erreicht.</strong><br>
-      Die geplante Gesamtmenge von
-      ${calculation.total.toFixed(0)}
-      wurde bereits erreicht.
+
+      <strong>
+        Jahresziel erreicht.
+      </strong>
+
+      Du hast bereits
+      ${result.completed.toFixed(0)}
+      von
+      ${result.total.toFixed(0)}
+      Einheiten erledigt.
+
     `;
 
     return;
+
   }
 
 
   const difference =
-    calculation.completed -
-    calculation.sollToday;
+    result.completed -
+    result.sollToday;
 
 
-  if (difference >= 0) {
+  if (
+    difference >= 0
+  ) {
 
     status.className =
-      "success-box";
+      "status-card success";
 
     status.innerHTML = `
-      <strong>Du liegst aktuell im Plan.</strong><br>
-      Tatsächlich erledigt:
-      ${calculation.completed.toFixed(0)}<br>
-      Soll bis heute:
-      ${calculation.sollToday.toFixed(1)}<br>
-      Abweichung:
+
+      <strong>
+        Du liegst aktuell im Plan.
+      </strong>
+
+      <br>
+
+      Ist:
+      ${result.completed.toFixed(0)}
+
+      &nbsp;·&nbsp;
+
+      Soll:
+      ${result.sollToday.toFixed(1)}
+
+      &nbsp;·&nbsp;
+
+      Vorsprung:
       +${difference.toFixed(1)}
+
     `;
 
   } else {
 
     status.className =
-      "warning-box";
+      "status-card warning";
 
     status.innerHTML = `
-      <strong>Aktuell besteht eine Planabweichung.</strong><br>
-      Tatsächlich erledigt:
-      ${calculation.completed.toFixed(0)}<br>
-      Soll bis heute:
-      ${calculation.sollToday.toFixed(1)}<br>
-      Abweichung:
-      ${difference.toFixed(1)}<br><br>
 
-      Für die verbleibenden Arbeitstage werden
-      durchschnittlich
       <strong>
-        ${calculation.fromTomorrow.toFixed(1)}
+        Aktuell besteht ein Rückstand zum Soll.
       </strong>
-      Einheiten pro Arbeitstag benötigt.
+
+      <br>
+
+      Ist:
+      ${result.completed.toFixed(0)}
+
+      &nbsp;·&nbsp;
+
+      Soll:
+      ${result.sollToday.toFixed(1)}
+
+      &nbsp;·&nbsp;
+
+      Abweichung:
+      ${difference.toFixed(1)}
+
+      <br><br>
+
+      Ab morgen benötigst du durchschnittlich
+      <strong>
+        ${result.fromTomorrow.toFixed(1)}
+      </strong>
+      Einheiten pro Arbeitstag.
+
     `;
+
   }
+
 }
 
 
 /* =========================================================
-   AUSGEWÄHLTE PLANUNG
+   HEADER / SELECTION
 ========================================================= */
 
-function renderSelectedPlanning() {
-
-  const element =
-    document.getElementById(
-      "selectedPlanningText"
-    );
+function renderSelection() {
 
   const year =
-    Number(appData.selectedYear);
+    Number(
+      appData.selectedYear
+    );
 
   const state =
-    STATES[appData.federalState];
-
-  element.textContent =
-    `${year} – ${state}`;
-}
+    STATES[
+      appData.federalState
+    ];
 
 
-/* =========================================================
-   HAUPT-RENDER
-========================================================= */
+  document.getElementById(
+    "headerYear"
+  ).textContent =
+    year;
 
-function render() {
 
-  /*
-    Selects immer korrekt setzen.
-  */
+  document.getElementById(
+    "selectedPlanningText"
+  ).textContent =
+    `${year} · ${state}`;
+
 
   document.getElementById(
     "yearSelect"
   ).value =
-    String(appData.selectedYear);
+    String(year);
+
 
   document.getElementById(
     "stateSelect"
   ).value =
     appData.federalState;
 
+}
 
-  renderSelectedPlanning();
+
+/* =========================================================
+   RENDER
+========================================================= */
+
+function render() {
+
+  renderSelection();
 
   renderHolidays();
 
@@ -2428,11 +4202,12 @@ function render() {
   renderPlanning();
 
   renderHistory();
+
 }
 
 
 /* =========================================================
-   EVENT LISTENER
+   EVENTS
 ========================================================= */
 
 document
@@ -2461,7 +4236,7 @@ document
   )
   .addEventListener(
     "input",
-    savePlanningFields
+    savePlanFields
   );
 
 
@@ -2471,7 +4246,7 @@ document
   )
   .addEventListener(
     "change",
-    savePlanningFields
+    savePlanFields
   );
 
 
@@ -2481,7 +4256,7 @@ document
   )
   .addEventListener(
     "change",
-    savePlanningFields
+    savePlanFields
   );
 
 
@@ -2506,12 +4281,22 @@ document
 
 
 /* =========================================================
-   INITIALISIERUNG
+   FOOTER
+========================================================= */
+
+document.getElementById(
+  "footerYear"
+).textContent =
+  new Date().getFullYear();
+
+
+/* =========================================================
+   START
 ========================================================= */
 
 populateYears();
 
-loadFormFromPlan();
+loadForm();
 
 render();
 
@@ -2520,7 +4305,9 @@ render();
    SERVICE WORKER
 ========================================================= */
 
-if ("serviceWorker" in navigator) {
+if (
+  "serviceWorker" in navigator
+) {
 
   window.addEventListener(
     "load",
@@ -2528,15 +4315,17 @@ if ("serviceWorker" in navigator) {
 
       navigator.serviceWorker
         .register("./sw.js")
-        .catch(error => {
-          console.log(
-            "Service Worker Fehler:",
-            error
-          );
-        });
+        .catch(
+          error =>
+            console.log(
+              "Service Worker Fehler:",
+              error
+            )
+        );
 
     }
   );
+
 }
 
 </script>
