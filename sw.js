@@ -1,1 +1,1 @@
-const CACHE_NAME = "schornstein-planer-v7";
+const CACHE_NAME = "schornstein-planer-v8";
