@@ -1,4016 +1,3104 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Schornstein Planer</title>
-  <meta
-    name="description"
-    content="Digitale Arbeitsplanung für das Schornsteinfeger-Handwerk."
-  >
-  <meta name="theme-color" content="#20252b">
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="icons/icon-192.png">
-  <style>
-    :root {
-      --bg: #f3f5f7;
-      --card: #ffffff;
-      --dark: #22272d;
-      --dark-2: #2d343c;
-      --gold: #c79a42;
-      --gold-light: #f3e4c1;
-      --text: #242a30;
-      --muted: #6c757d;
-      --border: #e1e5e9;
-      --green: #16845b;
-      --green-light: #e8f6ef;
-      --red: #c84d4d;
-      --red-light: #fdecec;
-      --shadow: 0 8px 28px rgba(28, 35, 42, .07);
-      --radius: 17px;
-    }
-    * {
-      box-sizing: border-box;
-    }
-    html {
-      scroll-behavior: smooth;
-    }
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      font-family:
-        Inter,
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        sans-serif;
-      line-height: 1.5;
-    }
-    button,
-    input,
-    select,
-    textarea {
-      font: inherit;
-    }
-    button {
-      cursor: pointer;
-    }
-    .hidden {
-      display: none !important;
-    }
-    /* =====================================================
-       HEADER
-    ===================================================== */
-    .site-header {
-      position: sticky;
-      top: 0;
-      z-index: 5000;
-      background:
-        linear-gradient(
-          135deg,
-          #20252b 0%,
-          #282f36 100%
-        );
-      color: #fff;
-      box-shadow:
-        0 4px 20px rgba(0, 0, 0, .12);
-      overflow: visible !important;
-    }
-    .header-inner {
-      max-width: 1180px;
-      margin: 0 auto;
-      padding:
-        14px 20px 0;
-      overflow: visible !important;
-    }
-    .brand-row {
-      display: flex;
-      align-items: center;
-      gap: 13px;
-      min-height: 56px;
-    }
-    .brand-logo {
-      width: 48px;
-      height: 48px;
-      flex: 0 0 48px;
-      display: grid;
-      place-items: center;
-      border-radius: 13px;
-      background: var(--gold);
-      box-shadow:
-        0 5px 15px rgba(0, 0, 0, .2);
-    }
-    .brand-logo svg {
-      width: 36px;
-      height: 36px;
-    }
-    .brand-title {
-      margin: 0;
-      font-size: 1.35rem;
-      line-height: 1.1;
-      font-weight: 800;
-      letter-spacing: -.02em;
-    }
-    .brand-subtitle {
-      margin: 3px 0 0;
-      color: #c9cfd4;
-      font-size: .82rem;
-    }
-    .brand-badge {
-      margin-left: auto;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border:
-        1px solid rgba(255,255,255,.14);
-      background:
-        rgba(255,255,255,.06);
-      color: var(--gold-light);
-      font-size: .72rem;
-      font-weight: 750;
-      white-space: nowrap;
-    }
-    /* =====================================================
-       NAVIGATION
-    ===================================================== */
-    .main-nav {
-      position: relative;
-      z-index: 10000;
-      display: flex;
-      align-items: center;
-      gap: 3px;
-      margin-top: 12px;
-      min-height: 43px;
-      overflow: visible !important;
-    }
-    .nav-link,
-    .legal-button {
-      display: inline-flex;
-      align-items: center;
-      border: 0;
-      background: transparent;
-      color: #d7dce1;
-      text-decoration: none;
-      padding: 9px 11px;
-      border-radius: 9px 9px 0 0;
-      font-size: .86rem;
-      font-weight: 650;
-      white-space: nowrap;
-      transition:
-        background .18s ease,
-        color .18s ease;
-    }
-    .nav-link:hover,
-    .legal-button:hover,
-    .legal-button[aria-expanded="true"] {
-      background:
-        rgba(255,255,255,.08);
-      color: #fff;
-    }
-    /* =====================================================
-       RECHTLICHES DROPDOWN
-    ===================================================== */
-    .legal-menu {
-      position: relative;
-      margin-left: auto;
-      z-index: 99999;
-    }
-    .legal-button {
-      gap: 7px;
-    }
-    .legal-arrow {
-      font-size: .62rem;
-      transition:
-        transform .18s ease;
-    }
-    .legal-button[aria-expanded="true"]
-    .legal-arrow {
-      transform:
-        rotate(180deg);
-    }
-    .legal-dropdown {
-      position: absolute;
-      top: calc(100% + 4px);
-      right: 0;
-      width: 220px;
-      padding: 6px;
-      background: #fff;
-      border:
-        1px solid var(--border);
-      border-radius: 12px;
-      box-shadow:
-        0 15px 35px rgba(0,0,0,.22);
-      z-index: 999999;
-    }
-    .legal-dropdown[hidden] {
-      display: none !important;
-    }
-    .legal-dropdown button {
-      display: block;
-      width: 100%;
-      border: 0;
-      background: transparent;
-      color: var(--text);
-      text-align: left;
-      padding: 11px 12px;
-      border-radius: 8px;
-      font-size: .86rem;
-      font-weight: 600;
-    }
-    .legal-dropdown button:hover {
-      background: #f1f3f5;
-    }
-    /* =====================================================
-       MAIN
-    ===================================================== */
-    main {
-      position: relative;
-      z-index: 1;
-      max-width: 1180px;
-      margin: 0 auto;
-      padding:
-        27px 20px 50px;
-    }
-    .page {
-      display: none;
-    }
-    .page.active {
-      display: block;
-    }
-    /* =====================================================
-       HERO
-    ===================================================== */
-    .hero {
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      min-height: 220px;
-      margin-bottom: 21px;
-      padding: 31px;
-      background:
-        linear-gradient(
-          135deg,
-          #fff 0%,
-          #fafbfc 70%,
-          #f4ead5 100%
-        );
-      border:
-        1px solid var(--border);
-      border-radius: 22px;
-      box-shadow: var(--shadow);
-    }
-    .hero-content {
-      position: relative;
-      z-index: 2;
-      max-width: 680px;
-    }
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: var(--gold-light);
-      border:
-        1px solid #e4ca8d;
-      color: #7d5b20;
-      font-size: .73rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-    }
-    .hero h1 {
-      margin: 13px 0 8px;
-      font-size:
-        clamp(2rem, 4vw, 3rem);
-      line-height: 1.02;
-      letter-spacing: -.045em;
-    }
-    .hero p {
-      margin: 0;
-      color: var(--muted);
-      max-width: 630px;
-      font-size: 1rem;
-    }
-    /* =====================================================
-       CHIMNEY ILLUSTRATION
-    ===================================================== */
-    .chimney-art {
-      position: absolute;
-      right: 35px;
-      bottom: 0;
-      width: 260px;
-      height: 200px;
-      opacity: .95;
-    }
-    .roof {
-      position: absolute;
-      right: -10px;
-      bottom: 0;
-      width: 295px;
-      height: 112px;
-      background: #3b434b;
-      clip-path:
-        polygon(
-          0 100%,
-          54% 0,
-          100% 100%
-        );
-    }
-    .roof-line {
-      position: absolute;
-      right: 19px;
-      bottom: 16px;
-      width: 220px;
-      height: 5px;
-      background: var(--gold);
-      transform:
-        rotate(-18deg);
-      transform-origin:
-        right center;
-      border-radius: 5px;
-    }
-    .chimney {
-      position: absolute;
-      right: 102px;
-      bottom: 70px;
-      width: 45px;
-      height: 100px;
-      background: #777f86;
-      border:
-        4px solid #5d656c;
-      border-bottom: 0;
-    }
-    .chimney::before {
-      content: "";
-      position: absolute;
-      left: -8px;
-      top: -12px;
-      width: 57px;
-      height: 13px;
-      background: #42494f;
-      border-radius: 3px;
-    }
-    .smoke {
-      position: absolute;
-      right: 108px;
-      bottom: 176px;
-      width: 25px;
-      height: 25px;
-      border-radius: 50%;
-      background: #b9bec3;
-      box-shadow:
-        16px -13px 0 -3px #c4c8cc,
-        33px -27px 0 -7px #d1d4d7;
-      opacity: .8;
-    }
-    /* =====================================================
-       CARDS
-    ===================================================== */
-    .card {
-      background: var(--card);
-      border:
-        1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 23px;
-      margin-bottom: 19px;
-    }
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 15px;
-      margin-bottom: 19px;
-    }
-    .card-header h2,
-    .card-header h3 {
-      margin: 0;
-      line-height: 1.2;
-      letter-spacing: -.02em;
-    }
-    .card-header p {
-      margin: 5px 0 0;
-      color: var(--muted);
-      font-size: .88rem;
-    }
-    .section-icon {
-      width: 39px;
-      height: 39px;
-      flex: 0 0 39px;
-      display: grid;
-      place-items: center;
-      border-radius: 11px;
-      background: #f0f2f4;
-      font-size: 1.1rem;
-    }
-    /* =====================================================
-       FORMULARE
-    ===================================================== */
-    .form-grid {
-      display: grid;
-      grid-template-columns:
-        repeat(4, 1fr);
-      gap: 15px;
-    }
-    .form-grid.two {
-      grid-template-columns:
-        repeat(2, 1fr);
-    }
-    .field {
-      min-width: 0;
-    }
-    .field label {
-      display: block;
-      margin-bottom: 6px;
-      color: #4f5962;
-      font-size: .79rem;
-      font-weight: 750;
-    }
-    .field input,
-    .field select,
-    .field textarea {
-      width: 100%;
-      padding: 10px 11px;
-      border:
-        1px solid #d5dbe0;
-      border-radius: 10px;
-      background: #fff;
-      color: var(--text);
-      outline: none;
-      transition:
-        border-color .18s ease,
-        box-shadow .18s ease;
-    }
-    .field input:focus,
-    .field select:focus,
-    .field textarea:focus {
-      border-color: var(--gold);
-      box-shadow:
-        0 0 0 3px
-        rgba(199,154,66,.13);
-    }
-    .field textarea {
-      min-height: 90px;
-      resize: vertical;
-    }
-    .form-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 9px;
-      margin-top: 17px;
-      flex-wrap: wrap;
-    }
-    .btn {
-      border: 0;
-      border-radius: 10px;
-      padding: 10px 15px;
-      font-weight: 750;
-      transition:
-        transform .16s ease,
-        background .16s ease;
-    }
-    .btn:hover {
-      transform:
-        translateY(-1px);
-    }
-    .btn-primary {
-      background: var(--dark);
-      color: #fff;
-    }
-    .btn-primary:hover {
-      background: #15191d;
-    }
-    .btn-gold {
-      background: var(--gold);
-      color: #1e180d;
-    }
-    .btn-gold:hover {
-      background: #d4a953;
-    }
-    .btn-light {
-      background: #edf0f2;
-      color: var(--dark);
-    }
-    .btn-light:hover {
-      background: #e1e5e8;
-    }
-    .btn-danger {
-      background: #fff0f0;
-      color: #a73737;
-    }
-    .btn-small {
-      padding: 6px 9px;
-      font-size: .76rem;
-    }
-    /* =====================================================
-       PREVIEW
-    ===================================================== */
-    .preview-box {
-      margin-top: 18px;
-      padding: 14px;
-      border:
-        1px dashed #d2b26b;
-      border-radius: 12px;
-      background: #fffaf0;
-      color: #5e4a22;
-      font-size: .88rem;
-    }
-    /* =====================================================
-       LEISTUNG
-    ===================================================== */
-    .performance-card {
-      border-top:
-        4px solid var(--gold);
-    }
-    .performance-grid {
-      display: grid;
-      grid-template-columns:
-        1fr 1fr 1.35fr auto;
-      gap: 11px;
-      align-items: end;
-    }
-    .quick-info {
-      display: grid;
-      grid-template-columns:
-        repeat(3, 1fr);
-      gap: 9px;
-      margin-top: 16px;
-    }
-    .quick-info-item {
-      padding: 12px;
-      background: #f7f8f9;
-      border:
-        1px solid var(--border);
-      border-radius: 11px;
-    }
-    .quick-info-item span {
-      display: block;
-      margin-bottom: 2px;
-      color: var(--muted);
-      font-size: .73rem;
-    }
-    .quick-info-item strong {
-      font-size: .98rem;
-    }
-    /* =====================================================
-       STATUS
-    ===================================================== */
-    .status-card {
-      color: #fff;
-      border: 0;
-      overflow: hidden;
-      background:
-        radial-gradient(
-          circle at 90% 10%,
-          rgba(199,154,66,.18),
-          transparent 32%
-        ),
-        linear-gradient(
-          135deg,
-          #22272d,
-          #30383f
-        );
-    }
-    .status-card .card-header p {
-      color: #bfc6cc;
-    }
-    .status-main {
-      display: grid;
-      grid-template-columns:
-        1.15fr .85fr;
-      gap: 17px;
-    }
-    .status-primary {
-      padding: 20px;
-      background:
-        rgba(255,255,255,.055);
-      border:
-        1px solid rgba(255,255,255,.08);
-      border-radius: 15px;
-    }
-    .status-label {
-      color: #c7cdd2;
-      font-size: .79rem;
-    }
-    .status-number {
-      margin: 5px 0;
-      font-size:
-        clamp(2rem, 5vw, 3.35rem);
-      font-weight: 850;
-      line-height: 1;
-      letter-spacing: -.04em;
-    }
-    .status-sub {
-      color: #aeb6bd;
-      font-size: .83rem;
-    }
-    .status-pill {
-      display: inline-flex;
-      align-items: center;
-      margin-top: 14px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-size: .76rem;
-      font-weight: 800;
-    }
-    .status-pill.good {
-      background:
-        rgba(22,132,91,.18);
-      color: #7be0b3;
-    }
-    .status-pill.bad {
-      background:
-        rgba(200,77,77,.18);
-      color: #ff9e9e;
-    }
-    .status-pill.neutral {
-      background:
-        rgba(199,154,66,.17);
-      color: #f0ce83;
-    }
-    .status-stats {
-      display: grid;
-      grid-template-columns:
-        1fr 1fr;
-      gap: 9px;
-    }
-    .dark-stat {
-      padding: 15px;
-      background:
-        rgba(255,255,255,.055);
-      border:
-        1px solid rgba(255,255,255,.08);
-      border-radius: 13px;
-    }
-    .dark-stat span {
-      display: block;
-      color: #aeb6bd;
-      font-size: .71rem;
-    }
-    .dark-stat strong {
-      display: block;
-      margin-top: 3px;
-      font-size: 1.2rem;
-    }
-    .progress-wrap {
-      margin-top: 17px;
-    }
-    .progress-track {
-      height: 10px;
-      background:
-        rgba(255,255,255,.1);
-      border-radius: 999px;
-      overflow: hidden;
-    }
-    .progress-bar {
-      width: 0;
-      height: 100%;
-      background:
-        linear-gradient(
-          90deg,
-          var(--gold),
-          #f1d17f
-        );
-      border-radius: inherit;
-      transition:
-        width .35s ease;
-    }
-    .progress-caption {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      margin-top: 6px;
-      color: #b9c0c5;
-      font-size: .73rem;
-    }
-    /* =====================================================
-       STATISTIK
-    ===================================================== */
-    .stats-grid {
-      display: grid;
-      grid-template-columns:
-        repeat(4, 1fr);
-      gap: 14px;
-      margin-bottom: 19px;
-    }
-    .stat-card {
-      padding: 17px;
-      background: #fff;
-      border:
-        1px solid var(--border);
-      border-radius: 15px;
-      box-shadow: var(--shadow);
-    }
-    .stat-icon {
-      margin-bottom: 8px;
-    }
-    .stat-card span {
-      display: block;
-      color: var(--muted);
-      font-size: .75rem;
-    }
-    .stat-card strong {
-      display: block;
-      margin-top: 2px;
-      font-size: 1.35rem;
-    }
-    /* =====================================================
-       ZWEI SPALTEN
-    ===================================================== */
-    .two-column {
-      display: grid;
-      grid-template-columns:
-        1fr 1fr;
-      gap: 19px;
-    }
-    /* =====================================================
-       LISTEN
-    ===================================================== */
-    .list {
-      display: grid;
-      gap: 8px;
-    }
-    .list-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 11px 12px;
-      background: #f7f8f9;
-      border:
-        1px solid var(--border);
-      border-radius: 10px;
-    }
-    .list-item-main {
-      min-width: 0;
-    }
-    .list-item-title {
-      font-weight: 750;
-    }
-    .list-item-meta {
-      margin-top: 2px;
-      color: var(--muted);
-      font-size: .75rem;
-    }
-    .empty {
-      padding: 20px 10px;
-      background: #f7f8f9;
-      border:
-        1px dashed var(--border);
-      border-radius: 10px;
-      color: var(--muted);
-      text-align: center;
-    }
-    /* =====================================================
-       FEIERTAGE
-    ===================================================== */
-    .holiday-list {
-      display: grid;
-      gap: 7px;
-    }
-    .holiday-row {
-      display: grid;
-      grid-template-columns:
-        95px 1fr;
-      gap: 10px;
-      padding: 9px 11px;
-      background: #f7f8f9;
-      border:
-        1px solid var(--border);
-      border-radius: 9px;
-      font-size: .86rem;
-    }
-    .holiday-date {
-      color: #805d1e;
-      font-weight: 800;
-    }
-    /* =====================================================
-       RECHTLICHE SEITEN
-    ===================================================== */
-    .legal-page {
-      max-width: 900px;
-      margin: 0 auto;
-    }
-    .legal-page h1 {
-      margin-top: 0;
-    }
-    .legal-page h2 {
-      margin-top: 27px;
-      font-size: 1.12rem;
-    }
-    .legal-page p,
-    .legal-page li {
-      color: #515a62;
-    }
-    .back-button {
-      margin-bottom: 16px;
-    }
-    /* =====================================================
-       FOOTER
-    ===================================================== */
-    footer {
-      background: #20252b;
-      color: #abb4bb;
-      padding: 27px 20px;
-    }
-    .footer-inner {
-      max-width: 1180px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
-    .footer-title {
-      color: #fff;
-      font-weight: 750;
-    }
-    .footer-links {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-    }
-    .footer-links button {
-      border: 0;
-      background: transparent;
-      color: #cbd1d6;
-      padding: 6px 8px;
-      border-radius: 7px;
-    }
-    .footer-links button:hover {
-      background:
-        rgba(255,255,255,.07);
-      color: #fff;
-    }
-    /* =====================================================
-       TABLET
-    ===================================================== */
-    @media (max-width: 950px) {
-      .form-grid {
-        grid-template-columns:
-          repeat(2, 1fr);
-      }
-      .performance-grid {
-        grid-template-columns:
-          1fr 1fr;
-      }
-      .performance-grid .btn {
-        width: 100%;
-      }
-      .stats-grid {
-        grid-template-columns:
-          repeat(2, 1fr);
-      }
-      .status-main {
-        grid-template-columns: 1fr;
-      }
-      .chimney-art {
-        opacity: .22;
-      }
-    }
-    /* =====================================================
-       MOBILE / HOCHFORMAT
-       ===================================================== */
-    @media (max-width: 720px) {
-      /*
-        Ganz wichtig:
-        Der Header bleibt sichtbar und darf nichts
-        abschneiden.
-      */
-      .site-header {
-        position: relative;
-        z-index: 5000;
-        overflow: visible !important;
-      }
-      .header-inner {
-        padding:
-          12px 12px 0;
-        overflow: visible !important;
-      }
-      .brand-row {
-        min-height: 50px;
-      }
-      .brand-logo {
-        width: 42px;
-        height: 42px;
-        flex-basis: 42px;
-      }
-      .brand-logo svg {
-        width: 32px;
-        height: 32px;
-      }
-      .brand-title {
-        font-size: 1.08rem;
-      }
-      .brand-subtitle {
-        font-size: .7rem;
-      }
-      .brand-badge {
-        display: none;
-      }
-      /*
-        Navigation darf umbrechen.
-      */
-      .main-nav {
-        position: relative;
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 3px;
-        margin-top: 9px;
-        min-height: 0;
-        padding-bottom: 7px;
-        overflow: visible !important;
-      }
-      .nav-link,
-      .legal-button {
-        padding:
-          8px 8px;
-        font-size: .76rem;
-      }
-      /*
-        Das Menü selbst ist auf Mobile
-        nicht mehr an die rechte Kante
-        des Buttons gebunden.
-      */
-      .legal-menu {
-        position: static;
-        margin-left: 0;
-        z-index: 99999;
-      }
-      /*
-        Entscheidend:
-        Das Untermenü erstreckt sich
-        innerhalb des verfügbaren Bildschirms.
-      */
-      .legal-dropdown {
-        position: absolute;
-        top: 100%;
-        left: 12px;
-        right: 12px;
-        width: auto;
-        margin-top: 5px;
-        padding: 7px;
-        background: #fff;
-        border:
-          1px solid var(--border);
-        border-radius: 13px;
-        box-shadow:
-          0 18px 40px
-          rgba(0,0,0,.25);
-        z-index: 999999;
-      }
-      .legal-dropdown button {
-        padding:
-          12px;
-        font-size: .88rem;
-      }
-      main {
-        padding:
-          18px 12px 35px;
-        z-index: 1;
-      }
-      .hero {
-        min-height: 245px;
-        padding:
-          23px 19px;
-      }
-      .hero h1 {
-        font-size: 1.95rem;
-      }
-      .hero p {
-        font-size: .91rem;
-      }
-      .chimney-art {
-        right: -45px;
-        bottom: -10px;
-        transform:
-          scale(.78);
-        transform-origin:
-          bottom right;
-      }
-      .card {
-        padding: 18px;
-      }
-      .form-grid,
-      .form-grid.two {
-        grid-template-columns: 1fr;
-      }
-      .performance-grid {
-        grid-template-columns: 1fr;
-      }
-      .performance-grid .btn {
-        width: 100%;
-      }
-      .quick-info {
-        grid-template-columns: 1fr;
-      }
-      .stats-grid {
-        grid-template-columns:
-          1fr 1fr;
-      }
-      .two-column {
-        grid-template-columns: 1fr;
-      }
-      .holiday-row {
-        grid-template-columns: 1fr;
-        gap: 2px;
-      }
-    }
-    /* =====================================================
-       SEHR SCHMALES HOCHFORMAT
-    ===================================================== */
-    @media (max-width: 430px) {
-      .brand-title {
-        font-size: 1rem;
-      }
-      .brand-subtitle {
-        font-size: .65rem;
-      }
-      .main-nav {
-        gap: 2px;
-      }
-      .nav-link,
-      .legal-button {
-        font-size: .72rem;
-        padding:
-          7px;
-      }
-      /*
-        Fast die gesamte Bildschirmbreite
-        für das Untermenü.
-      */
-      .legal-dropdown {
-        left: 8px;
-        right: 8px;
-        width: auto;
-      }
-      .stats-grid {
-        grid-template-columns: 1fr;
-      }
-      .status-stats {
-        grid-template-columns: 1fr;
-      }
-      .hero {
-        min-height: 270px;
-      }
-      .form-actions {
-        flex-direction: column;
-      }
-      .form-actions .btn {
-        width: 100%;
-      }
-      .list-item {
-        align-items: flex-start;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#22272d">
+
+<title>Schornstein Planer</title>
+<meta name="description" content="Schornstein Planer zur automatischen Jahresplanung, Leistungsübersicht und Fortschrittskontrolle.">
+
+<link rel="manifest" href="./manifest.webmanifest">
+
+<style>
+:root{
+  --bg:#f3f5f7;
+  --card:#fff;
+  --dark:#22272d;
+  --dark-2:#2d343c;
+  --gold:#c79a42;
+  --gold-light:#f3e4c1;
+  --text:#242a30;
+  --muted:#6c757d;
+  --border:#e1e5e9;
+  --green:#16845b;
+  --green-light:#e8f6ef;
+  --red:#c84d4d;
+  --red-light:#fdecec;
+  --shadow:0 8px 28px rgba(28,35,42,.07);
+  --radius:17px;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+html{
+  scroll-behavior:smooth;
+}
+
+body{
+  margin:0;
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.55;
+}
+
+button,
+input,
+select,
+textarea{
+  font:inherit;
+}
+
+button{
+  cursor:pointer;
+}
+
+a{
+  color:inherit;
+}
+
+.hidden{
+  display:none!important;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.site-header{
+  position:sticky;
+  top:0;
+  z-index:5000;
+  background:var(--dark);
+  color:#fff;
+  box-shadow:0 5px 20px rgba(0,0,0,.16);
+  overflow:visible;
+}
+
+.header-inner{
+  max-width:1180px;
+  margin:0 auto;
+  padding:12px 20px;
+  display:flex;
+  align-items:center;
+  gap:20px;
+  overflow:visible;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  text-decoration:none;
+  min-width:0;
+}
+
+.brand-logo{
+  width:44px;
+  height:44px;
+  flex:0 0 44px;
+}
+
+.brand-text{
+  min-width:0;
+}
+
+.brand-title{
+  font-size:1rem;
+  font-weight:800;
+  letter-spacing:.02em;
+  line-height:1.15;
+}
+
+.brand-subtitle{
+  color:#aeb5bc;
+  font-size:.73rem;
+  margin-top:2px;
+}
+
+.main-nav{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  gap:4px;
+  overflow:visible;
+}
+
+.main-nav a,
+.legal-button{
+  border:0;
+  background:transparent;
+  color:#e9edf0;
+  text-decoration:none;
+  padding:9px 11px;
+  border-radius:9px;
+  font-size:.82rem;
+  font-weight:700;
+  transition:.18s ease;
+  white-space:nowrap;
+}
+
+.main-nav a:hover,
+.legal-button:hover{
+  background:rgba(255,255,255,.09);
+  color:#fff;
+}
+
+.legal-menu{
+  position:relative;
+  margin-left:2px;
+  z-index:99999;
+}
+
+.legal-button{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+.legal-arrow{
+  font-size:.65rem;
+  color:var(--gold);
+  transition:transform .18s ease;
+}
+
+.legal-button[aria-expanded="true"] .legal-arrow{
+  transform:rotate(180deg);
+}
+
+.legal-dropdown{
+  position:absolute;
+  top:calc(100% + 4px);
+  right:0;
+  width:220px;
+  padding:7px;
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:13px;
+  box-shadow:0 15px 35px rgba(20,25,30,.2);
+  z-index:999999;
+}
+
+.legal-dropdown[hidden]{
+  display:none!important;
+}
+
+.legal-dropdown button{
+  display:block;
+  width:100%;
+  padding:10px 11px;
+  border:0;
+  border-radius:8px;
+  background:transparent;
+  color:var(--text);
+  text-align:left;
+  font-weight:650;
+  font-size:.86rem;
+}
+
+.legal-dropdown button:hover{
+  background:#f3f5f7;
+  color:var(--dark);
+}
+
+/* =========================
+   HERO
+========================= */
+
+.hero{
+  background:
+    radial-gradient(circle at 78% 30%,rgba(199,154,66,.16),transparent 25%),
+    linear-gradient(135deg,#252b31,#343c45);
+  color:#fff;
+}
+
+.hero-inner{
+  max-width:1180px;
+  margin:0 auto;
+  min-height:310px;
+  padding:48px 20px 42px;
+  display:grid;
+  grid-template-columns:minmax(0,1.3fr) minmax(260px,.7fr);
+  align-items:center;
+  gap:35px;
+}
+
+.hero-copy{
+  max-width:720px;
+}
+
+.hero-eyebrow{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  margin-bottom:13px;
+  color:var(--gold-light);
+  font-size:.76rem;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+
+.hero-eyebrow::before{
+  content:"";
+  width:26px;
+  height:2px;
+  background:var(--gold);
+  border-radius:999px;
+}
+
+.hero h1{
+  margin:0;
+  font-size:clamp(2rem,4vw,3.35rem);
+  line-height:1.06;
+  letter-spacing:-.035em;
+}
+
+.hero h1 span{
+  display:block;
+  color:var(--gold-light);
+}
+
+.hero p{
+  max-width:680px;
+  margin:18px 0 0;
+  color:#d8dde1;
+  font-size:1rem;
+}
+
+.hero-visual{
+  min-height:210px;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.roof{
+  position:relative;
+  width:220px;
+  height:145px;
+}
+
+.roof-main{
+  position:absolute;
+  left:15px;
+  bottom:15px;
+  width:190px;
+  height:95px;
+  background:#1c2126;
+  clip-path:polygon(50% 0,100% 65%,100% 100%,0 100%,0 65%);
+  border-radius:5px 5px 10px 10px;
+  box-shadow:0 14px 22px rgba(0,0,0,.18);
+}
+
+.roof-edge{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:14px;
+  height:10px;
+  background:var(--gold);
+  border-radius:3px;
+}
+
+.chimney{
+  position:absolute;
+  right:43px;
+  top:18px;
+  width:43px;
+  height:90px;
+  background:#555d65;
+  border-radius:3px 3px 1px 1px;
+  box-shadow:inset 0 -7px rgba(0,0,0,.12);
+}
+
+.chimney-top{
+  position:absolute;
+  top:-7px;
+  left:-5px;
+  width:53px;
+  height:9px;
+  border-radius:2px;
+  background:#22272d;
+}
+
+.smoke{
+  position:absolute;
+  right:48px;
+  top:-5px;
+  width:15px;
+  height:15px;
+  border-radius:50%;
+  background:rgba(230,234,237,.4);
+  box-shadow:
+    18px -13px 0 2px rgba(230,234,237,.27),
+    4px -30px 0 5px rgba(230,234,237,.18);
+}
+
+/* =========================
+   LAYOUT
+========================= */
+
+main{
+  max-width:1180px;
+  margin:0 auto;
+  padding:30px 20px 60px;
+}
+
+.section{
+  margin-bottom:28px;
+  scroll-margin-top:100px;
+}
+
+.section-heading{
+  margin-bottom:14px;
+}
+
+.section-heading h2{
+  margin:0;
+  font-size:1.35rem;
+  color:var(--dark);
+}
+
+.section-heading p{
+  margin:4px 0 0;
+  color:var(--muted);
+  font-size:.88rem;
+}
+
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+}
+
+.card-body{
+  padding:22px;
+}
+
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:16px;
+}
+
+.form-group{
+  min-width:0;
+}
+
+.form-group.full{
+  grid-column:1/-1;
+}
+
+.form-group label{
+  display:block;
+  margin-bottom:6px;
+  font-size:.78rem;
+  font-weight:800;
+  color:#4d555d;
+}
+
+input,
+select,
+textarea{
+  width:100%;
+  border:1px solid #d5dbe0;
+  background:#fff;
+  color:var(--text);
+  border-radius:11px;
+  padding:11px 12px;
+  outline:none;
+  transition:border-color .18s ease,box-shadow .18s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus{
+  border-color:var(--gold);
+  box-shadow:0 0 0 3px rgba(199,154,66,.14);
+}
+
+textarea{
+  min-height:90px;
+  resize:vertical;
+}
+
+.input-hint{
+  margin-top:5px;
+  color:var(--muted);
+  font-size:.74rem;
+}
+
+.form-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:9px;
+  margin-top:20px;
+}
+
+.btn{
+  border:0;
+  border-radius:10px;
+  padding:11px 15px;
+  font-weight:800;
+  font-size:.84rem;
+  transition:.18s ease;
+}
+
+.btn-primary{
+  background:var(--dark);
+  color:#fff;
+}
+
+.btn-primary:hover{
+  background:#11161a;
+  transform:translateY(-1px);
+}
+
+.btn-gold{
+  background:var(--gold);
+  color:#fff;
+}
+
+.btn-gold:hover{
+  background:#b78934;
+  transform:translateY(-1px);
+}
+
+.btn-secondary{
+  background:#edf0f2;
+  color:#3f474e;
+}
+
+.btn-secondary:hover{
+  background:#e1e5e8;
+}
+
+.btn-danger{
+  background:var(--red-light);
+  color:var(--red);
+}
+
+/* =========================
+   STATUS
+========================= */
+
+.status-card{
+  overflow:hidden;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  background:var(--card);
+  box-shadow:var(--shadow);
+}
+
+.status-top{
+  padding:24px;
+  background:linear-gradient(135deg,#292f35,#343c44);
+  color:#fff;
+}
+
+.status-top-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:15px;
+}
+
+.status-title{
+  margin:0;
+  font-size:1.25rem;
+}
+
+.status-subtitle{
+  margin:4px 0 0;
+  color:#bfc6cb;
+  font-size:.84rem;
+}
+
+.status-pill{
+  flex:0 0 auto;
+  padding:7px 11px;
+  border-radius:999px;
+  font-size:.75rem;
+  font-weight:850;
+  background:rgba(255,255,255,.1);
+  color:#fff;
+}
+
+.status-pill.good{
+  background:rgba(22,132,91,.25);
+  color:#a9e6cb;
+}
+
+.status-pill.bad{
+  background:rgba(200,77,77,.25);
+  color:#ffb5b5;
+}
+
+.status-pill.neutral{
+  background:rgba(199,154,66,.18);
+  color:var(--gold-light);
+}
+
+.status-numbers{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+  margin-top:22px;
+}
+
+.status-number{
+  padding:15px;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:12px;
+}
+
+.status-number-label{
+  color:#bfc6cb;
+  font-size:.72rem;
+  font-weight:700;
+}
+
+.status-number-value{
+  margin-top:4px;
+  font-size:1.35rem;
+  font-weight:850;
+}
+
+.progress-wrap{
+  margin-top:20px;
+}
+
+.progress-track{
+  width:100%;
+  height:12px;
+  overflow:hidden;
+  background:rgba(255,255,255,.12);
+  border-radius:999px;
+}
+
+.progress-bar{
+  width:0;
+  height:100%;
+  background:var(--gold);
+  border-radius:999px;
+  transition:width .25s ease;
+}
+
+.progress-info{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  margin-top:7px;
+  color:#cbd1d5;
+  font-size:.74rem;
+}
+
+.status-bottom{
+  padding:20px 24px;
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+}
+
+.status-detail{
+  padding:14px;
+  border:1px solid var(--border);
+  border-radius:12px;
+}
+
+.status-detail-label{
+  color:var(--muted);
+  font-size:.72rem;
+  font-weight:750;
+}
+
+.status-detail-value{
+  margin-top:3px;
+  color:var(--dark);
+  font-size:1rem;
+  font-weight:850;
+}
+
+/* =========================
+   STATS
+========================= */
+
+.stats-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:13px;
+}
+
+.stat-card{
+  padding:18px;
+  border:1px solid var(--border);
+  border-radius:14px;
+  background:#fff;
+  box-shadow:var(--shadow);
+}
+
+.stat-label{
+  color:var(--muted);
+  font-size:.73rem;
+  font-weight:750;
+}
+
+.stat-value{
+  margin-top:5px;
+  color:var(--dark);
+  font-size:1.45rem;
+  font-weight:850;
+}
+
+/* =========================
+   TWO COLUMN
+========================= */
+
+.two-column{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+}
+
+/* =========================
+   QUICK INFO
+========================= */
+
+.quick-info{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-top:17px;
+}
+
+.quick-item{
+  padding:12px;
+  border:1px solid var(--border);
+  background:#fafbfc;
+  border-radius:11px;
+}
+
+.quick-label{
+  color:var(--muted);
+  font-size:.7rem;
+  font-weight:750;
+}
+
+.quick-value{
+  margin-top:3px;
+  font-size:1rem;
+  font-weight:850;
+}
+
+/* =========================
+   LISTS
+========================= */
+
+.list{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.list-empty{
+  padding:20px;
+  border:1px dashed #ccd2d7;
+  border-radius:12px;
+  color:var(--muted);
+  text-align:center;
+  font-size:.84rem;
+}
+
+.list-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 13px;
+  border:1px solid var(--border);
+  border-radius:11px;
+  background:#fff;
+}
+
+.list-main{
+  min-width:0;
+}
+
+.list-title{
+  font-weight:800;
+  font-size:.85rem;
+}
+
+.list-meta{
+  color:var(--muted);
+  font-size:.74rem;
+}
+
+.list-value{
+  flex:0 0 auto;
+  font-weight:850;
+  color:var(--dark);
+}
+
+.list-delete{
+  flex:0 0 auto;
+  border:0;
+  background:var(--red-light);
+  color:var(--red);
+  border-radius:8px;
+  padding:6px 8px;
+  font-size:.72rem;
+  font-weight:800;
+}
+
+/* =========================
+   HOLIDAYS
+========================= */
+
+.holiday-list{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:8px;
+}
+
+.holiday-item{
+  padding:11px 12px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:#fafbfc;
+}
+
+.holiday-date{
+  color:var(--gold);
+  font-size:.73rem;
+  font-weight:850;
+}
+
+.holiday-name{
+  margin-top:2px;
+  font-size:.81rem;
+  font-weight:750;
+}
+
+/* =========================
+   LEGAL
+========================= */
+
+.legal-page{
+  display:none;
+}
+
+.legal-page.active{
+  display:block;
+}
+
+.legal-content{
+  max-width:900px;
+  margin:0 auto;
+}
+
+.legal-content h1{
+  margin:0 0 18px;
+  color:var(--dark);
+  font-size:1.8rem;
+}
+
+.legal-content h2{
+  margin:25px 0 7px;
+  color:var(--dark);
+  font-size:1.1rem;
+}
+
+.legal-content p,
+.legal-content li{
+  color:#4f575f;
+  font-size:.9rem;
+}
+
+.legal-content ul{
+  padding-left:20px;
+}
+
+.back-button{
+  margin-bottom:17px;
+}
+
+/* =========================
+   FOOTER
+========================= */
+
+footer{
+  background:var(--dark);
+  color:#aeb5bc;
+  padding:28px 20px;
+}
+
+.footer-inner{
+  max-width:1180px;
+  margin:0 auto;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:20px;
+}
+
+.footer-copy{
+  font-size:.78rem;
+}
+
+.footer-links{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+.footer-links button{
+  border:0;
+  background:transparent;
+  color:#cbd1d5;
+  padding:4px 6px;
+  font-size:.76rem;
+}
+
+.footer-links button:hover{
+  color:#fff;
+}
+
+.donation-button{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  margin-top:12px;
+  padding:9px 14px;
+  border:1px solid rgba(199,154,66,.55);
+  border-radius:10px;
+  background:rgba(199,154,66,.12);
+  color:var(--gold-light);
+  text-decoration:none;
+  font-size:.82rem;
+  font-weight:750;
+  transition:background .18s ease,border-color .18s ease,transform .16s ease;
+}
+
+.donation-button:hover{
+  background:rgba(199,154,66,.22);
+  border-color:var(--gold);
+  transform:translateY(-1px);
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media(max-width:900px){
+  .hero-inner{
+    grid-template-columns:1fr;
+  }
+
+  .hero-visual{
+    display:none;
+  }
+
+  .stats-grid{
+    grid-template-columns:repeat(2,1fr);
+  }
+}
+
+@media(max-width:720px){
+  .site-header{
+    position:relative;
+    z-index:5000;
+    overflow:visible!important;
+  }
+
+  .header-inner{
+    flex-wrap:wrap;
+    overflow:visible!important;
+    padding:11px 12px;
+    gap:10px;
+  }
+
+  .brand{
+    width:100%;
+  }
+
+  .main-nav{
+    width:100%;
+    position:relative;
+    display:flex;
+    flex-wrap:wrap;
+    gap:4px;
+    overflow:visible!important;
+  }
+
+  .main-nav a,
+  .legal-button{
+    padding:8px 9px;
+    font-size:.76rem;
+  }
+
+  .legal-menu{
+    position:static;
+    margin-left:0;
+    z-index:99999;
+  }
+
+  .legal-dropdown{
+    position:absolute;
+    top:100%;
+    left:12px;
+    right:12px;
+    width:auto;
+    margin-top:5px;
+    z-index:999999;
+  }
+
+  .hero-inner{
+    padding:36px 16px;
+  }
+
+  main{
+    padding:22px 14px 45px;
+  }
+
+  .form-grid,
+  .two-column{
+    grid-template-columns:1fr;
+  }
+
+  .form-group.full{
+    grid-column:auto;
+  }
+
+  .status-numbers{
+    grid-template-columns:1fr;
+  }
+
+  .status-bottom{
+    grid-template-columns:1fr;
+    padding:16px;
+  }
+
+  .status-top{
+    padding:18px;
+  }
+
+  .quick-info{
+    grid-template-columns:1fr;
+  }
+
+  .holiday-list{
+    grid-template-columns:1fr;
+  }
+
+  .footer-inner{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+}
+
+@media(max-width:430px){
+  .legal-dropdown{
+    left:8px;
+    right:8px;
+    width:auto;
+  }
+
+  .stats-grid{
+    grid-template-columns:1fr;
+  }
+
+  .card-body{
+    padding:17px;
+  }
+
+  .hero h1{
+    font-size:2rem;
+  }
+
+  .status-top-head{
+    flex-direction:column;
+  }
+}
+</style>
 </head>
+
 <body>
-<!-- =====================================================
-     HEADER
-===================================================== -->
+
 <header class="site-header">
   <div class="header-inner">
-    <div class="brand-row">
-      <div
-        class="brand-logo"
-        aria-hidden="true"
-      >
-        <svg
-          viewBox="0 0 64 64"
-          fill="none"
-        >
-          <path
-            d="M7 38L32 17L57 38"
-            stroke="#20252b"
-            stroke-width="6"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-          <path
-            d="M15 37V52H49V37"
-            stroke="#20252b"
-            stroke-width="6"
-            stroke-linejoin="round"
-          />
-          <path
-            d="M35 26V10H45V30"
-            stroke="#20252b"
-            stroke-width="5"
-            stroke-linejoin="round"
-          />
-          <path
-            d="M33 10H47"
-            stroke="#20252b"
-            stroke-width="5"
-            stroke-linecap="round"
-          />
-        </svg>
-      </div>
-      <div>
-        <h1 class="brand-title">
-          Schornstein Planer
-        </h1>
-        <p class="brand-subtitle">
-          Digitale Arbeitsplanung für das Schornsteinfeger-Handwerk
-        </p>
-      </div>
-      <div class="brand-badge">
-        SCHORNSTEINFEGER
-      </div>
-    </div>
-    <!-- =================================================
-         NAVIGATION
-    ================================================== -->
-    <nav
-      class="main-nav"
-      aria-label="Hauptnavigation"
-    >
-      <a
-        class="nav-link"
-        href="#start"
-      >
-        Planung
-      </a>
-      <a
-        class="nav-link"
-        href="#leistung"
-      >
-        Leistung
-      </a>
-      <a
-        class="nav-link"
-        href="#uebersicht"
-      >
-        Übersicht
-      </a>
-      <a
-        class="nav-link"
-        href="#feiertage"
-      >
-        Feiertage
-      </a>
-      <a
-        class="nav-link"
-        href="#historie"
-      >
-        Historie
-      </a>
-      <!-- RECHTLICHES -->
-      <div
-        class="legal-menu"
-        id="legalMenu"
-      >
+
+    <a href="#home" class="brand" data-home-link>
+      <svg class="brand-logo" viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M8 39 32 18l24 21v16H8Z" fill="#2d343c"/>
+        <path d="M5 40 32 14l27 26-4 4L32 20 9 44Z" fill="#c79a42"/>
+        <path d="M38 22h12v22H38z" fill="#59616a"/>
+        <path d="M36 20h16v4H36z" fill="#22272d"/>
+        <path d="M15 43h18v12H15z" fill="#f3f5f7"/>
+        <path d="M18 46h12v9H18z" fill="#22272d"/>
+      </svg>
+
+      <span class="brand-text">
+        <span class="brand-title">Schornstein Planer</span>
+        <span class="brand-subtitle">Jahresplanung für Schornsteinfeger</span>
+      </span>
+    </a>
+
+    <nav class="main-nav" aria-label="Hauptnavigation">
+      <a href="#planung">Planung</a>
+      <a href="#leistung">Leistung</a>
+      <a href="#uebersicht">Übersicht</a>
+      <a href="#feiertage">Feiertage</a>
+      <a href="#historie">Historie</a>
+
+      <div class="legal-menu" id="legalMenu">
         <button
           class="legal-button"
           id="legalButton"
           type="button"
           aria-expanded="false"
-          aria-haspopup="true"
-        >
+          aria-haspopup="true">
           Rechtliches
-          <span
-            class="legal-arrow"
-            aria-hidden="true"
-          >
-            ▼
-          </span>
+          <span class="legal-arrow" aria-hidden="true">▼</span>
         </button>
-        <div
-          class="legal-dropdown"
-          id="legalDropdown"
-          hidden
-        >
-          <button
-            type="button"
-            data-legal="impressum"
-          >
-            Impressum
-          </button>
-          <button
-            type="button"
-            data-legal="datenschutz"
-          >
-            Datenschutz
-          </button>
-          <button
-            type="button"
-            data-legal="hinweise"
-          >
-            Rechtliche Hinweise
-          </button>
+
+        <div class="legal-dropdown" id="legalDropdown" hidden>
+          <button type="button" data-legal="impressum">Impressum</button>
+          <button type="button" data-legal="datenschutz">Datenschutz</button>
+          <button type="button" data-legal="hinweise">Rechtliche Hinweise</button>
         </div>
       </div>
     </nav>
+
   </div>
 </header>
-<!-- =====================================================
-     MAIN
-===================================================== -->
-<main>
-  <!-- ===================================================
-       STARTSEITE
-  ==================================================== -->
-  <section
-    id="homePage"
-    class="page active"
-  >
-    <!-- HERO -->
-    <section
-      class="hero"
-      id="start"
-    >
-      <div class="hero-content">
-        <span class="eyebrow">
-          🔥 Schornsteinfeger-Handwerk
-        </span>
-        <h1>
-          Deine Jahresplanung.<br>
-          Deine Leistung. Dein Überblick.
-        </h1>
-        <p>
-          Plane deine Jahresmenge automatisch,
-          berücksichtige Feiertage und freie Tage
-          und sieh jederzeit, ob du im Soll liegst.
-        </p>
-      </div>
-      <div
-        class="chimney-art"
-        aria-hidden="true"
-      >
+
+<!-- =========================
+     STARTSEITE
+========================= -->
+
+<div id="homePage">
+
+<section class="hero">
+  <div class="hero-inner">
+
+    <div class="hero-copy">
+      <div class="hero-eyebrow">Schornsteinfeger Planung</div>
+
+      <h1>
+        Deine Jahresplanung.
+        <span>Deine Leistung. Dein Überblick.</span>
+      </h1>
+
+      <p>
+        Plane deine Jahresmenge automatisch, berücksichtige Feiertage
+        und freie Tage und sieh jederzeit, ob du im Soll liegst.
+      </p>
+    </div>
+
+    <div class="hero-visual" aria-hidden="true">
+      <div class="roof">
         <div class="smoke"></div>
-        <div class="chimney"></div>
-        <div class="roof"></div>
-        <div class="roof-line"></div>
-      </div>
-    </section>
-    <!-- =================================================
-         PLANUNG
-    ================================================== -->
-    <section
-      class="card"
-      id="planung"
-    >
-      <div class="card-header">
-        <div>
-          <h2>
-            Jahresplanung
-          </h2>
-          <p>
-            Lege die Eckdaten für deine Jahresplanung fest.
-          </p>
+        <div class="chimney">
+          <div class="chimney-top"></div>
         </div>
-        <div class="section-icon">
-          📅
-        </div>
+        <div class="roof-main"></div>
+        <div class="roof-edge"></div>
       </div>
+    </div>
+
+  </div>
+</section>
+
+<main>
+
+<!-- PLANUNG -->
+
+<section class="section" id="planung">
+  <div class="section-heading">
+    <h2>Jahresplanung</h2>
+    <p>Lege die Grundlage für deine automatische Jahresplanung fest.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+
       <div class="form-grid">
-        <div class="field">
-          <label for="year">
-            Planungsjahr
-          </label>
-          <select id="year"></select>
+
+        <div class="form-group">
+          <label for="planYear">Planungsjahr</label>
+          <select id="planYear"></select>
         </div>
-        <div class="field">
-          <label for="state">
-            Bundesland
-          </label>
-          <select id="state">
-            <option value="BW">
-              Baden-Württemberg
-            </option>
-            <option value="BY">
-              Bayern
-            </option>
-            <option value="BE">
-              Berlin
-            </option>
-            <option value="BB">
-              Brandenburg
-            </option>
-            <option value="HB">
-              Bremen
-            </option>
-            <option value="HH">
-              Hamburg
-            </option>
-            <option value="HE">
-              Hessen
-            </option>
-            <option value="MV">
-              Mecklenburg-Vorpommern
-            </option>
-            <option value="NI">
-              Niedersachsen
-            </option>
-            <option value="NW">
-              Nordrhein-Westfalen
-            </option>
-            <option value="RP">
-              Rheinland-Pfalz
-            </option>
-            <option value="SL">
-              Saarland
-            </option>
-            <option value="SN">
-              Sachsen
-            </option>
-            <option value="ST">
-              Sachsen-Anhalt
-            </option>
-            <option value="SH">
-              Schleswig-Holstein
-            </option>
-            <option value="TH">
-              Thüringen
-            </option>
+
+        <div class="form-group">
+          <label for="planState">Bundesland</label>
+          <select id="planState">
+            <option value="BW">Baden-Württemberg</option>
+            <option value="BY">Bayern</option>
+            <option value="BE">Berlin</option>
+            <option value="BB">Brandenburg</option>
+            <option value="HB">Bremen</option>
+            <option value="HH">Hamburg</option>
+            <option value="HE">Hessen</option>
+            <option value="MV">Mecklenburg-Vorpommern</option>
+            <option value="NI">Niedersachsen</option>
+            <option value="NW">Nordrhein-Westfalen</option>
+            <option value="RP">Rheinland-Pfalz</option>
+            <option value="SL">Saarland</option>
+            <option value="SN">Sachsen</option>
+            <option value="ST">Sachsen-Anhalt</option>
+            <option value="SH">Schleswig-Holstein</option>
+            <option value="TH">Thüringen</option>
           </select>
         </div>
-        <div class="field">
-          <label for="totalAmount">
-            Jahresmenge
-          </label>
-          <input
-            id="totalAmount"
-            type="number"
-            min="0"
-            step="0.01"
-            placeholder="z. B. 1200"
-          >
+
+        <div class="form-group">
+          <label for="totalAmount">Gesamtmenge des Jahres</label>
+          <input id="totalAmount" type="number" min="0" step="0.01" placeholder="z. B. 850">
+          <div class="input-hint">Die gesamte zu erledigende Jahresmenge.</div>
         </div>
-        <div class="field">
-          <label for="startDate">
-            Startdatum
-          </label>
-          <input
-            id="startDate"
-            type="date"
-          >
+
+        <div class="form-group">
+          <label for="startDate">Startdatum</label>
+          <input id="startDate" type="date">
         </div>
-        <div class="field">
-          <label for="targetDate">
-            Gewünschtes Enddatum
-          </label>
-          <input
-            id="targetDate"
-            type="date"
-          >
+
+        <div class="form-group">
+          <label for="targetDate">Gewünschtes Enddatum</label>
+          <input id="targetDate" type="date">
+          <div class="input-hint">Bis zu diesem Datum wird die Jahresmenge automatisch verteilt.</div>
         </div>
+
       </div>
+
       <div class="form-actions">
-        <button
-          class="btn btn-light"
-          id="resetPlan"
-          type="button"
-        >
-          Zurücksetzen
-        </button>
-        <button
-          class="btn btn-gold"
-          id="previewPlan"
-          type="button"
-        >
-          Planung berechnen
-        </button>
-        <button
-          class="btn btn-primary"
-          id="savePlan"
-          type="button"
-        >
+        <button class="btn btn-primary" id="savePlan" type="button">
           Planung speichern
         </button>
+
+        <button class="btn btn-gold" id="previewPlan" type="button">
+          Planung berechnen
+        </button>
+
+        <button class="btn btn-secondary" id="resetPlan" type="button">
+          Eingaben zurücksetzen
+        </button>
       </div>
-      <div
-        id="planPreview"
-        class="preview-box hidden"
-      ></div>
-    </section>
-    <!-- =================================================
-         LEISTUNG
-    ================================================== -->
-    <section
-      class="card performance-card"
-      id="leistung"
-    >
-      <div class="card-header">
-        <div>
-          <h2>
-            Erledigte Leistung eintragen
-          </h2>
-          <p>
-            Trage ein, was du tatsächlich an einem bestimmten Tag geschafft hast.
-          </p>
+
+    </div>
+  </div>
+</section>
+
+<!-- LEISTUNG -->
+
+<section class="section" id="leistung">
+  <div class="section-heading">
+    <h2>Erledigte Leistung eintragen</h2>
+    <p>Trage ein, was du tatsächlich an einem Tag geschafft hast.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+
+      <div class="form-grid">
+
+        <div class="form-group">
+          <label for="entryDate">Datum</label>
+          <input id="entryDate" type="date">
         </div>
-        <div class="section-icon">
-          🧹
-        </div>
-      </div>
-      <div class="performance-grid">
-        <div class="field">
-          <label for="entryDate">
-            Datum
-          </label>
-          <input
-            id="entryDate"
-            type="date"
-          >
-        </div>
-        <div class="field">
-          <label for="entryAmount">
-            Erledigte Menge
-          </label>
+
+        <div class="form-group">
+          <label for="entryAmount">Erledigte Menge</label>
           <input
             id="entryAmount"
             type="text"
             inputmode="decimal"
-            placeholder="z. B. 35,5"
-          >
+            placeholder="z. B. 35,5">
+          <div class="input-hint">Komma oder Punkt als Dezimaltrennzeichen möglich.</div>
         </div>
-        <div class="field">
-          <label for="entryNote">
-            Notiz (optional)
-          </label>
-          <input
+
+        <div class="form-group full">
+          <label for="entryNote">Notiz</label>
+          <textarea
             id="entryNote"
-            type="text"
-            placeholder="z. B. Bezirk Nord"
-          >
+            placeholder="Optional: z. B. besonders hoher Arbeitsaufwand"></textarea>
         </div>
-        <button
-          class="btn btn-primary"
-          id="savePerformance"
-          type="button"
-        >
+
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-gold" id="savePerformance" type="button">
           Leistung speichern
         </button>
       </div>
+
       <div class="quick-info">
-        <div class="quick-info-item">
-          <span>
-            Jahresmenge
-          </span>
-          <strong id="quickTotal">
-            –
-          </strong>
+        <div class="quick-item">
+          <div class="quick-label">Jahresmenge</div>
+          <div class="quick-value" id="quickTotal">0</div>
         </div>
-        <div class="quick-info-item">
-          <span>
-            Bisher erledigt
-          </span>
-          <strong id="quickDone">
-            –
-          </strong>
+
+        <div class="quick-item">
+          <div class="quick-label">Bisher erledigt</div>
+          <div class="quick-value" id="quickDone">0</div>
         </div>
-        <div class="quick-info-item">
-          <span>
-            Restmenge
-          </span>
-          <strong id="quickRemaining">
-            –
-          </strong>
+
+        <div class="quick-item">
+          <div class="quick-label">Noch offen</div>
+          <div class="quick-value" id="quickRemaining">0</div>
         </div>
       </div>
-    </section>
-    <!-- =================================================
-         AKTUELLER STAND
-    ================================================== -->
-    <section
-      class="card status-card"
-      id="uebersicht"
-    >
-      <div class="card-header">
-        <div>
-          <h2>
-            Aktueller Stand
-          </h2>
-          <p>
-            Automatischer Vergleich zwischen Soll und tatsächlicher Leistung.
-          </p>
-        </div>
-        <div class="section-icon">
-          📊
-        </div>
-      </div>
-      <div class="status-main">
-        <div class="status-primary">
-          <div class="status-label">
-            Tatsächlich bisher erledigt
-          </div>
-          <div
-            class="status-number"
-            id="statusActual"
-          >
-            0
-          </div>
-          <div
-            class="status-sub"
-            id="statusTarget"
-          >
-            Soll bis heute: 0
-          </div>
-          <div
-            id="statusPill"
-            class="status-pill neutral"
-          >
-            Noch nicht gestartet
-          </div>
-          <div class="progress-wrap">
-            <div class="progress-track">
-              <div
-                class="progress-bar"
-                id="progressBar"
-              ></div>
-            </div>
-            <div class="progress-caption">
-              <span id="progressText">
-                0 % der Jahresmenge
-              </span>
-              <span id="progressTargetText">
-                Ziel: 0
-              </span>
-            </div>
-          </div>
-        </div>
-        <div class="status-stats">
-          <div class="dark-stat">
-            <span>
-              Soll bis heute
-            </span>
-            <strong id="statusSoll">
-              0
-            </strong>
-          </div>
-          <div class="dark-stat">
-            <span>
-              Differenz zum Soll
-            </span>
-            <strong id="statusDifference">
-              0
-            </strong>
-          </div>
-          <div class="dark-stat">
-            <span>
-              Restmenge
-            </span>
-            <strong id="statusRemaining">
-              0
-            </strong>
-          </div>
-          <div class="dark-stat">
-            <span>
-              Benötigt ab morgen
-            </span>
-            <strong id="statusTomorrow">
-              0
-            </strong>
-          </div>
-        </div>
-      </div>
-    </section>
-    <!-- =================================================
-         STATISTIK
-    ================================================== -->
-    <section class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon">
-          🎯
-        </div>
-        <span>
-          Jahresmenge
-        </span>
-        <strong id="statTotal">
-          0
-        </strong>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">
-          🧹
-        </div>
-        <span>
-          Erledigt
-        </span>
-        <strong id="statDone">
-          0
-        </strong>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">
-          📅
-        </div>
-        <span>
-          Arbeitstage gesamt
-        </span>
-        <strong id="statWorkdays">
-          0
-        </strong>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">
-          ⚙️
-        </div>
-        <span>
-          Durchschnitt pro Arbeitstag
-        </span>
-        <strong id="statAverage">
-          0
-        </strong>
-      </div>
-    </section>
-    <!-- =================================================
-         FREIE TAGE / FEIERTAGE
-    ================================================== -->
-    <div class="two-column">
-      <section class="card">
-        <div class="card-header">
-          <div>
-            <h2>
-              Zusätzliche freie Tage
-            </h2>
-            <p>
-              Diese Tage werden automatisch aus den verfügbaren Arbeitstagen herausgerechnet.
-            </p>
-          </div>
-          <div class="section-icon">
-            🏖️
-          </div>
-        </div>
-        <div class="form-grid two">
-          <div class="field">
-            <label for="freeDate">
-              Freier Tag
-            </label>
-            <input
-              id="freeDate"
-              type="date"
-            >
-          </div>
-          <div class="field">
-            <label for="freeNote">
-              Bezeichnung
-            </label>
-            <input
-              id="freeNote"
-              type="text"
-              placeholder="z. B. Urlaub"
-            >
-          </div>
-        </div>
-        <div class="form-actions">
-          <button
-            class="btn btn-primary"
-            id="addFreeDay"
-            type="button"
-          >
-            Freien Tag hinzufügen
-          </button>
-        </div>
-        <div
-          id="freeDaysList"
-          class="list"
-          style="margin-top:15px;"
-        ></div>
-      </section>
-      <section
-        class="card"
-        id="feiertage"
-      >
-        <div class="card-header">
-          <div>
-            <h2>
-              Feiertage
-            </h2>
-            <p id="holidayStateLabel">
-              Automatisch für das gewählte Bundesland.
-            </p>
-          </div>
-          <div class="section-icon">
-            🎉
-          </div>
-        </div>
-        <div
-          id="holidayList"
-          class="holiday-list"
-        ></div>
-      </section>
-    </div>
-    <!-- =================================================
-         HISTORIE
-    ================================================== -->
-    <section
-      class="card"
-      id="historie"
-    >
-      <div class="card-header">
-        <div>
-          <h2>
-            Leistungshistorie
-          </h2>
-          <p>
-            Alle eingetragenen tatsächlichen Leistungen.
-          </p>
-        </div>
-        <div class="section-icon">
-          📋
-        </div>
-      </div>
-      <div
-        id="historyList"
-        class="list"
-      ></div>
-    </section>
-  </section>
-  <!-- ===================================================
-       IMPRESSUM
-  ==================================================== -->
-  <section
-    id="impressumPage"
-    class="page legal-page"
-  >
-    <button
-      class="btn btn-light back-button"
-      type="button"
-      data-back-home
-    >
-      ← Zurück zur Startseite
-    </button>
-    <section class="card">
-      <h1>
-        Impressum
-      </h1>
-      <h2>
-        Angaben gemäß § 5 DDG
-      </h2>
-      <p>
-        Marc-André Stein-Bakowski<br>
-        Kirchstraße 7<br>
-        65589 Hadamar<br>
-        Deutschland
-      </p>
-      <h2>
-        Kontakt
-      </h2>
-      <p>
-        E-Mail:
-        <a href="mailto:kontakt@schornstein-planer.de">
-          kontakt@schornstein-planer.de
-        </a>
-      </p>
-      <h2>
-        Betreiber und Verantwortlicher 
-        für dieses Online-Angebot:
-      </h2>
-      <p>
-        Marc-André Stein-Bakowski
-      </p>
-    </section>
-  </section>
-  <!-- ===================================================
-       DATENSCHUTZ
-  ==================================================== -->
-  <section
-    id="datenschutzPage"
-    class="page legal-page"
-  >
-    <button
-      class="btn btn-light back-button"
-      type="button"
-      data-back-home
-    >
-      ← Zurück zur Startseite
-    </button>
-    <section class="card">
-      <h1>
-        Datenschutzerklärung
-      </h1>
-      <h2>
-        1. Allgemeine Hinweise
-      </h2>
-      <p>
-        Der Schutz deiner Daten ist wichtig.
-        Diese Anwendung ist als lokale Planungsanwendung konzipiert.
-      </p>
-      <h2>
-        2. Speicherung der Planungsdaten
-      </h2>
-      <p>
-        Die von dir eingegebenen Planungsdaten, freien Tage und
-        Leistungseinträge werden grundsätzlich lokal im Browser gespeichert.
-        Hierfür wird der lokale Speicher des Browsers (localStorage) verwendet.
-      </p>
-      <p>
-        Die in den Planer eingegebenen Planungs- und Leistungsdaten werden 
-        ausschließlich lokal im Browser des Nutzers gespeichert und nicht durch 
-        die Anwendung an den Betreiber übermittelt.
-      </p>
-      <h2>
-        3. E-Mail
-      </h2>
-      <p>
-        Wenn du die im Impressum angegebene E-Mail-Adresse verwendest,
-        gelten die Datenschutzbestimmungen des von dir verwendeten
-        E-Mail-Dienstes.
-      </p>
-      <h2>
-        4. Verantwortlicher
-      </h2>
-      <p>
-        Marc-André Stein-Bakowski<br>
-        Kirchstraße 7<br>
-        65589 Hadamar<br>
-        Deutschland
-      </p>
-      <p>
-        E-Mail:
-        <a href="mailto:kontakt@schornstein-planer.de">
-          kontakt@schornstein-planer.de
-        </a>
-      </p>
-    </section>
-  </section>
-  <!-- ===================================================
-       RECHTLICHE HINWEISE
-  ==================================================== -->
-  <section
-    id="hinweisePage"
-    class="page legal-page"
-  >
-    <button
-      class="btn btn-light back-button"
-      type="button"
-      data-back-home
-    >
-      ← Zurück zur Startseite
-    </button>
-    <section class="card">
-      <h1>
-        Rechtliche Hinweise
-      </h1>
-      <h2>
-        1. Zweck der Anwendung
-      </h2>
-      <p>
-        Der Schornstein Planer dient der organisatorischen Unterstützung
-        bei der Planung und Dokumentation von Arbeitsleistungen.
-      </p>
-      <h2>
-        2. Keine verbindliche Arbeits- oder Rechtsberatung
-      </h2>
-      <p>
-        Die automatisch berechneten Arbeitstage, Sollwerte und Planungen
-        stellen eine technische Planungshilfe dar.
-        Sie ersetzen keine individuelle arbeitsrechtliche,
-        betriebliche oder fachliche Beratung.
-      </p>
-      <h2>
-        3. Feiertage
-      </h2>
-      <p>
-        Die Anwendung verwendet hinterlegte Feiertagsregeln für das
-        ausgewählte Bundesland. Vor einer verbindlichen betrieblichen
-        Planung sollten die für den konkreten Betrieb geltenden
-        gesetzlichen und betrieblichen Regelungen geprüft werden.
-      </p>
-      <h2>
-        4. Verantwortung für Eingaben
-      </h2>
-      <p>
-        Für die Richtigkeit der eingegebenen Mengen, Termine und
-        freien Tage ist der Nutzer selbst verantwortlich.
-      </p>
-      <h2>
-        5. Technische Berechnung
-      </h2>
-      <p>
-        Die Berechnung dient ausschließlich der Planungsunterstützung.
-        Bei besonderen betrieblichen Rahmenbedingungen können zusätzliche
-        Anpassungen erforderlich sein.
-      </p>
-    </section>
-  </section>
-</main>
-<!-- =====================================================
-     FOOTER
-===================================================== -->
-<footer>
-  <div class="footer-inner">
-    <div>
-      <div class="footer-title">
-        Schornstein Planer
-      </div>
-      <div>
-        Digitale Arbeitsplanung für das Schornsteinfeger-Handwerk
-      </div>
-    </div>
-    <div class="footer-links">
-      <button
-        type="button"
-        data-legal="impressum"
-      >
-        Impressum
-      </button>
-      <button
-        type="button"
-        data-legal="datenschutz"
-      >
-        Datenschutz
-      </button>
-      <button
-        type="button"
-        data-legal="hinweise"
-      >
-        Rechtliche Hinweise
-      </button>
+
     </div>
   </div>
+</section>
+
+<!-- ÜBERSICHT -->
+
+<section class="section" id="uebersicht">
+  <div class="section-heading">
+    <h2>Aktueller Stand</h2>
+    <p>Hier siehst du sofort, ob du im Soll liegst.</p>
+  </div>
+
+  <div class="status-card">
+
+    <div class="status-top">
+
+      <div class="status-top-head">
+        <div>
+          <h3 class="status-title">Dein aktueller Fortschritt</h3>
+          <p class="status-subtitle">
+            Tatsächliche Leistung im Vergleich zum errechneten Soll.
+          </p>
+        </div>
+
+        <div class="status-pill neutral" id="statusPill">
+          Noch nicht gestartet
+        </div>
+      </div>
+
+      <div class="status-numbers">
+
+        <div class="status-number">
+          <div class="status-number-label">Tatsächlich bisher</div>
+          <div class="status-number-value" id="statusActual">0</div>
+        </div>
+
+        <div class="status-number">
+          <div class="status-number-label">Soll bis heute</div>
+          <div class="status-number-value" id="statusTarget">0</div>
+        </div>
+
+        <div class="status-number">
+          <div class="status-number-label">Differenz zum Soll</div>
+          <div class="status-number-value" id="statusDifference">0</div>
+        </div>
+
+      </div>
+
+      <div class="progress-wrap">
+
+        <div class="progress-track">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div class="progress-info">
+          <span id="progressText">0 % erledigt</span>
+          <span id="progressTargetText">0 % vom Soll</span>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="status-bottom">
+
+      <div class="status-detail">
+        <div class="status-detail-label">Noch zu erledigen</div>
+        <div class="status-detail-value" id="statusRemaining">0</div>
+      </div>
+
+      <div class="status-detail">
+        <div class="status-detail-label">Benötigt ab morgen</div>
+        <div class="status-detail-value" id="statusTomorrow">0</div>
+      </div>
+
+      <div class="status-detail">
+        <div class="status-detail-label">Soll bis heute</div>
+        <div class="status-detail-value" id="statusSoll">0</div>
+      </div>
+
+      <div class="status-detail">
+        <div class="status-detail-label">Restliche Arbeitstage</div>
+        <div class="status-detail-value" id="statusWorkdaysRemaining">0</div>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<!-- STATISTIK -->
+
+<section class="section">
+  <div class="section-heading">
+    <h2>Planungsübersicht</h2>
+    <p>Die wichtigsten Kennzahlen deiner aktuellen Planung.</p>
+  </div>
+
+  <div class="stats-grid">
+
+    <div class="stat-card">
+      <div class="stat-label">Gesamtmenge</div>
+      <div class="stat-value" id="statTotal">0</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Erledigt</div>
+      <div class="stat-value" id="statDone">0</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Arbeitstage</div>
+      <div class="stat-value" id="statWorkdays">0</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Benötigter Tagesdurchschnitt</div>
+      <div class="stat-value" id="statAverage">0</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- FREIE TAGE / FEIERTAGE -->
+
+<section class="section">
+  <div class="two-column">
+
+    <div id="freie-tage">
+      <div class="section-heading">
+        <h2>Zusätzliche freie Tage</h2>
+        <p>Diese Tage werden automatisch aus der verfügbaren Arbeitszeit herausgenommen.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+
+          <div class="form-group">
+            <label for="freeDate">Freier Tag</label>
+            <input id="freeDate" type="date">
+          </div>
+
+          <div class="form-group" style="margin-top:12px;">
+            <label for="freeNote">Bezeichnung</label>
+            <input id="freeNote" type="text" placeholder="z. B. Urlaub">
+          </div>
+
+          <div class="form-actions">
+            <button class="btn btn-secondary" id="addFreeDay" type="button">
+              Freien Tag hinzufügen
+            </button>
+          </div>
+
+          <div style="margin-top:16px;">
+            <div class="list" id="freeDaysList"></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div id="feiertage">
+      <div class="section-heading">
+        <h2>Feiertage</h2>
+        <p id="holidayStateLabel">Gesetzliche Feiertage des gewählten Bundeslandes.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+          <div class="holiday-list" id="holidayList"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- HISTORIE -->
+
+<section class="section" id="historie">
+  <div class="section-heading">
+    <h2>Leistungshistorie</h2>
+    <p>Alle eingetragenen tatsächlichen Leistungen.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="list" id="historyList"></div>
+    </div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<!-- =========================
+     IMPRESSUM
+========================= -->
+
+<section class="legal-page" id="page-impressum">
+  <main>
+    <div class="legal-content">
+
+      <button class="btn btn-secondary back-button" type="button" data-back-home>
+        ← Zurück zur Planung
+      </button>
+
+      <div class="card">
+        <div class="card-body">
+
+          <h1>Impressum</h1>
+
+          <h2>Angaben gemäß § 5 DDG</h2>
+
+          <p>
+            Marc-André Stein-Bakowski<br>
+            Kirchstraße 7<br>
+            65589 Hadamar<br>
+            Deutschland
+          </p>
+
+          <h2>Kontakt</h2>
+
+          <p>
+            E-Mail:
+            <a href="mailto:kontakt@schornstein-planer.de">
+              kontakt@schornstein-planer.de
+            </a>
+          </p>
+
+          <h2>Verantwortlich für den Inhalt</h2>
+
+          <p>
+            Marc-André Stein-Bakowski<br>
+            Kirchstraße 7<br>
+            65589 Hadamar<br>
+            Deutschland
+          </p>
+
+          <h2>Hinweis</h2>
+
+          <p>
+            Dieses Impressum gilt für den unter
+            <strong>schornstein-planer.de</strong> erreichbaren
+            Schornstein Planer.
+          </p>
+
+        </div>
+      </div>
+
+    </div>
+  </main>
+</section>
+
+<!-- =========================
+     DATENSCHUTZ
+========================= -->
+
+<section class="legal-page" id="page-datenschutz">
+  <main>
+    <div class="legal-content">
+
+      <button class="btn btn-secondary back-button" type="button" data-back-home>
+        ← Zurück zur Planung
+      </button>
+
+      <div class="card">
+        <div class="card-body">
+
+          <h1>Datenschutzerklärung</h1>
+
+          <p>
+            Der Schutz personenbezogener Daten ist wichtig. Diese
+            Datenschutzerklärung informiert darüber, welche Daten beim
+            Besuch und bei der Nutzung des Schornstein Planers verarbeitet
+            werden.
+          </p>
+
+          <h2>1. Verantwortlicher</h2>
+
+          <p>
+            Marc-André Stein-Bakowski<br>
+            Kirchstraße 7<br>
+            65589 Hadamar<br>
+            Deutschland
+          </p>
+
+          <p>
+            E-Mail:
+            <a href="mailto:kontakt@schornstein-planer.de">
+              kontakt@schornstein-planer.de
+            </a>
+          </p>
+
+          <h2>2. Nutzung der Planungsdaten</h2>
+
+          <p>
+            Die von dir im Schornstein Planer eingegebenen Planungsdaten,
+            Leistungsdaten und freien Tage werden grundsätzlich lokal in
+            deinem Browser gespeichert.
+          </p>
+
+          <p>
+            Die Anwendung übermittelt diese Planungsdaten nicht an den
+            Betreiber des Schornstein Planers.
+          </p>
+
+          <h2>3. Speicherung im Browser</h2>
+
+          <p>
+            Zur Speicherung deiner Einstellungen und Eingaben verwendet
+            die Anwendung den lokalen Browserspeicher
+            (<strong>localStorage</strong>).
+          </p>
+
+          <p>
+            Diese Daten verbleiben grundsätzlich auf deinem Gerät bzw. in
+            deinem Browser. Wenn du die entsprechenden Browserdaten löschst,
+            können auch gespeicherte Planungsdaten gelöscht werden.
+          </p>
+
+          <h2>4. Service Worker und Cache</h2>
+
+          <p>
+            Der Schornstein Planer kann einen Service Worker verwenden,
+            damit Bestandteile der Anwendung lokal zwischengespeichert
+            werden und die Anwendung zuverlässiger geladen werden kann.
+          </p>
+
+          <p>
+            Dabei werden technische Dateien der Anwendung im Browsercache
+            gespeichert. Die eigentlichen Planungsdaten werden davon
+            getrennt im lokalen Browserspeicher verwaltet.
+          </p>
+
+          <h2>5. Hosting</h2>
+
+          <p>
+            Die Website kann über GitHub Pages bereitgestellt werden.
+            Beim Aufruf einer Website können durch den Hostinganbieter
+            technisch erforderliche Informationen verarbeitet werden,
+            beispielsweise IP-Adresse, Zeitpunkt des Zugriffs,
+            aufgerufene Ressource, Browserinformationen und technische
+            Protokolldaten.
+          </p>
+
+          <p>
+            Auf diese technische Verarbeitung durch den Hostinganbieter
+            hat die Anwendung selbst keinen vollständigen Einfluss.
+          </p>
+
+          <h2>6. Keine Analyse- oder Werbetracker</h2>
+
+          <p>
+            In dieser Anwendung sind nach dem derzeitigen Stand keine
+            eigenen Analyse-, Werbe- oder Trackingdienste eingebunden.
+          </p>
+
+          <h2>7. Externe Links</h2>
+
+          <p>
+            Die Website kann auf externe Angebote verlinken. Beim Aufruf
+            eines solchen Angebots gelten die Datenschutzbestimmungen des
+            jeweiligen Anbieters.
+          </p>
+
+          <h2>8. PayPal-Unterstützung</h2>
+
+          <p>
+            Über den Unterstützen-Button kann ein externes PayPal-Angebot
+            aufgerufen werden. Die Verarbeitung personenbezogener Daten
+            innerhalb von PayPal erfolgt durch PayPal nach dessen eigenen
+            Datenschutzbestimmungen.
+          </p>
+
+          <h2>9. Kontakt per E-Mail</h2>
+
+          <p>
+            Wenn du per E-Mail Kontakt aufnimmst, werden die von dir
+            übermittelten Angaben zur Bearbeitung der Anfrage verarbeitet.
+          </p>
+
+          <h2>10. Rechte betroffener Personen</h2>
+
+          <p>
+            Soweit die gesetzlichen Voraussetzungen erfüllt sind, bestehen
+            insbesondere Rechte auf Auskunft, Berichtigung, Löschung,
+            Einschränkung der Verarbeitung, Datenübertragbarkeit und
+            Widerspruch gegen bestimmte Verarbeitungen.
+          </p>
+
+          <p>
+            Außerdem besteht ein Beschwerderecht bei einer zuständigen
+            Datenschutzaufsichtsbehörde.
+          </p>
+
+          <h2>11. Stand</h2>
+
+          <p>
+            Stand: 2026
+          </p>
+
+        </div>
+      </div>
+
+    </div>
+  </main>
+</section>
+
+<!-- =========================
+     RECHTLICHE HINWEISE
+========================= -->
+
+<section class="legal-page" id="page-hinweise">
+  <main>
+    <div class="legal-content">
+
+      <button class="btn btn-secondary back-button" type="button" data-back-home>
+        ← Zurück zur Planung
+      </button>
+
+      <div class="card">
+        <div class="card-body">
+
+          <h1>Rechtliche Hinweise</h1>
+
+          <h2>Planungshilfe</h2>
+
+          <p>
+            Der Schornstein Planer dient als organisatorische und rechnerische
+            Unterstützung bei der persönlichen Jahresplanung.
+          </p>
+
+          <p>
+            Die Berechnung ersetzt keine gesetzliche, behördliche oder
+            fachliche Prüfung.
+          </p>
+
+          <h2>Berechnung</h2>
+
+          <p>
+            Die Anwendung berechnet verfügbare Arbeitstage unter
+            Berücksichtigung von Wochenenden, gesetzlichen Feiertagen des
+            ausgewählten Bundeslandes und zusätzlich eingetragenen freien
+            Tagen.
+          </p>
+
+          <p>
+            Regionale Besonderheiten bei einzelnen Feiertagen können
+            zusätzliche Prüfungen erforderlich machen. Dies betrifft
+            insbesondere Feiertage, die nicht in allen Gemeinden eines
+            Bundeslandes gleichermaßen gelten.
+          </p>
+
+          <h2>Verantwortung für Eingaben</h2>
+
+          <p>
+            Für die Richtigkeit der eingegebenen Jahresmenge, Termine,
+            freien Tage und tatsächlich erbrachten Leistungen ist der
+            Nutzer selbst verantwortlich.
+          </p>
+
+          <h2>Keine Gewähr für Verfügbarkeit</h2>
+
+          <p>
+            Trotz sorgfältiger Entwicklung kann keine Gewähr dafür
+            übernommen werden, dass die Anwendung jederzeit fehlerfrei,
+            vollständig oder ohne Unterbrechung verfügbar ist.
+          </p>
+
+          <h2>Aktualität</h2>
+
+          <p>
+            Gesetzliche Regelungen, Feiertagsregelungen und technische
+            Rahmenbedingungen können sich ändern. Im Zweifel sind die
+            jeweils aktuellen offiziellen Informationen zu prüfen.
+          </p>
+
+        </div>
+      </div>
+
+    </div>
+  </main>
+</section>
+
+<!-- =========================
+     FOOTER
+========================= -->
+
+<footer>
+  <div class="footer-inner">
+
+    <div>
+      <div class="footer-copy">
+        © <span id="footerYear"></span> Schornstein Planer
+      </div>
+
+      <a
+        class="donation-button"
+        href="https://paypal.me/stein785"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Schornstein Planer mit einer Spende über PayPal unterstützen">
+        ☕ Schornstein Planer unterstützen
+      </a>
+    </div>
+
+    <div class="footer-links">
+      <button type="button" data-legal-footer="impressum">Impressum</button>
+      <button type="button" data-legal-footer="datenschutz">Datenschutz</button>
+      <button type="button" data-legal-footer="hinweise">Rechtliche Hinweise</button>
+    </div>
+
+  </div>
 </footer>
+
 <script>
-  "use strict";
-  /* =====================================================
-     DATEN
-  ===================================================== */
-  const STORAGE_KEY =
-    "schornstein-planer-v8";
-  const defaultPlan = {
-    year:
-      new Date().getFullYear(),
-    state:
-      "HE",
-    totalAmount:
-      0,
-    startDate:
-      "",
-    targetDate:
-      "",
-    entries:
-      [],
-    freeDays:
-      []
-  };
-  let plan =
-    loadData();
-  /* =====================================================
-     DOM
-  ===================================================== */
-  const yearEl =
-    document.getElementById("year");
-  const stateEl =
-    document.getElementById("state");
-  const totalAmountEl =
-    document.getElementById("totalAmount");
-  const startDateEl =
-    document.getElementById("startDate");
-  const targetDateEl =
-    document.getElementById("targetDate");
-  const entryDateEl =
-    document.getElementById("entryDate");
-  const entryAmountEl =
-    document.getElementById("entryAmount");
-  const entryNoteEl =
-    document.getElementById("entryNote");
-  const freeDateEl =
-    document.getElementById("freeDate");
-  const freeNoteEl =
-    document.getElementById("freeNote");
-  const previewEl =
-    document.getElementById("planPreview");
-  const legalMenu =
-    document.getElementById("legalMenu");
-  const legalButton =
-    document.getElementById("legalButton");
-  const legalDropdown =
-    document.getElementById("legalDropdown");
-  /* =====================================================
-     INIT
-  ===================================================== */
-  document.addEventListener(
-    "DOMContentLoaded",
-    init
-  );
-  function init() {
-    populateYears();
-    loadForm();
-    if (!entryDateEl.value) {
-      entryDateEl.value =
-        formatDateInput(
-          new Date()
-        );
+"use strict";
+
+/* =========================================================
+   GRUNDKONFIGURATION
+========================================================= */
+
+const STORAGE_KEY = "schornstein-planer-v8";
+
+const defaultPlan = {
+  year: new Date().getFullYear(),
+  state: "HE",
+  totalAmount: 0,
+  startDate: "",
+  targetDate: "",
+  entries: [],
+  freeDays: []
+};
+
+let plan = loadData();
+
+/* =========================================================
+   INITIALISIERUNG
+========================================================= */
+
+document.addEventListener("DOMContentLoaded", init);
+
+function init(){
+  populateYears();
+  loadForm();
+  setupEvents();
+  setupNavigation();
+  document.getElementById("footerYear").textContent = new Date().getFullYear();
+
+  const today = formatDateInput(new Date());
+
+  if (!document.getElementById("entryDate").value) {
+    document.getElementById("entryDate").value = today;
+  }
+
+  if (!document.getElementById("freeDate").value) {
+    document.getElementById("freeDate").value = today;
+  }
+
+  renderAll();
+  handleHash();
+}
+
+/* =========================================================
+   DATEN
+========================================================= */
+
+function loadData(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+
+    if(!raw){
+      return structuredClone(defaultPlan);
     }
-    setupEvents();
-    setupNavigation();
-    renderAll();
-    handleHash();
-  }
-  /* =====================================================
-     EVENTS
-  ===================================================== */
-  function setupEvents() {
-    document
-      .getElementById("previewPlan")
-      .addEventListener(
-        "click",
-        previewPlan
-      );
-    document
-      .getElementById("savePlan")
-      .addEventListener(
-        "click",
-        savePlan
-      );
-    document
-      .getElementById("resetPlan")
-      .addEventListener(
-        "click",
-        resetPlan
-      );
-    document
-      .getElementById("savePerformance")
-      .addEventListener(
-        "click",
-        savePerformance
-      );
-    document
-      .getElementById("addFreeDay")
-      .addEventListener(
-        "click",
-        addFreeDay
-      );
-    yearEl.addEventListener(
-      "change",
-      onPlanningFieldChange
-    );
-    stateEl.addEventListener(
-      "change",
-      onPlanningFieldChange
-    );
-    totalAmountEl.addEventListener(
-      "input",
-      onPlanningFieldChange
-    );
-    startDateEl.addEventListener(
-      "change",
-      onPlanningFieldChange
-    );
-    targetDateEl.addEventListener(
-      "change",
-      onPlanningFieldChange
-    );
-    document.addEventListener(
-      "click",
-      event => {
-        const deleteEntry =
-          event.target.closest(
-            "[data-delete-entry]"
-          );
-        if (deleteEntry) {
-          deletePerformance(
-            deleteEntry.dataset.deleteEntry
-          );
-          return;
-        }
-        const deleteFree =
-          event.target.closest(
-            "[data-delete-free]"
-          );
-        if (deleteFree) {
-          deleteFreeDay(
-            deleteFree.dataset.deleteFree
-          );
-        }
-      }
-    );
-  }
-  /* =====================================================
-     NAVIGATION
-  ===================================================== */
-  function setupNavigation() {
-    if (
-      !legalButton ||
-      !legalDropdown ||
-      !legalMenu
-    ) {
-      return;
-    }
-    /*
-      Rechtliches öffnen / schließen
-    */
-    legalButton.addEventListener(
-      "click",
-      event => {
-        event.preventDefault();
-        event.stopPropagation();
-        if (
-          legalDropdown.hidden
-        ) {
-          openLegalMenu();
-        } else {
-          closeLegalMenu();
-        }
-      }
-    );
-    /*
-      Klick innerhalb des Dropdowns
-    */
-    legalDropdown.addEventListener(
-      "click",
-      event => {
-        event.stopPropagation();
-        const button =
-          event.target.closest(
-            "[data-legal]"
-          );
-        if (!button) {
-          return;
-        }
-        const page =
-          button.dataset.legal;
-        closeLegalMenu();
-        showLegalPage(
-          page
-        );
-      }
-    );
-    /*
-      Klick außerhalb
-    */
-    document.addEventListener(
-      "click",
-      event => {
-        if (
-          !legalMenu.contains(
-            event.target
-          )
-        ) {
-          closeLegalMenu();
-        }
-      }
-    );
-    /*
-      ESC
-    */
-    document.addEventListener(
-      "keydown",
-      event => {
-        if (
-          event.key === "Escape"
-        ) {
-          closeLegalMenu();
-        }
-      }
-    );
-    /*
-      Footer
-    */
-    document
-      .querySelectorAll(
-        "footer [data-legal]"
-      )
-      .forEach(button => {
-        button.addEventListener(
-          "click",
-          event => {
-            event.preventDefault();
-            showLegalPage(
-              button.dataset.legal
-            );
-          }
-        );
-      });
-    /*
-      Zurück
-    */
-    document
-      .querySelectorAll(
-        "[data-back-home]"
-      )
-      .forEach(button => {
-        button.addEventListener(
-          "click",
-          () => {
-            showHome();
-          }
-        );
-      });
-    window.addEventListener(
-      "hashchange",
-      handleHash
-    );
-  }
-  function openLegalMenu() {
-    legalDropdown.hidden =
-      false;
-    legalButton.setAttribute(
-      "aria-expanded",
-      "true"
-    );
-  }
-  function closeLegalMenu() {
-    legalDropdown.hidden =
-      true;
-    legalButton.setAttribute(
-      "aria-expanded",
-      "false"
-    );
-  }
-  /* =====================================================
-     HASH / RECHTLICHE SEITEN
-  ===================================================== */
-  function handleHash() {
-    const hash =
-      window.location.hash
-        .replace("#", "");
-    if (
-      hash === "impressum" ||
-      hash === "datenschutz" ||
-      hash === "hinweise"
-    ) {
-      showLegalPage(
-        hash,
-        false
-      );
-      return;
-    }
-    showHome(false);
-  }
-  function showLegalPage(
-    page,
-    updateHash = true
-  ) {
-    document
-      .querySelectorAll(".page")
-      .forEach(section => {
-        section.classList.remove(
-          "active"
-        );
-      });
-    const target =
-      document.getElementById(
-        page + "Page"
-      );
-    if (target) {
-      target.classList.add(
-        "active"
-      );
-    }
-    closeLegalMenu();
-    if (updateHash) {
-      history.pushState(
-        null,
-        "",
-        "#" + page
-      );
-    }
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth"
-    });
-  }
-  function showHome(
-    updateHash = true
-  ) {
-    document
-      .querySelectorAll(".page")
-      .forEach(section => {
-        section.classList.remove(
-          "active"
-        );
-      });
-    document
-      .getElementById("homePage")
-      .classList.add(
-        "active"
-      );
-    closeLegalMenu();
-    if (updateHash) {
-      history.pushState(
-        null,
-        "",
-        "#start"
-      );
-    }
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth"
-    });
-  }
-  /* =====================================================
-     JAHRE
-  ===================================================== */
-  function populateYears() {
-    const currentYear =
-      new Date().getFullYear();
-    yearEl.innerHTML = "";
-    for (
-      let year =
-        currentYear - 2;
-      year <=
-        currentYear + 5;
-      year++
-    ) {
-      const option =
-        document.createElement(
-          "option"
-        );
-      option.value =
-        year;
-      option.textContent =
-        year;
-      yearEl.appendChild(
-        option
-      );
-    }
-    yearEl.value =
-      plan.year;
-  }
-  /* =====================================================
-     STORAGE
-  ===================================================== */
-  function loadData() {
-    try {
-      const raw =
-        localStorage.getItem(
-          STORAGE_KEY
-        );
-      if (!raw) {
-        return structuredClone(
-          defaultPlan
-        );
-      }
-      const saved =
-        JSON.parse(raw);
-      return {
-        ...structuredClone(
-          defaultPlan
-        ),
-        ...saved,
-        entries:
-          Array.isArray(
-            saved.entries
-          )
-            ? saved.entries
-            : [],
-        freeDays:
-          Array.isArray(
-            saved.freeDays
-          )
-            ? saved.freeDays
-            : []
-      };
-    } catch (error) {
-      console.error(
-        "Fehler beim Laden:",
-        error
-      );
-      return structuredClone(
-        defaultPlan
-      );
-    }
-  }
-  function saveData() {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(plan)
-    );
-  }
-  function loadForm() {
-    yearEl.value =
-      plan.year;
-    stateEl.value =
-      plan.state;
-    totalAmountEl.value =
-      plan.totalAmount || "";
-    startDateEl.value =
-      plan.startDate || "";
-    targetDateEl.value =
-      plan.targetDate || "";
-  }
-  /* =====================================================
-     PLANUNG
-  ===================================================== */
-  function getFormPlan() {
+
+    const parsed = JSON.parse(raw);
+
     return {
-      ...plan,
-      year:
-        Number(
-          yearEl.value
-        ),
-      state:
-        stateEl.value,
-      totalAmount:
-        Number(
-          totalAmountEl.value
-        ) || 0,
-      startDate:
-        startDateEl.value,
-      targetDate:
-        targetDateEl.value
+      ...structuredClone(defaultPlan),
+      ...parsed,
+      entries: Array.isArray(parsed.entries) ? parsed.entries : [],
+      freeDays: Array.isArray(parsed.freeDays) ? parsed.freeDays : []
     };
+
+  }catch(error){
+    console.warn("Planungsdaten konnten nicht geladen werden:", error);
+    return structuredClone(defaultPlan);
   }
-  function onPlanningFieldChange() {
-    renderPreview(
-      getFormPlan()
-    );
+}
+
+function saveData(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(plan));
+  }catch(error){
+    console.warn("Planungsdaten konnten nicht gespeichert werden:", error);
   }
-  function previewPlan() {
-    renderPreview(
-      getFormPlan()
-    );
-    previewEl.classList.remove(
-      "hidden"
-    );
-  }
-  function renderPreview(data) {
-    if (
-      !data.startDate ||
-      !data.targetDate ||
-      !data.totalAmount
-    ) {
-      previewEl.innerHTML = `
-        <strong>Planungsvorschau</strong><br>
-        Bitte Jahresmenge, Startdatum und gewünschtes Enddatum eingeben.
-      `;
-      return;
+}
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+function setupNavigation(){
+
+  const legalButton = document.getElementById("legalButton");
+  const legalDropdown = document.getElementById("legalDropdown");
+
+  legalButton.addEventListener("click", function(event){
+    event.stopPropagation();
+
+    if(legalDropdown.hidden){
+      openLegalMenu();
+    }else{
+      closeLegalMenu();
     }
-    const workdays =
-      getWorkdaysBetween(
-        data.startDate,
-        data.targetDate,
-        data
-      );
-    const dailyAverage =
-      workdays > 0
-        ? data.totalAmount /
-          workdays
-        : 0;
-    previewEl.innerHTML = `
-      <strong>
-        Planungsvorschau
-      </strong>
-      <br><br>
-      Verfügbare Arbeitstage:
-      <strong>
-        ${formatNumber(workdays)}
-      </strong>
-      <br>
-      Erforderlicher Durchschnitt:
-      <strong>
-        ${formatNumber(dailyAverage)}
-      </strong>
-      pro Arbeitstag
-      <br><br>
-      Wochenenden, gesetzliche Feiertage
-      und zusätzlich eingetragene freie Tage
-      werden nicht als Arbeitstage berücksichtigt.
-    `;
-  }
-  function savePlan() {
-    const data =
-      getFormPlan();
-    if (
-      !data.totalAmount ||
-      data.totalAmount <= 0
-    ) {
-      alert(
-        "Bitte eine gültige Jahresmenge eingeben."
-      );
-      return;
-    }
-    if (!data.startDate) {
-      alert(
-        "Bitte ein Startdatum auswählen."
-      );
-      return;
-    }
-    if (!data.targetDate) {
-      alert(
-        "Bitte ein gewünschtes Enddatum auswählen."
-      );
-      return;
-    }
-    if (
-      data.targetDate <
-      data.startDate
-    ) {
-      alert(
-        "Das Enddatum darf nicht vor dem Startdatum liegen."
-      );
-      return;
-    }
-    plan =
-      data;
-    saveData();
-    renderAll();
-    alert(
-      "Die Planung wurde gespeichert."
-    );
-  }
-  function resetPlan() {
-    if (
-      !confirm(
-        "Möchtest du die Planung wirklich zurücksetzen?"
-      )
-    ) {
-      return;
-    }
-    plan = {
-      ...structuredClone(
-        defaultPlan
-      ),
-      year:
-        Number(
-          yearEl.value
-        ) ||
-        new Date().getFullYear()
-    };
-    saveData();
-    loadForm();
-    previewEl.classList.add(
-      "hidden"
-    );
-    renderAll();
-  }
-  /* =====================================================
-     LEISTUNG
-  ===================================================== */
-  function savePerformance() {
-    const date =
-      entryDateEl.value;
-    const amount =
-      parseAmount(
-        entryAmountEl.value
-      );
-    const note =
-      entryNoteEl.value.trim();
-    if (!date) {
-      alert(
-        "Bitte ein Datum auswählen."
-      );
-      return;
-    }
-    if (
-      !Number.isFinite(amount) ||
-      amount <= 0
-    ) {
-      alert(
-        "Bitte eine gültige erledigte Menge eingeben."
-      );
-      return;
-    }
-    plan.entries.push({
-      id:
-        String(Date.now()) +
-        Math.random()
-          .toString(16)
-          .slice(2),
-      date,
-      amount,
-      note
+  });
+
+  legalDropdown.querySelectorAll("[data-legal]").forEach(button => {
+    button.addEventListener("click", function(event){
+      event.stopPropagation();
+      const page = this.dataset.legal;
+      closeLegalMenu();
+      showLegalPage(page);
     });
-    plan.entries.sort(
-      (a, b) =>
-        a.date.localeCompare(
-          b.date
-        )
-    );
-    saveData();
-    entryAmountEl.value =
-      "";
-    entryNoteEl.value =
-      "";
-    renderAll();
-  }
-  function deletePerformance(id) {
-    const entry =
-      plan.entries.find(
-        item =>
-          item.id === id
-      );
-    if (!entry) {
-      return;
-    }
-    if (
-      !confirm(
-        `Eintrag vom ${formatDate(entry.date)} mit ${formatNumber(entry.amount)} wirklich löschen?`
-      )
-    ) {
-      return;
-    }
-    plan.entries =
-      plan.entries.filter(
-        item =>
-          item.id !== id
-      );
-    saveData();
-    renderAll();
-  }
-  /* =====================================================
-     FREIE TAGE
-  ===================================================== */
-  function addFreeDay() {
-    const date =
-      freeDateEl.value;
-    const note =
-      freeNoteEl.value.trim();
-    if (!date) {
-      alert(
-        "Bitte einen freien Tag auswählen."
-      );
-      return;
-    }
-    if (
-      plan.freeDays.some(
-        item =>
-          item.date === date
-      )
-    ) {
-      alert(
-        "Dieser freie Tag ist bereits eingetragen."
-      );
-      return;
-    }
-    plan.freeDays.push({
-      id:
-        String(Date.now()) +
-        Math.random()
-          .toString(16)
-          .slice(2),
-      date,
-      note
+  });
+
+  document.querySelectorAll("[data-legal-footer]").forEach(button => {
+    button.addEventListener("click", function(){
+      showLegalPage(this.dataset.legalFooter);
     });
-    plan.freeDays.sort(
-      (a, b) =>
-        a.date.localeCompare(
-          b.date
-        )
-    );
+  });
+
+  document.querySelectorAll("[data-back-home]").forEach(button => {
+    button.addEventListener("click", function(){
+      showHome();
+    });
+  });
+
+  document.querySelectorAll("[data-home-link]").forEach(link => {
+    link.addEventListener("click", function(event){
+      event.preventDefault();
+      showHome();
+    });
+  });
+
+  document.addEventListener("click", function(){
+    closeLegalMenu();
+  });
+
+  document.addEventListener("keydown", function(event){
+    if(event.key === "Escape"){
+      closeLegalMenu();
+    }
+  });
+
+  window.addEventListener("hashchange", handleHash);
+  window.addEventListener("popstate", handleHash);
+}
+
+function openLegalMenu(){
+  const button = document.getElementById("legalButton");
+  const dropdown = document.getElementById("legalDropdown");
+
+  dropdown.hidden = false;
+  button.setAttribute("aria-expanded","true");
+}
+
+function closeLegalMenu(){
+  const button = document.getElementById("legalButton");
+  const dropdown = document.getElementById("legalDropdown");
+
+  dropdown.hidden = true;
+  button.setAttribute("aria-expanded","false");
+}
+
+function showLegalPage(page){
+  const target = document.getElementById("page-" + page);
+
+  if(!target){
+    console.warn("Rechtliche Seite nicht gefunden:", page);
+    return;
+  }
+
+  document.getElementById("homePage").classList.add("hidden");
+
+  document.querySelectorAll(".legal-page").forEach(element => {
+    element.classList.remove("active");
+  });
+
+  target.classList.add("active");
+
+  closeLegalMenu();
+
+  if(location.hash !== "#" + page){
+    history.pushState(null, "", "#" + page);
+  }
+
+  window.scrollTo({
+    top:0,
+    behavior:"smooth"
+  });
+}
+
+function showHome(){
+  document.querySelectorAll(".legal-page").forEach(element => {
+    element.classList.remove("active");
+  });
+
+  document.getElementById("homePage").classList.remove("hidden");
+
+  closeLegalMenu();
+
+  if(location.hash){
+    history.pushState(null, "", location.pathname + location.search);
+  }
+
+  window.scrollTo({
+    top:0,
+    behavior:"smooth"
+  });
+}
+
+function handleHash(){
+  const hash = location.hash.replace("#","").trim();
+
+  if(
+    hash === "impressum" ||
+    hash === "datenschutz" ||
+    hash === "hinweise"
+  ){
+    showLegalPageWithoutHistory(hash);
+  }else{
+    document.querySelectorAll(".legal-page").forEach(element => {
+      element.classList.remove("active");
+    });
+
+    document.getElementById("homePage").classList.remove("hidden");
+  }
+}
+
+function showLegalPageWithoutHistory(page){
+  const target = document.getElementById("page-" + page);
+
+  if(!target){
+    return;
+  }
+
+  document.getElementById("homePage").classList.add("hidden");
+
+  document.querySelectorAll(".legal-page").forEach(element => {
+    element.classList.remove("active");
+  });
+
+  target.classList.add("active");
+
+  closeLegalMenu();
+
+  window.scrollTo({
+    top:0,
+    behavior:"auto"
+  });
+}
+
+/* =========================================================
+   EVENTS
+========================================================= */
+
+function setupEvents(){
+
+  document.getElementById("planYear").addEventListener("change", function(){
+    plan.year = Number(this.value);
+    plan.startDate = "";
+    plan.targetDate = "";
+
+    document.getElementById("startDate").value = "";
+    document.getElementById("targetDate").value = "";
+
     saveData();
-    freeDateEl.value =
-      "";
-    freeNoteEl.value =
-      "";
     renderAll();
-  }
-  function deleteFreeDay(id) {
-    plan.freeDays =
-      plan.freeDays.filter(
-        item =>
-          item.id !== id
-      );
+  });
+
+  document.getElementById("planState").addEventListener("change", function(){
+    plan.state = this.value;
     saveData();
     renderAll();
-  }
-  /* =====================================================
-     FEIERTAGE
-  ===================================================== */
-  function getHolidays(
-    year,
-    state
-  ) {
-    const holidays = [];
-    function add(
-      date,
-      name
-    ) {
-      holidays.push({
-        date:
-          formatDateInput(
-            date
-          ),
-        name
-      });
+  });
+
+  document.getElementById("totalAmount").addEventListener("input", function(){
+    plan.totalAmount = Number(this.value) || 0;
+    saveData();
+    renderAll();
+  });
+
+  document.getElementById("startDate").addEventListener("change", function(){
+    plan.startDate = this.value;
+    saveData();
+    renderAll();
+  });
+
+  document.getElementById("targetDate").addEventListener("change", function(){
+    plan.targetDate = this.value;
+    saveData();
+    renderAll();
+  });
+
+  document.getElementById("savePlan").addEventListener("click", function(){
+    readPlanningForm();
+    saveData();
+    renderAll();
+    alert("Planung wurde gespeichert.");
+  });
+
+  document.getElementById("previewPlan").addEventListener("click", function(){
+    readPlanningForm();
+    saveData();
+    renderAll();
+
+    document.getElementById("uebersicht").scrollIntoView({
+      behavior:"smooth"
+    });
+  });
+
+  document.getElementById("resetPlan").addEventListener("click", resetPlan);
+
+  document.getElementById("savePerformance").addEventListener("click", savePerformance);
+
+  document.getElementById("addFreeDay").addEventListener("click", addFreeDay);
+
+  document.getElementById("entryAmount").addEventListener("keydown", function(event){
+    if(event.key === "Enter"){
+      event.preventDefault();
+      savePerformance();
     }
-    const easter =
-      calculateEaster(
-        year
-      );
-    /*
-      Bundesweite Feiertage
-    */
-    add(
-      new Date(
-        year,
-        0,
-        1
-      ),
-      "Neujahr"
-    );
-    add(
-      new Date(
-        year,
-        4,
-        1
-      ),
-      "Tag der Arbeit"
-    );
-    add(
-      new Date(
-        year,
-        9,
-        3
-      ),
-      "Tag der Deutschen Einheit"
-    );
-    add(
-      new Date(
-        year,
-        11,
-        25
-      ),
-      "1. Weihnachtstag"
-    );
-    add(
-      new Date(
-        year,
-        11,
-        26
-      ),
-      "2. Weihnachtstag"
-    );
-    add(
-      addDays(
-        easter,
-        -2
-      ),
-      "Karfreitag"
-    );
-    add(
-      addDays(
-        easter,
-        1
-      ),
-      "Ostermontag"
-    );
-    add(
-      addDays(
-        easter,
-        39
-      ),
-      "Christi Himmelfahrt"
-    );
-    add(
-      addDays(
-        easter,
-        50
-      ),
-      "Pfingstmontag"
-    );
-    /*
-      Bundesland
-    */
-    switch (state) {
-      case "BW":
-        add(
-          new Date(
-            year,
-            0,
-            6
-          ),
-          "Heilige Drei Könige"
-        );
-        add(
-          addDays(
-            easter,
-            60
-          ),
-          "Fronleichnam"
-        );
-        add(
-          new Date(
-            year,
-            10,
-            1
-          ),
-          "Allerheiligen"
-        );
-        break;
-      case "BY":
-        add(
-          new Date(
-            year,
-            0,
-            6
-          ),
-          "Heilige Drei Könige"
-        );
-        add(
-          addDays(
-            easter,
-            60
-          ),
-          "Fronleichnam"
-        );
-        add(
-          new Date(
-            year,
-            7,
-            15
-          ),
-          "Mariä Himmelfahrt"
-        );
-        add(
-          new Date(
-            year,
-            10,
-            1
-          ),
-          "Allerheiligen"
-        );
-        break;
-      case "BE":
-        add(
-          new Date(
-            year,
-            2,
-            8
-          ),
-          "Internationaler Frauentag"
-        );
-        break;
-      case "BB":
-        add(
-          new Date(
-            year,
-            9,
-            31
-          ),
-          "Reformationstag"
-        );
-        break;
-      case "HB":
-        add(
-          new Date(
-            year,
-            9,
-            31
-          ),
-          "Reformationstag"
-        );
-        break;
-      case "HH":
-        add(
-          new Date(
-            year,
-            9,
-            31
-          ),
-          "Reformationstag"
-        );
-        break;
-      case "HE":
-        add(
-          addDays(
-            easter,
-            60
-          ),
-          "Fronleichnam"
-        );
-        break;
-      case "MV":
-        add(
-          new Date(
-            year,
-            2,
-            8
-          ),
-          "Internationaler Frauentag"
-        );
-        add(
-          new Date(
-            year,
-            9,
-            31
-          ),
-          "Reformationstag"
-        );
-        break;
-      case "NI":
-        add(
-          new Date(
-            year,
-            9,
-            31
-          ),
-          "Reformationstag"
-        );
-        break;
-      case "NW":
-        add(
-          addDays(
-            easter,
-            60
-          ),
-          "Fronleichnam"
-        );
-        add(
-          new Date(
-            year,
-            10,
-            1
-          ),
-          "Allerheiligen"
-        );
-        break;
-      case "RP":
-        add(
-          addDays(
-            easter,
-            60
-          ),
-          "Fronleichnam"
-        );
-        add(
-          new Date(
-            year,
-            10,
-            1
-          ),
-          "Allerheiligen"
-        );
-        break;
-      case "SL":
-        add(
-          addDays(
-            easter,
-            60
-          ),
-          "Fronleichnam"
-        );
-        add(
-          new Date(
-            year,
-            7,
-            15
-          ),
-          "Mariä Himmelfahrt"
-        );
-        add(
-          new Date(
-            year,
-            10,
-            1
-          ),
-          "Allerheiligen"
-        );
-        break;
-      case "SN":
-        add(
-          new Date(
-            year,
-            9,
-            31
-          ),
-          "Reformationstag"
-        );
-        add(
-          getBußUndBettag(
-            year
-          ),
-          "Buß- und Bettag"
-        );
-        break;
-      case "ST":
-        add(
-          new Date(
-            year,
-            0,
-            6
-          ),
-          "Heilige Drei Könige"
-        );
-        add(
-          new Date(
-            year,
-            9,
-            31
-          ),
-          "Reformationstag"
-        );
-        break;
-      case "SH":
-        add(
-          new Date(
-            year,
-            9,
-            31
-          ),
-          "Reformationstag"
-        );
-        break;
-      case "TH":
-        add(
-          new Date(
-            year,
-            9,
-            31
-          ),
-          "Reformationstag"
-        );
-        add(
-          new Date(
-            year,
-            8,
-            20
-          ),
-          "Weltkindertag"
-        );
-        break;
-    }
-    const unique =
-      new Map();
-    holidays.forEach(
-      item => {
-        unique.set(
-          item.date,
-          item
-        );
-      }
-    );
-    return Array
-      .from(
-        unique.values()
-      )
-      .sort(
-        (a, b) =>
-          a.date.localeCompare(
-            b.date
-          )
-      );
+  });
+}
+
+/* =========================================================
+   PLANUNG
+========================================================= */
+
+function readPlanningForm(){
+
+  const year = Number(document.getElementById("planYear").value);
+  const state = document.getElementById("planState").value;
+  const totalAmount = Number(document.getElementById("totalAmount").value) || 0;
+  const startDate = document.getElementById("startDate").value;
+  const targetDate = document.getElementById("targetDate").value;
+
+  plan.year = year;
+  plan.state = state;
+  plan.totalAmount = totalAmount;
+  plan.startDate = startDate;
+  plan.targetDate = targetDate;
+}
+
+function resetPlan(){
+
+  if(!confirm("Soll die Planung wirklich zurückgesetzt werden?")){
+    return;
   }
-  function calculateEaster(year) {
-    const a =
-      year % 19;
-    const b =
-      Math.floor(
-        year / 100
-      );
-    const c =
-      year % 100;
-    const d =
-      Math.floor(
-        b / 4
-      );
-    const e =
-      b % 4;
-    const f =
-      Math.floor(
-        (b + 8) / 25
-      );
-    const g =
-      Math.floor(
-        (b - f + 1) / 3
-      );
-    const h =
-      (
-        19 * a +
-        b -
-        d -
-        g +
-        15
-      ) % 30;
-    const i =
-      Math.floor(
-        c / 4
-      );
-    const k =
-      c % 4;
-    const l =
-      (
-        32 +
-        2 * e +
-        2 * i -
-        h -
-        k
-      ) % 7;
-    const m =
-      Math.floor(
-        (
-          a +
-          11 * h +
-          22 * l
-        ) / 451
-      );
-    const month =
-      Math.floor(
-        (
-          h +
-          l -
-          7 * m +
-          114
-        ) / 31
-      );
-    const day =
-      (
-        (
-          h +
-          l -
-          7 * m +
-          114
-        ) % 31
-      ) + 1;
-    return new Date(
-      year,
-      month - 1,
-      day
-    );
+
+  plan = {
+    ...structuredClone(defaultPlan),
+    year:new Date().getFullYear()
+  };
+
+  saveData();
+  loadForm();
+  renderAll();
+}
+
+function populateYears(){
+
+  const select = document.getElementById("planYear");
+  const currentYear = new Date().getFullYear();
+
+  select.innerHTML = "";
+
+  for(let year = currentYear - 2; year <= currentYear + 5; year++){
+
+    const option = document.createElement("option");
+    option.value = year;
+    option.textContent = year;
+
+    select.appendChild(option);
   }
-  function getBußUndBettag(year) {
-    for (
-      let day = 22;
-      day >= 16;
-      day--
-    ) {
-      const date =
-        new Date(
-          year,
-          10,
-          day
-        );
-      if (
-        date.getDay() === 3
-      ) {
-        return date;
-      }
-    }
-    return new Date(
-      year,
-      10,
-      18
-    );
+}
+
+function loadForm(){
+
+  document.getElementById("planYear").value = plan.year;
+  document.getElementById("planState").value = plan.state;
+  document.getElementById("totalAmount").value =
+    plan.totalAmount || "";
+
+  document.getElementById("startDate").value =
+    plan.startDate || "";
+
+  document.getElementById("targetDate").value =
+    plan.targetDate || "";
+}
+
+/* =========================================================
+   LEISTUNG
+========================================================= */
+
+function savePerformance(){
+
+  const date = document.getElementById("entryDate").value;
+  const amount = parseAmount(
+    document.getElementById("entryAmount").value
+  );
+  const note = document.getElementById("entryNote").value.trim();
+
+  if(!date){
+    alert("Bitte ein Datum auswählen.");
+    return;
   }
-  /* =====================================================
-     ARBEITSTAGE
-  ===================================================== */
-  function isWorkday(
-    date,
-    data = plan
-  ) {
-    const day =
-      date.getDay();
-    if (
-      day === 0 ||
-      day === 6
-    ) {
-      return false;
-    }
-    const dateString =
-      formatDateInput(
-        date
-      );
-    const holidays =
-      getHolidays(
-        date.getFullYear(),
-        data.state
-      );
-    if (
-      holidays.some(
-        holiday =>
-          holiday.date ===
-          dateString
-      )
-    ) {
-      return false;
-    }
-    if (
-      data.freeDays.some(
-        item =>
-          item.date ===
-          dateString
-      )
-    ) {
-      return false;
-    }
-    return true;
+
+  if(!Number.isFinite(amount) || amount <= 0){
+    alert("Bitte eine gültige erledigte Menge eingeben.");
+    return;
   }
-  function getWorkdaysBetween(
-    start,
-    end,
-    data = plan
-  ) {
-    if (
-      !start ||
-      !end ||
-      end < start
-    ) {
-      return 0;
-    }
-    let count = 0;
-    const current =
-      parseDate(start);
-    const last =
-      parseDate(end);
-    while (
-      current <= last
-    ) {
-      if (
-        isWorkday(
-          current,
-          data
-        )
-      ) {
-        count++;
-      }
-      current.setDate(
-        current.getDate() + 1
-      );
-    }
-    return count;
-  }
-  function getWorkdaysUntilToday(
-    data = plan
-  ) {
-    if (
-      !data.startDate
-    ) {
-      return 0;
-    }
-    const today =
-      new Date();
-    today.setHours(
-      0,
-      0,
-      0,
-      0
-    );
-    const start =
-      parseDate(
-        data.startDate
-      );
-    if (
-      today < start
-    ) {
-      return 0;
-    }
-    let end =
-      today;
-    if (
-      data.targetDate
-    ) {
-      const target =
-        parseDate(
-          data.targetDate
-        );
-      if (
-        end > target
-      ) {
-        end =
-          target;
-      }
-    }
-    return getWorkdaysBetween(
-      data.startDate,
-      formatDateInput(
-        end
-      ),
-      data
-    );
-  }
-  function getWorkdaysAfterToday(
-    data = plan
-  ) {
-    if (
-      !data.targetDate ||
-      !data.startDate
-    ) {
-      return 0;
-    }
-    const tomorrow =
-      new Date();
-    tomorrow.setHours(
-      0,
-      0,
-      0,
-      0
-    );
-    tomorrow.setDate(
-      tomorrow.getDate() + 1
-    );
-    const target =
-      parseDate(
-        data.targetDate
-      );
-    if (
-      tomorrow > target
-    ) {
-      return 0;
-    }
-    return getWorkdaysBetween(
-      formatDateInput(
-        tomorrow
-      ),
-      data.targetDate,
-      data
-    );
-  }
-  function getSollUntilToday(
-    data = plan
-  ) {
-    if (
-      !data.totalAmount ||
-      !data.startDate ||
-      !data.targetDate
-    ) {
-      return 0;
-    }
-    const totalWorkdays =
-      getWorkdaysBetween(
-        data.startDate,
-        data.targetDate,
-        data
-      );
-    const workdaysUntilToday =
-      getWorkdaysUntilToday(
-        data
-      );
-    if (
-      totalWorkdays <= 0
-    ) {
-      return 0;
-    }
-    return (
-      data.totalAmount *
-      (
-        workdaysUntilToday /
-        totalWorkdays
-      )
-    );
-  }
-  function getTomorrowNeed(
-    data = plan
-  ) {
-    const done =
-      getCompletedAmount(
-        data
-      );
-    const remaining =
-      Math.max(
-        0,
-        data.totalAmount -
-        done
-      );
-    const workdays =
-      getWorkdaysAfterToday(
-        data
-      );
-    if (
-      workdays <= 0
-    ) {
-      return remaining;
-    }
-    return (
-      remaining /
-      workdays
-    );
-  }
-  /* =====================================================
-     BERECHNUNGEN
-  ===================================================== */
-  function getCompletedAmount(
-    data = plan
-  ) {
-    return data.entries.reduce(
-      (sum, entry) =>
-        sum +
-        Number(
-          entry.amount || 0
-        ),
-      0
-    );
-  }
-  function getRemainingAmount(
-    data = plan
-  ) {
-    return Math.max(
-      0,
-      Number(
-        data.totalAmount || 0
-      ) -
-      getCompletedAmount(
-        data
-      )
-    );
-  }
-  function getAverage(
-    data = plan
-  ) {
-    const workdays =
-      getWorkdaysBetween(
-        data.startDate,
-        data.targetDate,
-        data
-      );
-    if (
-      !workdays
-    ) {
-      return 0;
-    }
-    return (
-      data.totalAmount /
-      workdays
-    );
-  }
-  /* =====================================================
-     RENDER
-  ===================================================== */
-  function renderAll() {
-    renderStatus();
-    renderStats();
-    renderQuickInfo();
-    renderFreeDays();
-    renderHolidays();
-    renderHistory();
-  }
-  function renderStatus() {
-    const actual =
-      getCompletedAmount(
-        plan
-      );
-    const soll =
-      getSollUntilToday(
-        plan
-      );
-    const difference =
-      actual - soll;
-    const remaining =
-      getRemainingAmount(
-        plan
-      );
-    const tomorrowNeed =
-      getTomorrowNeed(
-        plan
-      );
-    document
-      .getElementById(
-        "statusActual"
-      )
-      .textContent =
-        formatNumber(
-          actual
-        );
-    document
-      .getElementById(
-        "statusTarget"
-      )
-      .textContent =
-        "Soll bis heute: " +
-        formatNumber(
-          soll
-        );
-    document
-      .getElementById(
-        "statusSoll"
-      )
-      .textContent =
-        formatNumber(
-          soll
-        );
-    document
-      .getElementById(
-        "statusDifference"
-      )
-      .textContent =
-        formatSignedNumber(
-          difference
-        );
-    document
-      .getElementById(
-        "statusRemaining"
-      )
-      .textContent =
-        formatNumber(
-          remaining
-        );
-    document
-      .getElementById(
-        "statusTomorrow"
-      )
-      .textContent =
-        formatNumber(
-          tomorrowNeed
-        );
-    document
-      .getElementById(
-        "progressTargetText"
-      )
-      .textContent =
-        "Ziel: " +
-        formatNumber(
-          plan.totalAmount || 0
-        );
-    const percent =
-      plan.totalAmount > 0
-        ? Math.min(
-            100,
-            Math.max(
-              0,
-              actual /
-              plan.totalAmount *
-              100
-            )
-          )
-        : 0;
-    document
-      .getElementById(
-        "progressBar"
-      )
-      .style.width =
-        percent + "%";
-    document
-      .getElementById(
-        "progressText"
-      )
-      .textContent =
-        formatNumber(
-          percent
-        ) +
-        "% der Jahresmenge";
-    const pill =
-      document.getElementById(
-        "statusPill"
-      );
-    pill.className =
-      "status-pill";
-    if (
-      !plan.totalAmount
-    ) {
-      pill.classList.add(
-        "neutral"
-      );
-      pill.textContent =
-        "Planung noch nicht eingerichtet";
-    } else if (
-      actual >=
-      plan.totalAmount
-    ) {
-      pill.classList.add(
-        "good"
-      );
-      pill.textContent =
-        "Ziel erreicht";
-    } else if (
-      actual === 0 &&
-      soll === 0
-    ) {
-      pill.classList.add(
-        "neutral"
-      );
-      pill.textContent =
-        "Noch nicht gestartet";
-    } else if (
-      difference >= 0
-    ) {
-      pill.classList.add(
-        "good"
-      );
-      pill.textContent =
-        "Im Soll · " +
-        formatNumber(
-          difference
-        ) +
-        " voraus";
-    } else {
-      pill.classList.add(
-        "bad"
-      );
-      pill.textContent =
-        "Hinter dem Soll · " +
-        formatNumber(
-          Math.abs(
-            difference
-          )
-        ) +
-        " Rückstand";
-    }
-  }
-  function renderStats() {
-    const workdays =
-      getWorkdaysBetween(
-        plan.startDate,
-        plan.targetDate,
-        plan
-      );
-    document
-      .getElementById(
-        "statTotal"
-      )
-      .textContent =
-        formatNumber(
-          plan.totalAmount || 0
-        );
-    document
-      .getElementById(
-        "statDone"
-      )
-      .textContent =
-        formatNumber(
-          getCompletedAmount(
-            plan
-          )
-        );
-    document
-      .getElementById(
-        "statWorkdays"
-      )
-      .textContent =
-        formatNumber(
-          workdays
-        );
-    document
-      .getElementById(
-        "statAverage"
-      )
-      .textContent =
-        formatNumber(
-          getAverage(
-            plan
-          )
-        );
-  }
-  function renderQuickInfo() {
-    const total =
-      Number(
-        plan.totalAmount || 0
-      );
-    const done =
-      getCompletedAmount(
-        plan
-      );
-    const remaining =
-      Math.max(
-        0,
-        total - done
-      );
-    document
-      .getElementById(
-        "quickTotal"
-      )
-      .textContent =
-        formatNumber(
-          total
-        );
-    document
-      .getElementById(
-        "quickDone"
-      )
-      .textContent =
-        formatNumber(
-          done
-        );
-    document
-      .getElementById(
-        "quickRemaining"
-      )
-      .textContent =
-        formatNumber(
-          remaining
-        );
-  }
-  function renderFreeDays() {
-    const container =
-      document.getElementById(
-        "freeDaysList"
-      );
-    if (
-      !plan.freeDays.length
-    ) {
-      container.innerHTML = `
-        <div class="empty">
-          Noch keine zusätzlichen freien Tage eingetragen.
-        </div>
-      `;
-      return;
-    }
-    container.innerHTML =
-      plan.freeDays
-        .map(
-          item => `
-            <div class="list-item">
-              <div class="list-item-main">
-                <div class="list-item-title">
-                  ${
-                    escapeHtml(
-                      item.note ||
-                      "Freier Tag"
-                    )
-                  }
-                </div>
-                <div class="list-item-meta">
-                  ${formatDate(
-                    item.date
-                  )}
-                </div>
-              </div>
-              <button
-                class="btn btn-danger btn-small"
-                type="button"
-                data-delete-free="${escapeHtml(item.id)}"
-              >
-                Löschen
-              </button>
-            </div>
-          `
-        )
-        .join("");
-  }
-  function renderHolidays() {
-    const container =
-      document.getElementById(
-        "holidayList"
-      );
-    const holidays =
-      getHolidays(
-        plan.year,
-        plan.state
-      );
-    const stateName =
-      stateEl
-        .options[
-          stateEl.selectedIndex
-        ]
-        ?.text ||
-      plan.state;
-    document
-      .getElementById(
-        "holidayStateLabel"
-      )
-      .textContent =
-        `Feiertage für ${stateName} im Jahr ${plan.year}.`;
-    container.innerHTML =
-      holidays
-        .map(
-          holiday => `
-            <div class="holiday-row">
-              <div class="holiday-date">
-                ${formatDate(
-                  holiday.date
-                )}
-              </div>
-              <div>
-                ${escapeHtml(
-                  holiday.name
-                )}
-              </div>
-            </div>
-          `
-        )
-        .join("");
-  }
-  function renderHistory() {
-    const container =
-      document.getElementById(
-        "historyList"
-      );
-    if (
-      !plan.entries.length
-    ) {
-      container.innerHTML = `
-        <div class="empty">
-          Noch keine Leistungen eingetragen.
-        </div>
-      `;
-      return;
-    }
-    const entries =
-      [...plan.entries]
-        .sort(
-          (a, b) =>
-            b.date.localeCompare(
-              a.date
-            )
-        );
-    container.innerHTML =
-      entries
-        .map(
-          entry => `
-            <div class="list-item">
-              <div class="list-item-main">
-                <div class="list-item-title">
-                  ${formatDate(
-                    entry.date
-                  )}
-                  ·
-                  ${formatNumber(
-                    entry.amount
-                  )}
-                </div>
-                <div class="list-item-meta">
-                  ${
-                    entry.note
-                      ? escapeHtml(
-                          entry.note
-                        )
-                      : "Keine Notiz"
-                  }
-                </div>
-              </div>
-              <button
-                class="btn btn-danger btn-small"
-                type="button"
-                data-delete-entry="${escapeHtml(entry.id)}"
-              >
-                Löschen
-              </button>
-            </div>
-          `
-        )
-        .join("");
-  }
-  /* =====================================================
-     HILFSFUNKTIONEN
-  ===================================================== */
-  function parseAmount(value) {
-    if (
-      value === null ||
-      value === undefined
-    ) {
-      return NaN;
-    }
-    let normalized =
-      String(value)
-        .trim()
-        .replace(
-          /\s/g,
-          ""
-        );
-    if (!normalized) {
-      return NaN;
-    }
-    if (
-      normalized.includes(",") &&
-      normalized.includes(".")
-    ) {
-      if (
-        normalized.lastIndexOf(",") >
-        normalized.lastIndexOf(".")
-      ) {
-        normalized =
-          normalized
-            .replace(
-              /\./g,
-              ""
-            )
-            .replace(
-              ",",
-              "."
-            );
-      } else {
-        normalized =
-          normalized.replace(
-            /,/g,
-            ""
-          );
-      }
-    } else if (
-      normalized.includes(",")
-    ) {
-      normalized =
-        normalized.replace(
-          ",",
-          "."
-        );
-    }
-    return Number(
-      normalized
-    );
-  }
-  function formatNumber(value) {
-    return new Intl.NumberFormat(
-      "de-DE",
-      {
-        maximumFractionDigits: 2
-      }
-    ).format(
-      Number(value) || 0
-    );
-  }
-  function formatSignedNumber(value) {
-    const number =
-      Number(value) || 0;
-    if (
-      number > 0
-    ) {
-      return "+" +
-        formatNumber(
-          number
-        );
-    }
-    return formatNumber(
-      number
-    );
-  }
-  function parseDate(value) {
-    const parts =
-      value.split("-");
-    return new Date(
-      Number(parts[0]),
-      Number(parts[1]) - 1,
-      Number(parts[2])
-    );
-  }
-  function formatDateInput(date) {
-    const year =
-      date.getFullYear();
-    const month =
-      String(
-        date.getMonth() + 1
-      ).padStart(
-        2,
-        "0"
-      );
-    const day =
-      String(
-        date.getDate()
-      ).padStart(
-        2,
-        "0"
-      );
-    return `${year}-${month}-${day}`;
-  }
-  function formatDate(value) {
-    if (!value) {
-      return "–";
-    }
-    const date =
-      parseDate(
-        value
-      );
-    return new Intl.DateTimeFormat(
-      "de-DE",
-      {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric"
-      }
-    ).format(
-      date
-    );
-  }
-  function addDays(
-    date,
-    days
-  ) {
-    const result =
-      new Date(
-        date
-      );
-    result.setDate(
-      result.getDate() +
-      days
-    );
-    return result;
-  }
-  function escapeHtml(value) {
-    return String(
-      value ?? ""
+
+  const entry = {
+    id:(
+      typeof crypto !== "undefined" &&
+      crypto.randomUUID
     )
-      .replace(
-        /&/g,
-        "&amp;"
-      )
-      .replace(
-        /</g,
-        "&lt;"
-      )
-      .replace(
-        />/g,
-        "&gt;"
-      )
-      .replace(
-        /"/g,
-        "&quot;"
-      )
-      .replace(
-        /'/g,
-        "&#039;"
-      );
+      ? crypto.randomUUID()
+      : String(Date.now()) + Math.random(),
+
+    date,
+    amount,
+    note
+  };
+
+  plan.entries.push(entry);
+
+  plan.entries.sort((a,b) =>
+    String(b.date).localeCompare(String(a.date))
+  );
+
+  saveData();
+
+  document.getElementById("entryAmount").value = "";
+  document.getElementById("entryNote").value = "";
+
+  renderAll();
+
+  document.getElementById("uebersicht").scrollIntoView({
+    behavior:"smooth",
+    block:"start"
+  });
+}
+
+/* =========================================================
+   FREIE TAGE
+========================================================= */
+
+function addFreeDay(){
+
+  const date = document.getElementById("freeDate").value;
+  const note = document.getElementById("freeNote").value.trim();
+
+  if(!date){
+    alert("Bitte ein Datum auswählen.");
+    return;
   }
-  /* =====================================================
-     SERVICE WORKER
-  ===================================================== */
-  if (
-    "serviceWorker" in navigator
-  ) {
-    window.addEventListener(
-      "load",
-      () => {
-        navigator.serviceWorker
-          .register(
-            "sw.js"
-          )
-          .catch(
-            error => {
-              console.warn(
-                "Service Worker konnte nicht registriert werden:",
-                error
-              );
-            }
-          );
-      }
+
+  const parsed = parseDate(date);
+
+  if(!parsed){
+    alert("Das Datum ist ungültig.");
+    return;
+  }
+
+  if(parsed.getFullYear() !== Number(plan.year)){
+    alert("Der freie Tag muss im gewählten Planungsjahr liegen.");
+    return;
+  }
+
+  if(plan.freeDays.some(item => item.date === date)){
+    alert("Dieser freie Tag ist bereits eingetragen.");
+    return;
+  }
+
+  plan.freeDays.push({
+    id:(
+      typeof crypto !== "undefined" &&
+      crypto.randomUUID
+    )
+      ? crypto.randomUUID()
+      : String(Date.now()) + Math.random(),
+    date,
+    note:note || "Freier Tag"
+  });
+
+  plan.freeDays.sort((a,b) =>
+    a.date.localeCompare(b.date)
+  );
+
+  saveData();
+
+  document.getElementById("freeNote").value = "";
+
+  renderAll();
+}
+
+function deleteFreeDay(id){
+
+  plan.freeDays = plan.freeDays.filter(item => item.id !== id);
+
+  saveData();
+  renderAll();
+}
+
+function deleteEntry(id){
+
+  if(!confirm("Soll dieser Leistungseintrag gelöscht werden?")){
+    return;
+  }
+
+  plan.entries = plan.entries.filter(item => item.id !== id);
+
+  saveData();
+  renderAll();
+}
+
+/* =========================================================
+   FEIERTAGE
+========================================================= */
+
+function easterSunday(year){
+
+  const a = year % 19;
+  const b = Math.floor(year / 100);
+  const c = year % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19*a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2*e + 2*i - h - k) % 7;
+  const m = Math.floor((a + 11*h + 22*l) / 451);
+  const month = Math.floor((h + l - 7*m + 114) / 31);
+  const day = ((h + l - 7*m + 114) % 31) + 1;
+
+  return new Date(year, month - 1, day);
+}
+
+function addDays(date, days){
+
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+
+  return result;
+}
+
+function getHolidays(year, state){
+
+  const holidays = [];
+
+  function add(date, name){
+    holidays.push({
+      date:formatDateInput(date),
+      name
+    });
+  }
+
+  add(new Date(year,0,1), "Neujahr");
+  add(new Date(year,4,1), "Tag der Arbeit");
+  add(new Date(year,9,3), "Tag der Deutschen Einheit");
+  add(new Date(year,11,25), "1. Weihnachtstag");
+  add(new Date(year,11,26), "2. Weihnachtstag");
+
+  const easter = easterSunday(year);
+
+  add(addDays(easter,-2), "Karfreitag");
+  add(addDays(easter,1), "Ostermontag");
+  add(addDays(easter,39), "Christi Himmelfahrt");
+  add(addDays(easter,50), "Pfingstmontag");
+
+  switch(state){
+
+    case "BW":
+      add(new Date(year,0,6), "Heilige Drei Könige");
+      add(addDays(easter,60), "Fronleichnam");
+      add(new Date(year,10,1), "Allerheiligen");
+      break;
+
+    case "BY":
+      add(new Date(year,0,6), "Heilige Drei Könige");
+      add(addDays(easter,60), "Fronleichnam");
+      add(new Date(year,10,1), "Allerheiligen");
+      add(new Date(year,7,15), "Mariä Himmelfahrt");
+      break;
+
+    case "BE":
+      add(new Date(year,2,8), "Internationaler Frauentag");
+      break;
+
+    case "BB":
+      add(new Date(year,9,31), "Reformationstag");
+      break;
+
+    case "HB":
+      add(new Date(year,9,31), "Reformationstag");
+      break;
+
+    case "HH":
+      add(new Date(year,9,31), "Reformationstag");
+      break;
+
+    case "HE":
+      add(addDays(easter,60), "Fronleichnam");
+      break;
+
+    case "MV":
+      add(new Date(year,2,8), "Internationaler Frauentag");
+      add(new Date(year,9,31), "Reformationstag");
+      break;
+
+    case "NI":
+      add(new Date(year,9,31), "Reformationstag");
+      break;
+
+    case "NW":
+      add(addDays(easter,60), "Fronleichnam");
+      add(new Date(year,10,1), "Allerheiligen");
+      break;
+
+    case "RP":
+      add(addDays(easter,60), "Fronleichnam");
+      add(new Date(year,10,1), "Allerheiligen");
+      break;
+
+    case "SL":
+      add(addDays(easter,60), "Fronleichnam");
+      add(new Date(year,10,1), "Allerheiligen");
+      break;
+
+    case "SN":
+      add(new Date(year,9,31), "Reformationstag");
+      add(new Date(year,10,1), "Allerheiligen");
+      add(addDays(easter,60), "Fronleichnam");
+      add(new Date(year,10,22), "Buß- und Bettag");
+      break;
+
+    case "ST":
+      add(new Date(year,0,6), "Heilige Drei Könige");
+      add(new Date(year,9,31), "Reformationstag");
+      break;
+
+    case "SH":
+      add(new Date(year,9,31), "Reformationstag");
+      break;
+
+    case "TH":
+      add(new Date(year,9,31), "Reformationstag");
+      add(new Date(year,0,6), "Heilige Drei Könige");
+      break;
+  }
+
+  const unique = new Map();
+
+  holidays.forEach(item => {
+    unique.set(item.date,item);
+  });
+
+  return [...unique.values()].sort((a,b) =>
+    a.date.localeCompare(b.date)
+  );
+}
+
+/* =========================================================
+   ARBEITSTAGE
+========================================================= */
+
+function isFreeDay(date){
+
+  const key = formatDateInput(date);
+
+  return plan.freeDays.some(item => item.date === key);
+}
+
+function isHoliday(date){
+
+  const holidays = getHolidays(
+    date.getFullYear(),
+    plan.state
+  );
+
+  const key = formatDateInput(date);
+
+  return holidays.some(item => item.date === key);
+}
+
+function isWorkday(date){
+
+  const day = date.getDay();
+
+  if(day === 0 || day === 6){
+    return false;
+  }
+
+  if(isHoliday(date)){
+    return false;
+  }
+
+  if(isFreeDay(date)){
+    return false;
+  }
+
+  return true;
+}
+
+function countWorkdays(startDate,endDate){
+
+  if(!startDate || !endDate){
+    return 0;
+  }
+
+  const start = parseDate(startDate);
+  const end = parseDate(endDate);
+
+  if(!start || !end || start > end){
+    return 0;
+  }
+
+  let count = 0;
+  const cursor = new Date(start);
+
+  while(cursor <= end){
+
+    if(isWorkday(cursor)){
+      count++;
+    }
+
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  return count;
+}
+
+function getPlanningWorkdays(){
+
+  if(!plan.startDate || !plan.targetDate){
+    return 0;
+  }
+
+  return countWorkdays(
+    plan.startDate,
+    plan.targetDate
+  );
+}
+
+function getRemainingWorkdays(fromDate){
+
+  if(!plan.targetDate){
+    return 0;
+  }
+
+  const target = parseDate(plan.targetDate);
+
+  if(!target){
+    return 0;
+  }
+
+  let start = fromDate
+    ? new Date(fromDate)
+    : new Date();
+
+  start.setHours(0,0,0,0);
+
+  if(start > target){
+    return 0;
+  }
+
+  return countWorkdays(
+    formatDateInput(start),
+    plan.targetDate
+  );
+}
+
+/* =========================================================
+   LEISTUNG / SOLL
+========================================================= */
+
+function getCompletedAmount(){
+
+  if(!plan.entries.length){
+    return 0;
+  }
+
+  return plan.entries.reduce((sum,entry) => {
+
+    const amount = Number(entry.amount);
+
+    if(!Number.isFinite(amount)){
+      return sum;
+    }
+
+    const date = parseDate(entry.date);
+
+    if(!date){
+      return sum;
+    }
+
+    if(date.getFullYear() !== Number(plan.year)){
+      return sum;
+    }
+
+    if(
+      plan.startDate &&
+      entry.date < plan.startDate
+    ){
+      return sum;
+    }
+
+    if(
+      plan.targetDate &&
+      entry.date > plan.targetDate
+    ){
+      return sum;
+    }
+
+    return sum + amount;
+
+  },0);
+}
+
+function getToday(){
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  return today;
+}
+
+function getTargetUntilToday(){
+
+  if(
+    !plan.totalAmount ||
+    !plan.startDate ||
+    !plan.targetDate
+  ){
+    return 0;
+  }
+
+  const start = parseDate(plan.startDate);
+  const target = parseDate(plan.targetDate);
+  const today = getToday();
+
+  if(!start || !target){
+    return 0;
+  }
+
+  if(today < start){
+    return 0;
+  }
+
+  const effectiveEnd =
+    today < target
+      ? today
+      : target;
+
+  const totalWorkdays = countWorkdays(
+    plan.startDate,
+    plan.targetDate
+  );
+
+  if(totalWorkdays <= 0){
+    return 0;
+  }
+
+  const elapsedWorkdays = countWorkdays(
+    plan.startDate,
+    formatDateInput(effectiveEnd)
+  );
+
+  return (
+    plan.totalAmount *
+    elapsedWorkdays /
+    totalWorkdays
+  );
+}
+
+function getRequiredDailyAverage(){
+
+  if(
+    !plan.totalAmount ||
+    !plan.startDate ||
+    !plan.targetDate
+  ){
+    return 0;
+  }
+
+  const workdays = getPlanningWorkdays();
+
+  if(workdays <= 0){
+    return 0;
+  }
+
+  return plan.totalAmount / workdays;
+}
+
+function getTomorrowNeed(){
+
+  const completed = getCompletedAmount();
+  const remaining = Math.max(
+    0,
+    plan.totalAmount - completed
+  );
+
+  if(remaining <= 0){
+    return 0;
+  }
+
+  if(!plan.targetDate){
+    return 0;
+  }
+
+  const tomorrow = addDays(getToday(),1);
+
+  const target = parseDate(plan.targetDate);
+
+  if(!target || tomorrow > target){
+    return 0;
+  }
+
+  const workdays = getRemainingWorkdays(tomorrow);
+
+  if(workdays <= 0){
+    return 0;
+  }
+
+  return remaining / workdays;
+}
+
+/* =========================================================
+   RENDERING
+========================================================= */
+
+function renderAll(){
+
+  renderStatus();
+  renderStats();
+  renderQuickInfo();
+  renderFreeDays();
+  renderHolidays();
+  renderHistory();
+}
+
+function renderStatus(){
+
+  const actual = getCompletedAmount();
+  const target = getTargetUntilToday();
+  const total = Number(plan.totalAmount) || 0;
+  const remaining = Math.max(0,total - actual);
+  const difference = actual - target;
+
+  const percent =
+    total > 0
+      ? Math.min(100,(actual / total) * 100)
+      : 0;
+
+  const targetPercent =
+    total > 0
+      ? Math.min(100,(target / total) * 100)
+      : 0;
+
+  document.getElementById("statusActual").textContent =
+    formatNumber(actual);
+
+  document.getElementById("statusTarget").textContent =
+    formatNumber(target);
+
+  document.getElementById("statusDifference").textContent =
+    formatSignedNumber(difference);
+
+  document.getElementById("statusRemaining").textContent =
+    formatNumber(remaining);
+
+  document.getElementById("statusTomorrow").textContent =
+    formatNumber(getTomorrowNeed());
+
+  document.getElementById("statusSoll").textContent =
+    formatNumber(target);
+
+  document.getElementById("statusWorkdaysRemaining").textContent =
+    getRemainingWorkdays(
+      addDays(getToday(),1)
     );
+
+  document.getElementById("progressBar").style.width =
+    percent + "%";
+
+  document.getElementById("progressText").textContent =
+    formatNumber(percent) + " % erledigt";
+
+  document.getElementById("progressTargetText").textContent =
+    formatNumber(targetPercent) + " % vom Soll";
+
+  const pill = document.getElementById("statusPill");
+
+  pill.className = "status-pill";
+
+  if(total <= 0){
+
+    pill.textContent = "Noch nicht gestartet";
+    pill.classList.add("neutral");
+
+  }else if(actual >= total){
+
+    pill.textContent = "Ziel erreicht";
+    pill.classList.add("good");
+
+  }else if(difference >= -0.000001){
+
+    pill.textContent = "Im Soll";
+    pill.classList.add("good");
+
+  }else{
+
+    pill.textContent = "Hinter dem Soll";
+    pill.classList.add("bad");
   }
+}
+
+function renderStats(){
+
+  document.getElementById("statTotal").textContent =
+    formatNumber(plan.totalAmount || 0);
+
+  document.getElementById("statDone").textContent =
+    formatNumber(getCompletedAmount());
+
+  document.getElementById("statWorkdays").textContent =
+    getPlanningWorkdays();
+
+  document.getElementById("statAverage").textContent =
+    formatNumber(getRequiredDailyAverage());
+}
+
+function renderQuickInfo(){
+
+  const total = Number(plan.totalAmount) || 0;
+  const done = getCompletedAmount();
+
+  document.getElementById("quickTotal").textContent =
+    formatNumber(total);
+
+  document.getElementById("quickDone").textContent =
+    formatNumber(done);
+
+  document.getElementById("quickRemaining").textContent =
+    formatNumber(Math.max(0,total - done));
+}
+
+function renderFreeDays(){
+
+  const container =
+    document.getElementById("freeDaysList");
+
+  if(!plan.freeDays.length){
+
+    container.innerHTML =
+      '<div class="list-empty">Noch keine zusätzlichen freien Tage eingetragen.</div>';
+
+    return;
+  }
+
+  container.innerHTML = plan.freeDays
+    .sort((a,b) => a.date.localeCompare(b.date))
+    .map(item => `
+      <div class="list-item">
+        <div class="list-main">
+          <div class="list-title">
+            ${escapeHtml(formatDate(item.date))}
+          </div>
+          <div class="list-meta">
+            ${escapeHtml(item.note || "Freier Tag")}
+          </div>
+        </div>
+
+        <button
+          class="list-delete"
+          type="button"
+          data-delete-free="${escapeHtml(item.id)}">
+          Entfernen
+        </button>
+      </div>
+    `)
+    .join("");
+
+  container.querySelectorAll("[data-delete-free]").forEach(button => {
+    button.addEventListener("click",function(){
+      deleteFreeDay(this.dataset.deleteFree);
+    });
+  });
+}
+
+function renderHolidays(){
+
+  const stateEl = document.getElementById("planState");
+  const stateName =
+    stateEl.options[stateEl.selectedIndex]
+      ? stateEl.options[stateEl.selectedIndex].text
+      : "";
+
+  document.getElementById("holidayStateLabel").textContent =
+    "Gesetzliche Feiertage für " +
+    stateName +
+    " im Jahr " +
+    plan.year +
+    ".";
+
+  const holidays =
+    getHolidays(plan.year,plan.state);
+
+  const container =
+    document.getElementById("holidayList");
+
+  container.innerHTML = holidays.map(item => `
+    <div class="holiday-item">
+      <div class="holiday-date">
+        ${escapeHtml(formatDate(item.date))}
+      </div>
+      <div class="holiday-name">
+        ${escapeHtml(item.name)}
+      </div>
+    </div>
+  `).join("");
+}
+
+function renderHistory(){
+
+  const container =
+    document.getElementById("historyList");
+
+  if(!plan.entries.length){
+
+    container.innerHTML =
+      '<div class="list-empty">Noch keine Leistungen eingetragen.</div>';
+
+    return;
+  }
+
+  container.innerHTML = plan.entries
+    .sort((a,b) => String(b.date).localeCompare(String(a.date)))
+    .map(entry => `
+      <div class="list-item">
+
+        <div class="list-main">
+          <div class="list-title">
+            ${escapeHtml(formatDate(entry.date))}
+          </div>
+
+          <div class="list-meta">
+            ${entry.note
+              ? escapeHtml(entry.note)
+              : "Keine Notiz"}
+          </div>
+        </div>
+
+        <div class="list-value">
+          ${escapeHtml(formatNumber(entry.amount))}
+        </div>
+
+        <button
+          class="list-delete"
+          type="button"
+          data-delete-entry="${escapeHtml(entry.id)}">
+          Löschen
+        </button>
+
+      </div>
+    `)
+    .join("");
+
+  container.querySelectorAll("[data-delete-entry]").forEach(button => {
+    button.addEventListener("click",function(){
+      deleteEntry(this.dataset.deleteEntry);
+    });
+  });
+}
+
+/* =========================================================
+   HILFSFUNKTIONEN
+========================================================= */
+
+function parseAmount(value){
+
+  if(value === null || value === undefined){
+    return NaN;
+  }
+
+  let text = String(value).trim();
+
+  if(!text){
+    return NaN;
+  }
+
+  text = text.replace(/\s/g,"");
+
+  if(text.includes(",") && text.includes(".")){
+    text = text.replace(/\./g,"").replace(",",".");
+  }else{
+    text = text.replace(",",".");
+  }
+
+  return Number(text);
+}
+
+function formatNumber(value){
+
+  const number = Number(value);
+
+  if(!Number.isFinite(number)){
+    return "0";
+  }
+
+  return number.toLocaleString("de-DE",{
+    minimumFractionDigits:0,
+    maximumFractionDigits:2
+  });
+}
+
+function formatSignedNumber(value){
+
+  const number = Number(value);
+
+  if(!Number.isFinite(number)){
+    return "0";
+  }
+
+  if(Math.abs(number) < 0.005){
+    return "0";
+  }
+
+  return (
+    number > 0 ? "+" : ""
+  ) + formatNumber(number);
+}
+
+function parseDate(value){
+
+  if(!value){
+    return null;
+  }
+
+  const parts = String(value).split("-");
+
+  if(parts.length !== 3){
+    return null;
+  }
+
+  const year = Number(parts[0]);
+  const month = Number(parts[1]) - 1;
+  const day = Number(parts[2]);
+
+  const date = new Date(year,month,day);
+
+  if(
+    date.getFullYear() !== year ||
+    date.getMonth() !== month ||
+    date.getDate() !== day
+  ){
+    return null;
+  }
+
+  date.setHours(0,0,0,0);
+
+  return date;
+}
+
+function formatDateInput(date){
+
+  if(!(date instanceof Date) || Number.isNaN(date.getTime())){
+    return "";
+  }
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth()+1).padStart(2,"0");
+  const day = String(date.getDate()).padStart(2,"0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function formatDate(value){
+
+  const date =
+    value instanceof Date
+      ? value
+      : parseDate(value);
+
+  if(!date){
+    return "";
+  }
+
+  return date.toLocaleDateString("de-DE",{
+    day:"2-digit",
+    month:"2-digit",
+    year:"numeric"
+  });
+}
+
+function escapeHtml(value){
+
+  return String(value ?? "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
+
+/* =========================================================
+   SERVICE WORKER
+========================================================= */
+
+if("serviceWorker" in navigator){
+
+  window.addEventListener("load",() => {
+
+    navigator.serviceWorker
+      .register("./sw.js")
+      .catch(error => {
+        console.warn(
+          "Service Worker konnte nicht registriert werden:",
+          error
+        );
+      });
+
+  });
+
+}
 </script>
+
 </body>
 </html>
