@@ -1,8 +1,9 @@
-const CACHE_NAME = "schornstein-planer-v9";
+const CACHE_NAME = "schornstein-planer-v10";
 
 const APP_SHELL = [
   "./",
   "./index.html",
+  "./termine.js",
   "./manifest.webmanifest",
   "./icons/icon-192.png"
 ];
