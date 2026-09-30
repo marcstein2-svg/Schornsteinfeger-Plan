@@ -1,0 +1,6740 @@
+<!DOCTYPE html>
+
+<html lang="de">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Schornstein Planer</title>
+
+  <meta
+    name="description"
+    content="Digitale Arbeitsplanung für das Schornsteinfeger-Handwerk."
+  >
+
+  <meta name="theme-color" content="#20252b">
+
+  <link rel="manifest" href="manifest.webmanifest">
+
+  <link rel="icon" href="icons/icon-192.png">
+
+  <style>
+
+    :root {
+      --bg: #f3f5f7;
+      --card: #ffffff;
+      --dark: #22272d;
+      --dark-2: #2d343c;
+      --gold: #c79a42;
+      --gold-light: #f3e4c1;
+      --text: #242a30;
+      --muted: #6c757d;
+      --border: #e1e5e9;
+      --green: #16845b;
+      --green-light: #e8f6ef;
+      --red: #c84d4d;
+      --red-light: #fdecec;
+      --shadow: 0 8px 28px rgba(28, 35, 42, .07);
+      --radius: 17px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+      line-height: 1.5;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* =====================================================
+       HEADER
+    ===================================================== */
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 5000;
+      background:
+        linear-gradient(
+          135deg,
+          #20252b 0%,
+          #282f36 100%
+        );
+      color: #fff;
+      box-shadow:
+        0 4px 20px rgba(0, 0, 0, .12);
+      overflow: visible !important;
+    }
+
+    .header-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding:
+        14px 20px 0;
+      overflow: visible !important;
+    }
+
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      min-height: 56px;
+    }
+
+    .brand-logo {
+      width: 48px;
+      height: 48px;
+      flex: 0 0 48px;
+      display: grid;
+      place-items: center;
+      border-radius: 13px;
+      background: var(--gold);
+      box-shadow:
+        0 5px 15px rgba(0, 0, 0, .2);
+    }
+
+    .brand-logo svg {
+      width: 36px;
+      height: 36px;
+    }
+
+    .brand-title {
+      margin: 0;
+      font-size: 1.35rem;
+      line-height: 1.1;
+      font-weight: 800;
+      letter-spacing: -.02em;
+    }
+
+    .brand-subtitle {
+      margin: 3px 0 0;
+      color: #c9cfd4;
+      font-size: .82rem;
+    }
+
+    .brand-badge {
+      margin-left: auto;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border:
+        1px solid rgba(255,255,255,.14);
+      background:
+        rgba(255,255,255,.06);
+      color: var(--gold-light);
+      font-size: .72rem;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
+    /* =====================================================
+       NAVIGATION
+    ===================================================== */
+
+    .main-nav {
+      position: relative;
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      margin-top: 12px;
+      min-height: 43px;
+      overflow: visible !important;
+    }
+
+    .nav-link,
+    .legal-button {
+      display: inline-flex;
+      align-items: center;
+      border: 0;
+      background: transparent;
+      color: #d7dce1;
+      text-decoration: none;
+      padding: 9px 11px;
+      border-radius: 9px 9px 0 0;
+      font-size: .86rem;
+      font-weight: 650;
+      white-space: nowrap;
+      transition:
+        background .18s ease,
+        color .18s ease;
+    }
+
+    .nav-link:hover,
+    .legal-button:hover,
+    .legal-button[aria-expanded="true"] {
+      background:
+        rgba(255,255,255,.08);
+      color: #fff;
+    }
+
+    /* =====================================================
+       RECHTLICHES DROPDOWN
+    ===================================================== */
+
+    .legal-menu {
+      position: relative;
+      margin-left: auto;
+      z-index: 99999;
+    }
+
+    .legal-button {
+      gap: 7px;
+    }
+
+    .legal-arrow {
+      font-size: .62rem;
+      transition:
+        transform .18s ease;
+    }
+
+    .legal-button[aria-expanded="true"]
+    .legal-arrow {
+      transform:
+        rotate(180deg);
+    }
+
+    .legal-dropdown {
+      position: absolute;
+      top: calc(100% + 4px);
+      right: 0;
+      width: 220px;
+      padding: 6px;
+      background: #fff;
+      border:
+        1px solid var(--border);
+      border-radius: 12px;
+      box-shadow:
+        0 15px 35px rgba(0,0,0,.22);
+      z-index: 999999;
+    }
+
+    .legal-dropdown[hidden] {
+      display: none !important;
+    }
+
+    .legal-dropdown button {
+      display: block;
+      width: 100%;
+      border: 0;
+      background: transparent;
+      color: var(--text);
+      text-align: left;
+      padding: 11px 12px;
+      border-radius: 8px;
+      font-size: .86rem;
+      font-weight: 600;
+    }
+
+    .legal-dropdown button:hover {
+      background: #f1f3f5;
+    }
+
+    /* =====================================================
+       MAIN
+    ===================================================== */
+
+    main {
+      position: relative;
+      z-index: 1;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding:
+        27px 20px 50px;
+    }
+
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    /* =====================================================
+       HERO
+    ===================================================== */
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      min-height: 220px;
+      margin-bottom: 21px;
+      padding: 31px;
+      background:
+        linear-gradient(
+          135deg,
+          #fff 0%,
+          #fafbfc 70%,
+          #f4ead5 100%
+        );
+      border:
+        1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 680px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--gold-light);
+      border:
+        1px solid #e4ca8d;
+      color: #7d5b20;
+      font-size: .73rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .hero h1 {
+      margin: 13px 0 8px;
+      font-size:
+        clamp(2rem, 4vw, 3rem);
+      line-height: 1.02;
+      letter-spacing: -.045em;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      max-width: 630px;
+      font-size: 1rem;
+    }
+
+    /* =====================================================
+       CHIMNEY ILLUSTRATION
+    ===================================================== */
+
+    .chimney-art {
+      position: absolute;
+      right: 35px;
+      bottom: 0;
+      width: 260px;
+      height: 200px;
+      opacity: .95;
+    }
+
+    .roof {
+      position: absolute;
+      right: -10px;
+      bottom: 0;
+      width: 295px;
+      height: 112px;
+      background: #3b434b;
+      clip-path:
+        polygon(
+          0 100%,
+          54% 0,
+          100% 100%
+        );
+    }
+
+    .roof-line {
+      position: absolute;
+      right: 19px;
+      bottom: 16px;
+      width: 220px;
+      height: 5px;
+      background: var(--gold);
+      transform:
+        rotate(-18deg);
+      transform-origin:
+        right center;
+      border-radius: 5px;
+    }
+
+    .chimney {
+      position: absolute;
+      right: 102px;
+      bottom: 70px;
+      width: 45px;
+      height: 100px;
+      background: #777f86;
+      border:
+        4px solid #5d656c;
+      border-bottom: 0;
+    }
+
+    .chimney::before {
+      content: "";
+      position: absolute;
+      left: -8px;
+      top: -12px;
+      width: 57px;
+      height: 13px;
+      background: #42494f;
+      border-radius: 3px;
+    }
+
+    .smoke {
+      position: absolute;
+      right: 108px;
+      bottom: 176px;
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      background: #b9bec3;
+      box-shadow:
+        16px -13px 0 -3px #c4c8cc,
+        33px -27px 0 -7px #d1d4d7;
+      opacity: .8;
+    }
+
+    /* =====================================================
+       CARDS
+    ===================================================== */
+
+    .card {
+      background: var(--card);
+      border:
+        1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 23px;
+      margin-bottom: 19px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 15px;
+      margin-bottom: 19px;
+    }
+
+    .card-header h2,
+    .card-header h3 {
+      margin: 0;
+      line-height: 1.2;
+      letter-spacing: -.02em;
+    }
+
+    .card-header p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: .88rem;
+    }
+
+    .section-icon {
+      width: 39px;
+      height: 39px;
+      flex: 0 0 39px;
+      display: grid;
+      place-items: center;
+      border-radius: 11px;
+      background: #f0f2f4;
+      font-size: 1.1rem;
+    }
+
+    /* =====================================================
+       FORMULARE
+    ===================================================== */
+
+    .form-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(4, 1fr);
+      gap: 15px;
+    }
+
+    .form-grid.two {
+      grid-template-columns:
+        repeat(2, 1fr);
+    }
+
+    .field {
+      min-width: 0;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 6px;
+      color: #4f5962;
+      font-size: .79rem;
+      font-weight: 750;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      padding: 10px 11px;
+      border:
+        1px solid #d5dbe0;
+      border-radius: 10px;
+      background: #fff;
+      color: var(--text);
+      outline: none;
+      transition:
+        border-color .18s ease,
+        box-shadow .18s ease;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: var(--gold);
+      box-shadow:
+        0 0 0 3px
+        rgba(199,154,66,.13);
+    }
+
+    .field textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 9px;
+      margin-top: 17px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 15px;
+      font-weight: 750;
+      transition:
+        transform .16s ease,
+        background .16s ease;
+    }
+
+    .btn:hover {
+      transform:
+        translateY(-1px);
+    }
+
+    .btn-primary {
+      background: var(--dark);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: #15191d;
+    }
+
+    .btn-gold {
+      background: var(--gold);
+      color: #1e180d;
+    }
+
+    .btn-gold:hover {
+      background: #d4a953;
+    }
+
+    .btn-light {
+      background: #edf0f2;
+      color: var(--dark);
+    }
+
+    .btn-light:hover {
+      background: #e1e5e8;
+    }
+
+    .btn-danger {
+      background: #fff0f0;
+      color: #a73737;
+    }
+
+    .btn-small {
+      padding: 6px 9px;
+      font-size: .76rem;
+    }
+
+    /* =====================================================
+       PREVIEW
+    ===================================================== */
+
+    .preview-box {
+      margin-top: 18px;
+      padding: 14px;
+      border:
+        1px dashed #d2b26b;
+      border-radius: 12px;
+      background: #fffaf0;
+      color: #5e4a22;
+      font-size: .88rem;
+    }
+
+    /* =====================================================
+       LEISTUNG
+    ===================================================== */
+
+    .performance-card {
+      border-top:
+        4px solid var(--gold);
+    }
+
+    .performance-grid {
+      display: grid;
+      grid-template-columns:
+        1fr 1fr 1.35fr auto;
+      gap: 11px;
+      align-items: end;
+    }
+
+    .quick-info {
+      display: grid;
+      grid-template-columns:
+        repeat(3, 1fr);
+      gap: 9px;
+      margin-top: 16px;
+    }
+
+    .quick-info-item {
+      padding: 12px;
+      background: #f7f8f9;
+      border:
+        1px solid var(--border);
+      border-radius: 11px;
+    }
+
+    .quick-info-item span {
+      display: block;
+      margin-bottom: 2px;
+      color: var(--muted);
+      font-size: .73rem;
+    }
+
+    .quick-info-item strong {
+      font-size: .98rem;
+    }
+
+    /* =====================================================
+       STATUS
+    ===================================================== */
+
+    .status-card {
+      color: #fff;
+      border: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(
+          circle at 90% 10%,
+          rgba(199,154,66,.18),
+          transparent 32%
+        ),
+        linear-gradient(
+          135deg,
+          #22272d,
+          #30383f
+        );
+    }
+
+    .status-card .card-header p {
+      color: #bfc6cc;
+    }
+
+    .status-main {
+      display: grid;
+      grid-template-columns:
+        1.15fr .85fr;
+      gap: 17px;
+    }
+
+    .status-primary {
+      padding: 20px;
+      background:
+        rgba(255,255,255,.055);
+      border:
+        1px solid rgba(255,255,255,.08);
+      border-radius: 15px;
+    }
+
+    .status-label {
+      color: #c7cdd2;
+      font-size: .79rem;
+    }
+
+    .status-number {
+      margin: 5px 0;
+      font-size:
+        clamp(2rem, 5vw, 3.35rem);
+      font-weight: 850;
+      line-height: 1;
+      letter-spacing: -.04em;
+    }
+
+    .status-sub {
+      color: #aeb6bd;
+      font-size: .83rem;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      margin-top: 14px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: .76rem;
+      font-weight: 800;
+    }
+
+    .status-pill.good {
+      background:
+        rgba(22,132,91,.18);
+      color: #7be0b3;
+    }
+
+    .status-pill.bad {
+      background:
+        rgba(200,77,77,.18);
+      color: #ff9e9e;
+    }
+
+    .status-pill.neutral {
+      background:
+        rgba(199,154,66,.17);
+      color: #f0ce83;
+    }
+
+    .status-stats {
+      display: grid;
+      grid-template-columns:
+        1fr 1fr;
+      gap: 9px;
+    }
+
+    .dark-stat {
+      padding: 15px;
+      background:
+        rgba(255,255,255,.055);
+      border:
+        1px solid rgba(255,255,255,.08);
+      border-radius: 13px;
+    }
+
+    .dark-stat span {
+      display: block;
+      color: #aeb6bd;
+      font-size: .71rem;
+    }
+
+    .dark-stat strong {
+      display: block;
+      margin-top: 3px;
+      font-size: 1.2rem;
+    }
+
+    .progress-wrap {
+      margin-top: 17px;
+    }
+
+    .progress-track {
+      height: 10px;
+      background:
+        rgba(255,255,255,.1);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      width: 0;
+      height: 100%;
+      background:
+        linear-gradient(
+          90deg,
+          var(--gold),
+          #f1d17f
+        );
+      border-radius: inherit;
+      transition:
+        width .35s ease;
+    }
+
+    .progress-caption {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 6px;
+      color: #b9c0c5;
+      font-size: .73rem;
+    }
+
+    /* =====================================================
+       STATISTIK
+    ===================================================== */
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 19px;
+    }
+
+    .stat-card {
+      padding: 17px;
+      background: #fff;
+      border:
+        1px solid var(--border);
+      border-radius: 15px;
+      box-shadow: var(--shadow);
+    }
+
+    .stat-icon {
+      margin-bottom: 8px;
+    }
+
+    .stat-card span {
+      display: block;
+      color: var(--muted);
+      font-size: .75rem;
+    }
+
+    .stat-card strong {
+      display: block;
+      margin-top: 2px;
+      font-size: 1.35rem;
+    }
+
+    /* =====================================================
+       ZWEI SPALTEN
+    ===================================================== */
+
+    .two-column {
+      display: grid;
+      grid-template-columns:
+        1fr 1fr;
+      gap: 19px;
+    }
+
+    /* =====================================================
+       LISTEN
+    ===================================================== */
+
+    .list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .list-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 11px 12px;
+      background: #f7f8f9;
+      border:
+        1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    .list-item-main {
+      min-width: 0;
+    }
+
+    .list-item-title {
+      font-weight: 750;
+    }
+
+    .list-item-meta {
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: .75rem;
+    }
+
+    .empty {
+      padding: 20px 10px;
+      background: #f7f8f9;
+      border:
+        1px dashed var(--border);
+      border-radius: 10px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    /* =====================================================
+       FEIERTAGE
+    ===================================================== */
+
+    .holiday-list {
+      display: grid;
+      gap: 7px;
+    }
+
+    .holiday-row {
+      display: grid;
+      grid-template-columns:
+        95px 1fr;
+      gap: 10px;
+      padding: 9px 11px;
+      background: #f7f8f9;
+      border:
+        1px solid var(--border);
+      border-radius: 9px;
+      font-size: .86rem;
+    }
+
+    .holiday-date {
+      color: #805d1e;
+      font-weight: 800;
+    }
+
+    /* =====================================================
+       RECHTLICHE SEITEN
+    ===================================================== */
+
+    .legal-page {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .legal-page h1 {
+      margin-top: 0;
+    }
+
+    .legal-page h2 {
+      margin-top: 27px;
+      font-size: 1.12rem;
+    }
+
+    .legal-page p,
+    .legal-page li {
+      color: #515a62;
+    }
+
+    .back-button {
+      margin-bottom: 16px;
+    }
+
+    /* =====================================================
+       FOOTER
+    ===================================================== */
+
+    footer {
+      background: #20252b;
+      color: #abb4bb;
+      padding: 27px 20px;
+    }
+
+    .footer-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .footer-title {
+      color: #fff;
+      font-weight: 750;
+    }
+
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .footer-links button {
+      border: 0;
+      background: transparent;
+      color: #cbd1d6;
+      padding: 6px 8px;
+      border-radius: 7px;
+    }
+
+    .footer-links button:hover {
+      background:
+        rgba(255,255,255,.07);
+      color: #fff;
+    }
+
+    /* =====================================================
+       SPENDEN / UNTERSTÜTZEN
+    ===================================================== */
+
+    .donation-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      margin-top: 12px;
+      padding: 9px 14px;
+      border: 1px solid rgba(199,154,66,.55);
+      border-radius: 10px;
+      background: rgba(199,154,66,.12);
+      color: var(--gold-light);
+      text-decoration: none;
+      font-size: .82rem;
+      font-weight: 750;
+      transition:
+        background .18s ease,
+        border-color .18s ease,
+        transform .16s ease;
+    }
+
+    .donation-button:hover {
+      background: rgba(199,154,66,.22);
+      border-color: var(--gold);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+
+    .donation-button:active {
+      transform: translateY(0);
+    }
+
+    /* =====================================================
+       TABLET
+    ===================================================== */
+
+    @media (max-width: 950px) {
+
+      .form-grid {
+        grid-template-columns:
+          repeat(2, 1fr);
+      }
+
+      .performance-grid {
+        grid-template-columns:
+          1fr 1fr;
+      }
+
+      .performance-grid .btn {
+        width: 100%;
+      }
+
+      .stats-grid {
+        grid-template-columns:
+          repeat(2, 1fr);
+      }
+
+      .status-main {
+        grid-template-columns: 1fr;
+      }
+
+      .chimney-art {
+        opacity: .22;
+      }
+
+    }
+
+    /* =====================================================
+       MOBILE / HOCHFORMAT
+    ===================================================== */
+
+    @media (max-width: 720px) {
+
+      .site-header {
+        position: relative;
+        z-index: 5000;
+        overflow: visible !important;
+      }
+
+      .header-inner {
+        padding:
+          12px 12px 0;
+        overflow: visible !important;
+      }
+
+      .brand-row {
+        min-height: 50px;
+      }
+
+      .brand-logo {
+        width: 42px;
+        height: 42px;
+        flex-basis: 42px;
+      }
+
+      .brand-logo svg {
+        width: 32px;
+        height: 32px;
+      }
+
+      .brand-title {
+        font-size: 1.08rem;
+      }
+
+      .brand-subtitle {
+        font-size: .7rem;
+      }
+
+      .brand-badge {
+        display: none;
+      }
+
+      .main-nav {
+        position: relative;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 3px;
+        margin-top: 9px;
+        min-height: 0;
+        padding-bottom: 7px;
+        overflow: visible !important;
+      }
+
+      .nav-link,
+      .legal-button {
+        padding:
+          8px 8px;
+        font-size: .76rem;
+      }
+
+      .legal-menu {
+        position: static;
+        margin-left: 0;
+        z-index: 99999;
+      }
+
+      .legal-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 12px;
+        right: 12px;
+        width: auto;
+        margin-top: 5px;
+        padding: 7px;
+        background: #fff;
+        border:
+          1px solid var(--border);
+        border-radius: 13px;
+        box-shadow:
+          0 18px 40px
+          rgba(0,0,0,.25);
+        z-index: 999999;
+      }
+
+      .legal-dropdown button {
+        padding:
+          12px;
+        font-size: .88rem;
+      }
+
+      main {
+        padding:
+          18px 12px 35px;
+        z-index: 1;
+      }
+
+      .hero {
+        min-height: 245px;
+        padding:
+          23px 19px;
+      }
+
+      .hero h1 {
+        font-size: 1.95rem;
+      }
+
+      .hero p {
+        font-size: .91rem;
+      }
+
+      .chimney-art {
+        right: -45px;
+        bottom: -10px;
+        transform:
+          scale(.78);
+        transform-origin:
+          bottom right;
+      }
+
+      .card {
+        padding: 18px;
+      }
+
+      .form-grid,
+      .form-grid.two {
+        grid-template-columns: 1fr;
+      }
+
+      .performance-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .performance-grid .btn {
+        width: 100%;
+      }
+
+      .quick-info {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-grid {
+        grid-template-columns:
+          1fr 1fr;
+      }
+
+      .two-column {
+        grid-template-columns: 1fr;
+      }
+
+      .holiday-row {
+        grid-template-columns: 1fr;
+        gap: 2px;
+      }
+
+      .footer-inner {
+        align-items: flex-start;
+      }
+
+      .donation-button {
+        width: 100%;
+        max-width: 280px;
+      }
+
+    }
+
+    /* =====================================================
+       SEHR SCHMALES HOCHFORMAT
+    ===================================================== */
+
+    @media (max-width: 430px) {
+
+      .brand-title {
+        font-size: 1rem;
+      }
+
+      .brand-subtitle {
+        font-size: .65rem;
+      }
+
+      .main-nav {
+        gap: 2px;
+      }
+
+      .nav-link,
+      .legal-button {
+        font-size: .72rem;
+        padding:
+          7px;
+      }
+
+      .legal-dropdown {
+        left: 8px;
+        right: 8px;
+        width: auto;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .status-stats {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        min-height: 270px;
+      }
+
+      .form-actions {
+        flex-direction: column;
+      }
+
+      .form-actions .btn {
+        width: 100%;
+      }
+
+      .list-item {
+        align-items: flex-start;
+      }
+
+    }
+
+  
+
+
+    /* Planung und Termine als gemeinsamer Arbeitsbereich */
+    .sp-planning-appointments {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+      gap: 24px;
+      align-items: start;
+      margin-top: 24px;
+      scroll-margin-top: 18px;
+    }
+
+    .sp-planning-appointments > #planung {
+      margin-top: 0;
+    }
+
+    .sp-planning-appointments > .sp-calendar-card {
+      margin-top: 0;
+      min-width: 0;
+    }
+    .sp-planning-appointments > #planung { order: 1; }
+    .sp-planning-appointments > .sp-calendar-card { order: 2; }
+    @media (max-width: 1100px) {
+      .sp-planning-appointments > #planung,
+      .sp-planning-appointments > .sp-calendar-card { order: initial; }
+    }
+
+
+    @media (max-width: 1100px) {
+      .sp-planning-appointments {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* =====================================================
+       TERMINPLANER – ERWEITERUNG
+    ===================================================== */
+
+    .sp-calendar-card {
+      margin-top: 24px;
+      padding: 24px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .sp-card-header,
+    .sp-toolbar,
+    .sp-toolbar-group {
+      display: flex;
+      align-items: center;
+    }
+
+    .sp-card-header {
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 18px;
+    }
+
+    .sp-card-header h2 { margin: 4px 0 5px; }
+    .sp-card-header p { margin: 0; color: var(--muted); }
+    .sp-eyebrow { font-size: .78rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); }
+    .sp-calendar-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+    .sp-file-label { cursor: pointer; }
+    .sp-toolbar { justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px; background: #f7f8f9; border: 1px solid var(--border); border-radius: 13px; margin-bottom: 12px; }
+    .sp-toolbar-group { gap: 7px; flex-wrap: wrap; }
+    .sp-toolbar strong { margin-left: 8px; min-width: 210px; }
+    .sp-view-btn.active { background: var(--dark); color: #fff; border-color: var(--dark); }
+    .sp-calendar-notice { padding: 10px 12px; margin-bottom: 12px; border-radius: 10px; background: var(--gold-light); border: 1px solid #e7d19d; color: var(--dark); font-size: .9rem; }
+    .sp-calendar-notice[hidden] { display: none; }
+    .sp-calendar { overflow-x: auto; border: 1px solid var(--border); border-radius: 13px; background: #fff; }
+    .sp-cal-head { display: grid; grid-template-columns: 68px repeat(var(--sp-days), minmax(170px, 1fr)); min-width: 760px; background: #f7f8f9; border-bottom: 1px solid var(--border); }
+    .sp-cal-head > div { padding: 10px 8px; border-right: 1px solid var(--border); font-size: .82rem; font-weight: 800; }
+    .sp-cal-head .sp-day-head { text-align: center; }
+    .sp-cal-head .sp-day-head small { display: block; margin-top: 2px; font-weight: 600; color: var(--muted); }
+    .sp-day-head.today { background: var(--gold-light); }
+    .sp-cal-row { display: grid; grid-template-columns: 68px repeat(var(--sp-days), minmax(170px, 1fr)); min-width: 760px; min-height: 92px; }
+    .sp-cal-time { padding: 10px 8px; text-align: right; color: var(--muted); font-size: .75rem; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .sp-cal-cell { padding: 6px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); min-width: 0; }
+    .sp-cal-cell.holiday { background: #fff8f0; }
+    .sp-cal-cell.weekend { background: #fafafa; }
+    .sp-slot-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; height: 100%; }
+    .sp-slot { min-width: 0; border: 1px dashed #cfd5da; border-radius: 8px; background: #fff; padding: 6px; text-align: left; cursor: pointer; transition: .15s ease; overflow: hidden; }
+    .sp-slot:hover { border-color: var(--gold); box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+    .sp-slot.empty { color: #a1a8ae; text-align: center; display: flex; align-items: center; justify-content: center; font-size: .72rem; }
+    .sp-slot.busy { border-style: solid; background: #fbfcfd; }
+    .sp-slot-time { font-size: .68rem; color: var(--gold); font-weight: 800; }
+    .sp-slot-name { font-size: .78rem; font-weight: 800; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sp-slot-address { font-size: .69rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sp-secondary-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(320px, .75fr); gap: 16px; margin-top: 16px; }
+    .sp-panel { border: 1px solid var(--border); border-radius: 13px; padding: 16px; background: #fff; }
+    .sp-panel-title { font-weight: 900; font-size: 1.05rem; margin-bottom: 6px; }
+    .sp-muted { color: var(--muted); font-size: .86rem; margin: 0 0 12px; }
+    .sp-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .sp-business-grid { margin-top: 12px; }
+    .sp-proposal-list { display: grid; gap: 7px; margin: 12px 0; max-height: 260px; overflow: auto; }
+    .sp-proposal-item { display: grid; grid-template-columns: 34px 1fr auto; gap: 8px; align-items: center; border: 1px solid var(--border); border-radius: 10px; padding: 9px; }
+    .sp-proposal-item.selected { border-color: var(--gold); background: #fffaf0; }
+    .sp-proposal-item input { accent-color: var(--gold); }
+    .sp-proposal-main strong { display: block; font-size: .88rem; }
+    .sp-proposal-main span { display: block; color: var(--muted); font-size: .76rem; }
+    .sp-proposal-actions { display: flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end; }
+    .sp-proposal-actions button { font-size: .72rem; padding: 6px 8px; }
+    .sp-backup-note { margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: #f7f8f9; color: var(--muted); font-size: .78rem; line-height: 1.5; }
+    .sp-modal-backdrop { position: fixed; inset: 0; z-index: 9998; background: rgba(20,25,30,.52); display: flex; align-items: center; justify-content: center; padding: 18px; }
+    .sp-modal-backdrop[hidden] { display: none; }
+    .sp-modal { width: min(720px, 100%); max-height: 92vh; overflow: auto; background: #fff; border-radius: 17px; box-shadow: 0 20px 60px rgba(0,0,0,.25); padding: 20px; }
+    .sp-modal h3 { margin-top: 0; }
+    .sp-modal-actions { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+    .sp-danger { color: var(--red); }
+
+    @media (max-width: 850px) {
+      .sp-card-header, .sp-secondary-grid { grid-template-columns: 1fr; flex-direction: column; align-items: stretch; }
+      .sp-calendar-actions { justify-content: flex-start; }
+      .sp-secondary-grid { display: grid; }
+    }
+
+    @media (max-width: 600px) {
+      .sp-calendar-card { padding: 14px; }
+      .sp-form-grid { grid-template-columns: 1fr; }
+      .sp-toolbar strong { min-width: 0; width: 100%; order: 5; margin-left: 0; }
+    }
+
+
+    /* =====================================================
+       EINKLAPPBARE BEREICHE (Planung & Termine / Terminübersicht)
+    ===================================================== */
+    details.sp-collapse > summary { list-style: none; }
+    details.sp-collapse > summary::-webkit-details-marker { display: none; }
+
+    .sp-collapse-main {
+      margin-top: 24px;
+      scroll-margin-top: 18px;
+    }
+    .sp-collapse-main > summary {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-height: 60px;
+      padding: 14px 20px;
+      cursor: pointer;
+      user-select: none;
+      background: var(--dark);
+      color: #fff;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      font-weight: 800;
+      font-size: 1.12rem;
+    }
+    .sp-collapse-main[open] > summary { border-bottom-left-radius: 6px; border-bottom-right-radius: 6px; }
+    .sp-collapse-main > summary:hover { background: var(--dark-2); }
+    .sp-collapse-main .sp-collapse-hint { margin-left: auto; font-size: .82rem; font-weight: 600; color: var(--gold-light); }
+    .sp-collapse-main > .sp-planning-appointments { margin-top: 16px; }
+
+    .sp-collapse-inner {
+      margin-bottom: 14px;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      background: #fff;
+      overflow: hidden;
+    }
+    .sp-collapse-inner > summary {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 52px;
+      padding: 12px 16px;
+      cursor: pointer;
+      user-select: none;
+      background: #f7f8f9;
+      font-weight: 800;
+      font-size: 1.02rem;
+    }
+    .sp-collapse-inner > summary:hover { background: #f0f2f4; }
+    .sp-collapse-inner[open] > summary { border-bottom: 1px solid var(--border); }
+    .sp-collapse-inner .sp-collapse-hint { margin-left: auto; font-size: .78rem; font-weight: 600; color: var(--muted); }
+    .sp-collapse-body { padding: 12px; }
+
+    .sp-chevron {
+      flex: none;
+      width: 10px;
+      height: 10px;
+      border-right: 2.5px solid currentColor;
+      border-bottom: 2.5px solid currentColor;
+      transform: rotate(-45deg);
+      transition: transform .2s ease;
+    }
+    details[open] > summary > .sp-chevron { transform: rotate(45deg); }
+    details.sp-collapse > summary:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+    /* Terminübersicht: kompakte Agenda statt Raster */
+    .sp-calendar { border: 0; background: transparent; overflow: visible; max-height: none; border-radius: 0; }
+    #spToggleEmpty[hidden] { display: none; }
+    .sp-day-summary { display: flex; align-items: center; gap: 8px; padding: 9px 12px; margin-bottom: 8px; border-radius: 10px; background: #f7f8f9; font-weight: 700; font-size: .9rem; }
+    .sp-day-summary.holiday { background: var(--gold-light); }
+    .sp-hour { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 10px; padding: 8px 0; border-top: 1px solid var(--border); }
+    .sp-hour-time { padding-top: 9px; font-size: .82rem; font-weight: 800; color: var(--muted); }
+    .sp-hour-body { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; min-width: 0; }
+    .sp-hour.empty { padding: 3px 0; }
+    .sp-hour.empty .sp-hour-time { padding-top: 6px; font-weight: 600; }
+    .sp-appt { display: flex; gap: 10px; align-items: flex-start; text-align: left; min-width: 0; padding: 9px 11px; border: 1px solid var(--border); border-left: 4px solid var(--gold); border-radius: 9px; background: #fff; cursor: pointer; font: inherit; color: inherit; }
+    .sp-appt:hover { box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+    .sp-appt.selected { background: #fffaf0; border-color: var(--gold); }
+    .sp-appt-time { flex: none; font-size: .86rem; font-weight: 800; color: var(--gold); }
+    .sp-appt-main { display: flex; flex-direction: column; min-width: 0; }
+    .sp-appt-main strong { font-size: .88rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sp-appt-main small { font-size: .76rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sp-add { border: 1px dashed #cfd5da; border-radius: 9px; background: transparent; color: var(--muted); cursor: pointer; font: inherit; font-size: .82rem; padding: 6px 12px; }
+    .sp-add:hover { border-color: var(--gold); color: var(--dark); }
+    .sp-hour.empty .sp-add { justify-self: start; padding: 3px 12px; }
+    .sp-empty-day { text-align: center; padding: 26px 12px; color: var(--muted); }
+    .sp-empty-day .sp-add { margin-top: 10px; color: var(--dark); border-style: solid; }
+    .sp-week { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+    .sp-week-day { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 8px; border: 1px solid var(--border); border-radius: 11px; background: #fff; }
+    .sp-week-day.weekend { background: #fafafa; }
+    .sp-week-day.holiday { background: #fff8f0; }
+    .sp-week-day.today { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
+    .sp-week-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 2px; border: 0; background: transparent; cursor: pointer; font: inherit; font-weight: 800; font-size: .84rem; text-align: left; color: inherit; }
+    .sp-week-head small { flex-basis: 100%; font-weight: 600; font-size: .7rem; color: var(--muted); }
+    .sp-count { margin-left: auto; min-width: 20px; padding: 1px 6px; border-radius: 999px; background: var(--dark); color: #fff; text-align: center; font-size: .72rem; }
+    .sp-count:empty { display: none; }
+    .sp-week-list { display: flex; flex-direction: column; gap: 5px; flex: 1; }
+    .sp-week-none { padding: 4px; text-align: center; font-size: .8rem; color: #b0b6bb; }
+    .sp-appt.compact { flex-direction: column; gap: 0; padding: 6px 8px; border-left-width: 3px; }
+    .sp-secondary-grid { align-items: start; }
+    .sp-secondary-grid > .sp-collapse-inner { margin-bottom: 0; }
+
+    @media (max-width: 600px) {
+      .sp-collapse-main > summary { padding: 12px 14px; font-size: 1.02rem; }
+      .sp-collapse-main .sp-collapse-hint { display: none; }
+      .sp-collapse-body { padding: 8px; }
+      .sp-hour { grid-template-columns: 46px minmax(0, 1fr); gap: 6px; }
+      .sp-hour-body { grid-template-columns: 1fr; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .sp-chevron { transition: none; }
+    }
+
+    @media print {
+      .sp-no-print { display: none !important; }
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+<!-- =====================================================
+     HEADER
+===================================================== -->
+
+<header class="site-header">
+
+  <div class="header-inner">
+
+    <div class="brand-row">
+
+      <div
+        class="brand-logo"
+        aria-hidden="true"
+      >
+
+        <svg
+          viewBox="0 0 64 64"
+          fill="none"
+        >
+
+          <path
+            d="M7 38L32 17L57 38"
+            stroke="#20252b"
+            stroke-width="6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+
+          <path
+            d="M15 37V52H49V37"
+            stroke="#20252b"
+            stroke-width="6"
+            stroke-linejoin="round"
+          />
+
+          <path
+            d="M35 26V10H45V30"
+            stroke="#20252b"
+            stroke-width="5"
+            stroke-linejoin="round"
+          />
+
+          <path
+            d="M33 10H47"
+            stroke="#20252b"
+            stroke-width="5"
+            stroke-linecap="round"
+          />
+
+        </svg>
+
+      </div>
+
+      <div>
+
+        <h1 class="brand-title">
+          Schornstein Planer
+        </h1>
+
+        <p class="brand-subtitle">
+          Digitale Arbeitsplanung für das Schornsteinfeger-Handwerk
+        </p>
+
+      </div>
+
+      <div class="brand-badge">
+        SCHORNSTEINFEGER
+      </div>
+
+    </div>
+
+    <!-- NAVIGATION -->
+
+    <nav
+      class="main-nav"
+      aria-label="Hauptnavigation"
+    >
+
+      <a
+        class="nav-link"
+        href="#planung-termine"
+      >
+        Planung &amp; Termine
+      </a>
+
+      <a
+        class="nav-link"
+        href="#leistung"
+      >
+        Leistung
+      </a>
+
+      <a
+        class="nav-link"
+        href="#uebersicht"
+      >
+        Übersicht
+      </a>
+
+      <a
+        class="nav-link"
+        href="#feiertage"
+      >
+        Feiertage
+      </a>
+
+      <a
+        class="nav-link"
+        href="#historie"
+      >
+        Historie
+      </a>
+
+      <!-- RECHTLICHES -->
+
+      <div
+        class="legal-menu"
+        id="legalMenu"
+      >
+
+        <button
+          class="legal-button"
+          id="legalButton"
+          type="button"
+          aria-expanded="false"
+          aria-haspopup="true"
+        >
+
+          Rechtliches
+
+          <span
+            class="legal-arrow"
+            aria-hidden="true"
+          >
+            ▼
+          </span>
+
+        </button>
+
+        <div
+          class="legal-dropdown"
+          id="legalDropdown"
+          hidden
+        >
+
+          <button
+            type="button"
+            data-legal="impressum"
+          >
+            Impressum
+          </button>
+
+          <button
+            type="button"
+            data-legal="datenschutz"
+          >
+            Datenschutz
+          </button>
+
+          <button
+            type="button"
+            data-legal="hinweise"
+          >
+            Rechtliche Hinweise
+          </button>
+
+        </div>
+
+      </div>
+
+    </nav>
+
+  </div>
+
+</header>
+
+<!-- =====================================================
+     MAIN
+===================================================== -->
+
+<main>
+
+  <!-- STARTSEITE -->
+
+  <section
+    id="homePage"
+    class="page active"
+  >
+
+    <!-- HERO -->
+
+    <section
+      class="hero"
+      id="start"
+    >
+
+      <div class="hero-content">
+
+        <span class="eyebrow">
+          🔥 Schornsteinfeger-Handwerk
+        </span>
+
+        <h1>
+          Deine Jahresplanung.<br>
+          Deine Leistung. Dein Überblick.
+        </h1>
+
+        <p>
+          Plane deine Jahresmenge automatisch,
+          berücksichtige Feiertage und freie Tage
+          und sieh jederzeit, ob du im Soll liegst.
+        </p>
+
+      </div>
+
+      <div
+        class="chimney-art"
+        aria-hidden="true"
+      >
+
+        <div class="smoke"></div>
+        <div class="chimney"></div>
+        <div class="roof"></div>
+        <div class="roof-line"></div>
+
+      </div>
+
+    </section>
+
+    <!-- PLANUNG & TERMINE (einklappbar) -->
+
+    <details class="sp-collapse sp-collapse-main" id="planung-termine" data-sp-collapse="main" open>
+      <summary>
+        <span aria-hidden="true">📋</span>
+        <span>Planung &amp; Termine</span>
+        <span class="sp-collapse-hint">Ein-/ausklappen</span>
+        <span class="sp-chevron" aria-hidden="true"></span>
+      </summary>
+
+    <div class="sp-planning-appointments">
+
+    <!-- TERMINPLANUNG -->
+
+    <section
+      class="sp-calendar-card"
+      id="terminplanung"
+    >
+
+      <div class="sp-card-header">
+        <div>
+          <span class="sp-eyebrow">📅 Terminplanung</span>
+          <h2>Kalender</h2>
+          <p>Plane Kundentermine lokal im Browser. Maximal vier Termine pro Stunde.</p>
+        </div>
+        <div class="sp-calendar-actions">
+          <button class="btn btn-light" type="button" id="spBackupData">💾 Daten sichern</button>
+          <label class="btn btn-light sp-file-label" for="spRestoreData">📂 Daten wiederherstellen</label>
+          <input id="spRestoreData" type="file" accept="application/json,.json" hidden>
+        </div>
+      </div>
+
+      <details class="sp-collapse sp-collapse-inner" data-sp-collapse="overview" open>
+        <summary>
+          <span aria-hidden="true">🗓</span>
+          <span>Terminübersicht</span>
+          <span class="sp-collapse-hint">Ein-/ausklappen</span>
+          <span class="sp-chevron" aria-hidden="true"></span>
+        </summary>
+        <div class="sp-collapse-body">
+
+      <div class="sp-toolbar">
+        <div class="sp-toolbar-group">
+          <button class="btn btn-light" type="button" id="spPrevPeriod">‹</button>
+          <button class="btn btn-light" type="button" id="spToday">Heute</button>
+          <button class="btn btn-light" type="button" id="spNextPeriod">›</button>
+          <strong id="spCalendarTitle"></strong>
+        </div>
+        <div class="sp-toolbar-group">
+          <button class="btn btn-light sp-view-btn active" type="button" data-sp-view="day">Tag</button>
+          <button class="btn btn-light sp-view-btn" type="button" data-sp-view="week">Woche</button>
+          <button class="btn btn-light" type="button" id="spToggleEmpty">Freie Stunden zeigen</button>
+          <button class="btn btn-gold" type="button" id="spNewAppointment">+ Termin</button>
+        </div>
+      </div>
+
+      <div class="sp-calendar-notice" id="spCalendarNotice" hidden></div>
+      <div class="sp-calendar" id="spCalendar"></div>
+
+        </div>
+      </details>
+
+      <div class="sp-secondary-grid">
+        <details class="sp-collapse sp-collapse-inner" data-sp-collapse="proposal">
+          <summary>
+            <span aria-hidden="true">🖨</span>
+            <span>Terminvorschlag drucken</span>
+            <span class="sp-chevron" aria-hidden="true"></span>
+          </summary>
+          <div class="sp-collapse-body">
+          <p class="sp-muted">Wähle einen Zeitraum. Du kannst einen einzelnen Termin als A5-Blatt drucken oder alle Termine des Zeitraums gesammelt (2 Terminvorschläge pro A4-Seite quer).</p>
+          <div class="sp-form-grid">
+            <div class="field"><label for="spProposalFrom">Von</label><input id="spProposalFrom" type="date"></div>
+            <div class="field"><label for="spProposalTo">Bis</label><input id="spProposalTo" type="date"></div>
+          </div>
+          <div id="spProposalList" class="sp-proposal-list"></div>
+          <div class="sp-form-grid sp-business-grid">
+            <div class="field"><label for="spBusinessName">Betrieb</label><input id="spBusinessName" type="text" placeholder="Name des Schornsteinfegerbetriebs"></div>
+            <div class="field"><label for="spEmployeeName">Mitarbeiter</label><input id="spEmployeeName" type="text" placeholder="Name des Mitarbeiters"></div>
+            <div class="field"><label for="spPhone">Telefon</label><input id="spPhone" type="tel" placeholder="Telefonnummer"></div>
+            <div class="field"><label for="spBusinessAddress">Betriebsanschrift</label><input id="spBusinessAddress" type="text" placeholder="Straße, PLZ Ort"></div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary" type="button" id="spPrintProposal" disabled>🖨 Ausgewählten Termin drucken (A5)</button>
+            <button class="btn btn-gold" type="button" id="spPrintRange">🖨 Alle Termine im Zeitraum drucken (2 pro A4)</button>
+            <button class="btn btn-light" type="button" id="spExportSelectedIcs" disabled>📅 Diesen Termin exportieren</button>
+          </div>
+        </div></details>
+
+        <details class="sp-collapse sp-collapse-inner" data-sp-collapse="export">
+          <summary>
+            <span aria-hidden="true">📅</span>
+            <span>Kalender-Export &amp; Datensicherung</span>
+            <span class="sp-chevron" aria-hidden="true"></span>
+          </summary>
+          <div class="sp-collapse-body">
+          <p class="sp-muted">Exportiere einen einzelnen Termin oder alle Termine eines frei gewählten Zeitraums für Android, iOS und andere Kalenderprogramme.</p>
+          <div class="sp-form-grid">
+            <div class="field"><label for="spExportFrom">Von</label><input id="spExportFrom" type="date"></div>
+            <div class="field"><label for="spExportTo">Bis</label><input id="spExportTo" type="date"></div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-gold" type="button" id="spExportRangeIcs">📅 Zeitraum als Kalender exportieren</button>
+          </div>
+          <div class="sp-backup-note">
+            <strong>Lokale Datensicherung</strong><br>
+            Termine, Betriebseinstellungen und die vorhandenen Planungsdaten bleiben auf diesem Gerät. Über „Daten sichern“ kannst du eine vollständige JSON-Sicherung erzeugen und später wieder importieren.
+          </div>
+        </div></details>
+      </div>
+
+    </section>
+
+    <!-- PLANUNG -->
+
+    <section
+      class="card"
+      id="planung"
+    >
+
+      <div class="card-header">
+
+        <div>
+
+          <h2>
+            Jahresplanung
+          </h2>
+
+          <p>
+            Lege die Eckdaten für deine Jahresplanung fest.
+          </p>
+
+        </div>
+
+        <div class="section-icon">
+          📅
+        </div>
+
+      </div>
+
+      <div class="form-grid">
+
+        <div class="field">
+
+          <label for="year">
+            Planungsjahr
+          </label>
+
+          <select id="year"></select>
+
+        </div>
+
+        <div class="field">
+
+          <label for="state">
+            Bundesland
+          </label>
+
+          <select id="state">
+
+            <option value="BW">
+              Baden-Württemberg
+            </option>
+
+            <option value="BY">
+              Bayern
+            </option>
+
+            <option value="BE">
+              Berlin
+            </option>
+
+            <option value="BB">
+              Brandenburg
+            </option>
+
+            <option value="HB">
+              Bremen
+            </option>
+
+            <option value="HH">
+              Hamburg
+            </option>
+
+            <option value="HE">
+              Hessen
+            </option>
+
+            <option value="MV">
+              Mecklenburg-Vorpommern
+            </option>
+
+            <option value="NI">
+              Niedersachsen
+            </option>
+
+            <option value="NW">
+              Nordrhein-Westfalen
+            </option>
+
+            <option value="RP">
+              Rheinland-Pfalz
+            </option>
+
+            <option value="SL">
+              Saarland
+            </option>
+
+            <option value="SN">
+              Sachsen
+            </option>
+
+            <option value="ST">
+              Sachsen-Anhalt
+            </option>
+
+            <option value="SH">
+              Schleswig-Holstein
+            </option>
+
+            <option value="TH">
+              Thüringen
+            </option>
+
+          </select>
+
+        </div>
+
+        <div class="field">
+
+          <label for="totalAmount">
+            Jahresmenge
+          </label>
+
+          <input
+            id="totalAmount"
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="z. B. 1200"
+          >
+
+        </div>
+
+        <div class="field">
+
+          <label for="startDate">
+            Startdatum
+          </label>
+
+          <input
+            id="startDate"
+            type="date"
+          >
+
+        </div>
+
+        <div class="field">
+
+          <label for="targetDate">
+            Gewünschtes Enddatum
+          </label>
+
+          <input
+            id="targetDate"
+            type="date"
+          >
+
+        </div>
+
+      </div>
+
+      <div class="form-actions">
+
+        <button
+          class="btn btn-light"
+          id="resetPlan"
+          type="button"
+        >
+          Zurücksetzen
+        </button>
+
+        <button
+          class="btn btn-gold"
+          id="previewPlan"
+          type="button"
+        >
+          Planung berechnen
+        </button>
+
+        <button
+          class="btn btn-primary"
+          id="savePlan"
+          type="button"
+        >
+          Planung speichern
+        </button>
+
+      </div>
+
+      <div
+        id="planPreview"
+        class="preview-box hidden"
+      ></div>
+
+    </section>
+
+    </div>
+
+    </details>
+
+    <!-- LEISTUNG -->
+
+    <section
+      class="card performance-card"
+      id="leistung"
+    >
+
+      <div class="card-header">
+
+        <div>
+
+          <h2>
+            Erledigte Leistung eintragen
+          </h2>
+
+          <p>
+            Trage ein, was du tatsächlich an einem bestimmten Tag geschafft hast.
+          </p>
+
+        </div>
+
+        <div class="section-icon">
+          🧹
+        </div>
+
+      </div>
+
+      <div class="performance-grid">
+
+        <div class="field">
+
+          <label for="entryDate">
+            Datum
+          </label>
+
+          <input
+            id="entryDate"
+            type="date"
+          >
+
+        </div>
+
+        <div class="field">
+
+          <label for="entryAmount">
+            Erledigte Menge
+          </label>
+
+          <input
+            id="entryAmount"
+            type="text"
+            inputmode="decimal"
+            placeholder="z. B. 35,5"
+          >
+
+        </div>
+
+        <div class="field">
+
+          <label for="entryNote">
+            Notiz (optional)
+          </label>
+
+          <input
+            id="entryNote"
+            type="text"
+            placeholder="z. B. Bezirk Nord"
+          >
+
+        </div>
+
+        <button
+          class="btn btn-primary"
+          id="savePerformance"
+          type="button"
+        >
+          Leistung speichern
+        </button>
+
+      </div>
+
+      <div class="quick-info">
+
+        <div class="quick-info-item">
+
+          <span>
+            Jahresmenge
+          </span>
+
+          <strong id="quickTotal">
+            –
+          </strong>
+
+        </div>
+
+        <div class="quick-info-item">
+
+          <span>
+            Bisher erledigt
+          </span>
+
+          <strong id="quickDone">
+            –
+          </strong>
+
+        </div>
+
+        <div class="quick-info-item">
+
+          <span>
+            Restmenge
+          </span>
+
+          <strong id="quickRemaining">
+            –
+          </strong>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- AKTUELLER STAND -->
+
+    <section
+      class="card status-card"
+      id="uebersicht"
+    >
+
+      <div class="card-header">
+
+        <div>
+
+          <h2>
+            Aktueller Stand
+          </h2>
+
+          <p>
+            Automatischer Vergleich zwischen Soll und tatsächlicher Leistung.
+          </p>
+
+        </div>
+
+        <div class="section-icon">
+          📊
+        </div>
+
+      </div>
+
+      <div class="status-main">
+
+        <div class="status-primary">
+
+          <div class="status-label">
+            Tatsächlich bisher erledigt
+          </div>
+
+          <div
+            class="status-number"
+            id="statusActual"
+          >
+            0
+          </div>
+
+          <div
+            class="status-sub"
+            id="statusTarget"
+          >
+            Soll bis heute: 0
+          </div>
+
+          <div
+            id="statusPill"
+            class="status-pill neutral"
+          >
+            Noch nicht gestartet
+          </div>
+
+          <div class="progress-wrap">
+
+            <div class="progress-track">
+
+              <div
+                class="progress-bar"
+                id="progressBar"
+              ></div>
+
+            </div>
+
+            <div class="progress-caption">
+
+              <span id="progressText">
+                0 % der Jahresmenge
+              </span>
+
+              <span id="progressTargetText">
+                Ziel: 0
+              </span>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="status-stats">
+
+          <div class="dark-stat">
+
+            <span>
+              Soll bis heute
+            </span>
+
+            <strong id="statusSoll">
+              0
+            </strong>
+
+          </div>
+
+          <div class="dark-stat">
+
+            <span>
+              Differenz zum Soll
+            </span>
+
+            <strong id="statusDifference">
+              0
+            </strong>
+
+          </div>
+
+          <div class="dark-stat">
+
+            <span>
+              Restmenge
+            </span>
+
+            <strong id="statusRemaining">
+              0
+            </strong>
+
+          </div>
+
+          <div class="dark-stat">
+
+            <span>
+              Benötigt ab morgen
+            </span>
+
+            <strong id="statusTomorrow">
+              0
+            </strong>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- STATISTIK -->
+
+    <section class="stats-grid">
+
+      <div class="stat-card">
+
+        <div class="stat-icon">
+          🎯
+        </div>
+
+        <span>
+          Jahresmenge
+        </span>
+
+        <strong id="statTotal">
+          0
+        </strong>
+
+      </div>
+
+      <div class="stat-card">
+
+        <div class="stat-icon">
+          🧹
+        </div>
+
+        <span>
+          Erledigt
+        </span>
+
+        <strong id="statDone">
+          0
+        </strong>
+
+      </div>
+
+      <div class="stat-card">
+
+        <div class="stat-icon">
+          📅
+        </div>
+
+        <span>
+          Arbeitstage gesamt
+        </span>
+
+        <strong id="statWorkdays">
+          0
+        </strong>
+
+      </div>
+
+      <div class="stat-card">
+
+        <div class="stat-icon">
+          ⚙️
+        </div>
+
+        <span>
+          Durchschnitt pro Arbeitstag
+        </span>
+
+        <strong id="statAverage">
+          0
+        </strong>
+
+      </div>
+
+    </section>
+
+    <!-- FREIE TAGE / FEIERTAGE -->
+
+    <div class="two-column">
+
+      <section class="card">
+
+        <div class="card-header">
+
+          <div>
+
+            <h2>
+              Zusätzliche freie Tage
+            </h2>
+
+            <p>
+              Diese Tage werden automatisch aus den verfügbaren Arbeitstagen herausgerechnet.
+            </p>
+
+          </div>
+
+          <div class="section-icon">
+            🏖️
+          </div>
+
+        </div>
+
+        <div class="form-grid two">
+
+          <div class="field">
+
+            <label for="freeDate">
+              Freier Tag
+            </label>
+
+            <input
+              id="freeDate"
+              type="date"
+            >
+
+          </div>
+
+          <div class="field">
+
+            <label for="freeNote">
+              Bezeichnung
+            </label>
+
+            <input
+              id="freeNote"
+              type="text"
+              placeholder="z. B. Urlaub"
+            >
+
+          </div>
+
+        </div>
+
+        <div class="form-actions">
+
+          <button
+            class="btn btn-primary"
+            id="addFreeDay"
+            type="button"
+          >
+            Freien Tag hinzufügen
+          </button>
+
+        </div>
+
+        <div
+          id="freeDaysList"
+          class="list"
+          style="margin-top:15px;"
+        ></div>
+
+      </section>
+
+      <section
+        class="card"
+        id="feiertage"
+      >
+
+        <div class="card-header">
+
+          <div>
+
+            <h2>
+              Feiertage
+            </h2>
+
+            <p id="holidayStateLabel">
+              Automatisch für das gewählte Bundesland.
+            </p>
+
+          </div>
+
+          <div class="section-icon">
+            🎉
+          </div>
+
+        </div>
+
+        <div
+          id="holidayList"
+          class="holiday-list"
+        ></div>
+
+      </section>
+
+    </div>
+
+    <!-- HISTORIE -->
+
+    <section
+      class="card"
+      id="historie"
+    >
+
+      <div class="card-header">
+
+        <div>
+
+          <h2>
+            Leistungshistorie
+          </h2>
+
+          <p>
+            Alle eingetragenen tatsächlichen Leistungen.
+          </p>
+
+        </div>
+
+        <div class="section-icon">
+          📋
+        </div>
+
+      </div>
+
+      <div
+        id="historyList"
+        class="list"
+      ></div>
+
+    </section>
+
+  </section>
+
+  <!-- =====================================================
+       IMPRESSUM
+  ===================================================== -->
+
+  <section
+    id="impressumPage"
+    class="page legal-page"
+  >
+
+    <button
+      class="btn btn-light back-button"
+      type="button"
+      data-back-home
+    >
+      ← Zurück zur Startseite
+    </button>
+
+    <section class="card">
+
+      <h1>
+        Impressum
+      </h1>
+
+      <h2>
+        Angaben gemäß § 5 DDG
+      </h2>
+
+      <p>
+        Marc-André Stein-Bakowski<br>
+        Kirchstraße 7<br>
+        65589 Hadamar<br>
+        Deutschland
+      </p>
+
+      <h2>
+        Kontakt
+      </h2>
+
+      <p>
+        E-Mail:
+        <a href="mailto:kontakt@schornstein-planer.de">
+          kontakt@schornstein-planer.de
+        </a>
+      </p>
+
+      <h2>
+        Verantwortlich für den Inhalt
+      </h2>
+
+      <p>
+        Marc-André Stein-Bakowski<br>
+        Kirchstraße 7<br>
+        65589 Hadamar<br>
+        Deutschland
+      </p>
+
+      <h2>
+        Hinweis zum Angebot
+      </h2>
+
+      <p>
+        Der Schornstein Planer ist eine webbasierte Anwendung zur Unterstützung
+        bei der Arbeits- und Einsatzplanung im Schornsteinfeger-Handwerk.
+      </p>
+
+      <p>
+        Die Anwendung stellt Planungs-, Berechnungs- und Dokumentationsfunktionen
+        zur Verfügung. Die bereitgestellten Berechnungen und Angaben dienen
+        ausschließlich der Unterstützung bei der betrieblichen Planung und
+        ersetzen keine eigenständige fachliche, rechtliche oder behördliche Prüfung.
+      </p>
+
+      <h2>
+        Haftung für Inhalte
+      </h2>
+
+      <p>
+        Die Inhalte dieser Website wurden mit Sorgfalt erstellt. Eine Gewähr
+        für die Vollständigkeit, Richtigkeit und Aktualität der bereitgestellten
+        Informationen kann jedoch nicht übernommen werden.
+      </p>
+
+      <p>
+        Die Nutzung der Anwendung erfolgt eigenverantwortlich. Insbesondere bei
+        gesetzlichen, behördlichen oder fachlich verbindlichen Anforderungen sind
+        die jeweils geltenden Vorschriften und offiziellen Quellen maßgeblich.
+      </p>
+
+      <h2>
+        Haftung für externe Links
+      </h2>
+
+      <p>
+        Diese Website kann Links zu externen Websites und Diensten enthalten.
+        Auf deren Inhalte und deren Datenverarbeitung hat der Betreiber dieser
+        Website keinen Einfluss.
+      </p>
+
+      <p>
+        Für die Inhalte der verlinkten externen Seiten ist grundsätzlich der
+        jeweilige Betreiber verantwortlich.
+      </p>
+
+      <h2>
+        Urheberrecht
+      </h2>
+
+      <p>
+        Die durch den Betreiber erstellten Inhalte und Bestandteile dieser
+        Website unterliegen dem geltenden Urheberrecht.
+      </p>
+
+      <p>
+        Eine Vervielfältigung, Bearbeitung, Verbreitung oder sonstige Verwertung
+        außerhalb der Grenzen des Urheberrechts bedarf der vorherigen Zustimmung
+        des jeweiligen Rechteinhabers.
+      </p>
+
+      <p>
+        Soweit Inhalte dieser Website nicht vom Betreiber erstellt wurden,
+        werden die Rechte Dritter beachtet.
+      </p>
+
+    </section>
+
+  </section>
+
+  <!-- =====================================================
+       DATENSCHUTZ
+  ===================================================== -->
+
+  <section
+    id="datenschutzPage"
+    class="page legal-page"
+  >
+
+    <button
+      class="btn btn-light back-button"
+      type="button"
+      data-back-home
+    >
+      ← Zurück zur Startseite
+    </button>
+
+    <section class="card">
+
+      <h1>
+        Datenschutzerklärung
+      </h1>
+
+      <h2>
+        1. Verantwortlicher
+      </h2>
+
+      <p>
+        Verantwortlich für die Verarbeitung personenbezogener Daten im
+        Zusammenhang mit dieser Website ist:
+      </p>
+
+      <p>
+        Marc-André Stein-Bakowski<br>
+        Kirchstraße 7<br>
+        65589 Hadamar<br>
+        Deutschland
+      </p>
+
+      <p>
+        E-Mail:
+        <a href="mailto:kontakt@schornstein-planer.de">
+          kontakt@schornstein-planer.de
+        </a>
+      </p>
+
+      <h2>
+        2. Allgemeines
+      </h2>
+
+      <p>
+        Der Schutz deiner persönlichen Daten ist uns wichtig.
+      </p>
+
+      <p>
+        Der Schornstein Planer ist eine webbasierte Anwendung zur Unterstützung
+        bei der Arbeits- und Einsatzplanung im Schornsteinfeger-Handwerk.
+      </p>
+
+      <p>
+        Diese Datenschutzerklärung informiert darüber, welche Daten beim Besuch
+        und bei der Nutzung der Website verarbeitet werden.
+      </p>
+
+      <h2>
+        3. Welche Daten verarbeitet der Schornstein Planer?
+      </h2>
+
+      <p>
+        Die eigentlichen Planungs- und Leistungsdaten werden grundsätzlich direkt
+        im Browser des Nutzers verarbeitet und gespeichert.
+      </p>
+
+      <p>
+        Hierzu können insbesondere gehören:
+      </p>
+
+      <ul>
+        <li>ausgewähltes Planungsjahr</li>
+        <li>ausgewähltes Bundesland</li>
+        <li>geplante Jahresmenge</li>
+        <li>Start- und Zieldatum</li>
+        <li>tatsächlich erfasste Leistungen</li>
+        <li>Datum der erfassten Leistungen</li>
+        <li>optionale Notizen zu Leistungseinträgen</li>
+        <li>individuell eingetragene freie Tage</li>
+      </ul>
+
+      <p>
+        Diese Daten werden von der Anwendung grundsätzlich nicht an den Betreiber
+        übertragen.
+      </p>
+
+      <h2>
+        4. Speicherung im Browser
+      </h2>
+
+      <p>
+        Der Schornstein Planer verwendet den Browser-Speicher (localStorage),
+        um die vom Nutzer eingegebenen Planungs- und Leistungsdaten auf dem
+        jeweiligen Endgerät zu speichern.
+      </p>
+
+      <p>
+        Die Speicherung dient ausschließlich dazu, die vom Nutzer ausdrücklich
+        gewünschte Funktion – nämlich die dauerhafte Nutzung und Fortführung
+        seiner persönlichen Planung – zu ermöglichen.
+      </p>
+
+      <p>
+        Die gespeicherten Planungsdaten werden nicht automatisch an den Betreiber
+        übermittelt.
+      </p>
+
+      <p>
+        Im Bereich „Planung &amp; Termine“ können Termine angelegt werden. Dabei
+        können vom Nutzer freiwillig Termin- und Kundendaten eingegeben werden,
+        insbesondere Name, Anschrift, Datum, Uhrzeit und Notizen. Auch diese
+        Daten werden ausschließlich lokal im Browser des Nutzers gespeichert.
+      </p>
+
+      <p>
+        Zusätzlich speichert die Anwendung lokal, ob einzelne Bereiche der
+        Oberfläche (z. B. „Planung &amp; Termine“ oder die Terminübersicht)
+        ein- oder ausgeklappt sind. Diese Anzeigeeinstellung enthält keine
+        personenbezogenen Daten und dient allein der Bedienung.
+      </p>
+
+      <p>
+        Der Nutzer kann die gespeicherten Daten insbesondere durch Löschen der
+        Website-Daten bzw. der lokalen Browserdaten entfernen.
+      </p>
+
+      <p>
+        Wird ein anderes Endgerät oder ein anderer Browser verwendet, stehen die
+        zuvor lokal gespeicherten Daten dort grundsätzlich nicht automatisch
+        zur Verfügung.
+      </p>
+
+      <h2>
+        5. Rechtsgrundlage für die lokale Speicherung
+      </h2>
+
+      <p>
+        Soweit die Speicherung von Informationen auf dem Endgerät des Nutzers
+        den gesetzlichen Regelungen zum Schutz der Privatsphäre bei
+        Endeinrichtungen unterliegt, erfolgt sie zur Bereitstellung der vom
+        Nutzer ausdrücklich gewünschten Funktionalität.
+      </p>
+
+      <p>
+        Die Anwendung benötigt den lokalen Speicher, damit eingegebene
+        Planungs- und Leistungsdaten bei einer späteren Nutzung auf demselben
+        Endgerät wieder zur Verfügung stehen.
+      </p>
+
+      <p>
+        § 25 TDDDG sieht eine Ausnahme von einer Einwilligung vor, wenn die
+        Speicherung unbedingt erforderlich ist, um einen vom Nutzer ausdrücklich
+        gewünschten digitalen Dienst bereitzustellen. (Gesetze im Internet)
+      </p>
+
+      <h2>
+        6. Keine Übertragung der Planungsdaten an den Betreiber
+      </h2>
+
+      <p>
+        Die in der Anwendung eingegebenen Planungs- und Leistungsdaten werden
+        durch den Schornstein Planer nicht automatisch an den Betreiber übermittelt.
+      </p>
+
+      <p>
+        Es besteht insbesondere kein Benutzerkonto und keine serverseitige
+        Datenbank für diese Planungsdaten.
+      </p>
+
+      <p>
+        Die Anwendung ist daher grundsätzlich auch ohne Eingabe eines Namens,
+        einer Anschrift oder anderer persönlicher Kontaktdaten nutzbar.
+      </p>
+
+      <p>
+        Der Betreiber hat keinen Zugriff auf die im Browser gespeicherten Termin-
+        und Kundendaten. Gibt der Nutzer Daten seiner Kunden ein, ist er selbst
+        dafür verantwortlich, dass er diese Daten datenschutzkonform verarbeitet
+        (z. B. Rechtsgrundlage, Informationspflichten, Aufbewahrung und
+        Löschung).
+      </p>
+
+      <p>
+        Daten verlassen das Gerät des Nutzers nur, wenn der Nutzer dies selbst
+        auslöst, etwa durch den Kalender-Export, die Datensicherung, den Druck
+        eines Terminvorschlags oder das Teilen der erzeugten PDF-Datei über die
+        Funktionen seines Geräts. Für erzeugte Dateien, Ausdrucke und deren
+        Weitergabe ist der Nutzer verantwortlich.
+      </p>
+
+      <p>
+        Die lokal gespeicherten Daten sind nicht gesondert verschlüsselt. Der
+        Nutzer sollte sein Endgerät daher durch Sperrbildschirm bzw. Passwort
+        schützen und Datensicherungen sicher aufbewahren.
+      </p>
+
+      <h2>
+        7. Hosting durch GitHub Pages
+      </h2>
+
+      <p>
+        Diese Website wird über GitHub Pages bereitgestellt.
+      </p>
+
+      <p>
+        Beim Aufruf einer GitHub-Pages-Website können technische Daten verarbeitet
+        werden. Nach Angaben von GitHub wird die IP-Adresse von Besuchern aus
+        Sicherheitsgründen protokolliert und gespeichert, unabhängig davon,
+        ob der Besucher bei GitHub angemeldet ist. (GitHub Docs)
+      </p>
+
+      <p>
+        Die Verarbeitung dieser technischen Zugriffsdaten erfolgt durch den
+        Hosting- bzw. Plattformanbieter und nicht durch die Planungsfunktionen
+        des Schornstein Planers.
+      </p>
+
+      <p>
+        Weitere Informationen zur Datenverarbeitung durch GitHub sind in der
+        Datenschutzerklärung von GitHub zu finden.
+      </p>
+
+      <h2>
+        8. Service Worker und Offline-Funktionen
+      </h2>
+
+      <p>
+        Der Schornstein Planer verwendet einen Service Worker.
+      </p>
+
+      <p>
+        Dieser dient insbesondere dazu, technische Bestandteile der Anwendung
+        zwischenzuspeichern und die Zuverlässigkeit bzw. Offline-Fähigkeit der
+        Anwendung zu unterstützen.
+      </p>
+
+      <p>
+        Der Service Worker dient nicht dazu, personenbezogene Daten oder die
+        eingegebenen Planungsdaten an den Betreiber zu übertragen.
+      </p>
+
+      <h2>
+        9. Cookies und Tracking
+      </h2>
+
+      <p>
+        Der Schornstein Planer verwendet nach dem derzeitigen technischen Stand
+        keine eigenen Analyse- oder Trackingdienste wie beispielsweise Google
+        Analytics, Meta Pixel oder vergleichbare Marketing-Tracking-Systeme.
+      </p>
+
+      <p>
+        Es werden durch den Schornstein Planer keine personenbezogenen
+        Nutzungsprofile zu Werbe- oder Analysezwecken erstellt.
+      </p>
+
+      <h2>
+        10. Externe Links
+      </h2>
+
+      <p>
+        Die Website kann Links zu externen Websites und Diensten enthalten.
+      </p>
+
+      <p>
+        Beim Aufruf eines solchen externen Angebots gelten die Datenschutzbestimmungen
+        des jeweiligen Anbieters.
+      </p>
+
+      <p>
+        Insbesondere kann im Rahmen einer freiwilligen Unterstützung des Projekts
+        ein Link zu PayPal angeboten werden.
+      </p>
+
+      <p>
+        Beim Anklicken dieses Links wird die Website des jeweiligen externen
+        Anbieters aufgerufen. Ab diesem Zeitpunkt gelten dessen eigene
+        Datenschutzbestimmungen.
+      </p>
+
+      <h2>
+        11. Kontaktaufnahme
+      </h2>
+
+      <p>
+        Wenn du den Betreiber per E-Mail kontaktierst, werden die dabei
+        übermittelten personenbezogenen Daten zur Bearbeitung deiner Anfrage
+        verarbeitet.
+      </p>
+
+      <p>
+        Welche Daten dabei verarbeitet werden, hängt vom Inhalt deiner Nachricht ab.
+      </p>
+
+      <p>
+        Die Daten werden nur so lange gespeichert, wie dies für die Bearbeitung
+        der Anfrage erforderlich ist oder gesetzliche Aufbewahrungspflichten bestehen.
+      </p>
+
+      <h2>
+        12. Deine Rechte
+      </h2>
+
+      <p>
+        Du hast nach Maßgabe der gesetzlichen Voraussetzungen insbesondere
+        folgende Rechte:
+      </p>
+
+      <ul>
+        <li>Recht auf Auskunft über die betreffenden personenbezogenen Daten</li>
+        <li>Recht auf Berichtigung unrichtiger Daten</li>
+        <li>Recht auf Löschung</li>
+        <li>Recht auf Einschränkung der Verarbeitung</li>
+        <li>Recht auf Widerspruch gegen bestimmte Verarbeitungen</li>
+        <li>Recht auf Datenübertragbarkeit, soweit die gesetzlichen Voraussetzungen erfüllt sind</li>
+        <li>Recht auf Beschwerde bei einer Datenschutzaufsichtsbehörde</li>
+      </ul>
+
+      <p>
+        Für Fragen zum Datenschutz kannst du dich an den oben genannten
+        Verantwortlichen wenden.
+      </p>
+
+      <h2>
+        13. Löschung lokal gespeicherter Planungsdaten
+      </h2>
+
+      <p>
+        Die im Browser gespeicherten Planungs- und Leistungsdaten können vom
+        Nutzer selbst gelöscht werden.
+      </p>
+
+      <p>
+        Dies kann insbesondere durch das Löschen der Website-Daten bzw. des
+        lokalen Speichers des verwendeten Browsers erfolgen.
+      </p>
+
+      <p>
+        Eine serverseitige Löschung dieser Planungsdaten durch den Betreiber
+        ist nicht erforderlich, da diese Daten nicht automatisch an den
+        Betreiber übertragen werden.
+      </p>
+
+      <p>
+        Vom Nutzer erstellte Exporte, Datensicherungen, PDF-Dateien und
+        Ausdrucke liegen außerhalb der Anwendung und müssen vom Nutzer selbst
+        gelöscht bzw. vernichtet werden.
+      </p>
+
+      <h2>
+        14. Aktualität dieser Datenschutzerklärung
+      </h2>
+
+      <p>
+        Diese Datenschutzerklärung kann angepasst werden, wenn sich die
+        technische Funktionsweise der Website oder die rechtlichen
+        Rahmenbedingungen ändern.
+      </p>
+
+      <p>
+        Es gilt jeweils die auf dieser Website veröffentlichte aktuelle Fassung.
+      </p>
+
+    </section>
+
+  </section>
+
+  <!-- =====================================================
+       RECHTLICHE HINWEISE
+  ===================================================== -->
+
+  <section
+    id="hinweisePage"
+    class="page legal-page"
+  >
+
+    <button
+      class="btn btn-light back-button"
+      type="button"
+      data-back-home
+    >
+      ← Zurück zur Startseite
+    </button>
+
+    <section class="card">
+
+      <h1>
+        Rechtliche Hinweise
+      </h1>
+
+      <h2>
+        Keine verbindliche Fach- oder Rechtsberatung
+      </h2>
+
+      <p>
+        Der Schornstein Planer ist ein technisches Hilfsmittel zur Unterstützung
+        bei der Arbeits- und Einsatzplanung.
+      </p>
+
+      <p>
+        Die mit der Anwendung berechneten Werte dienen ausschließlich der
+        Orientierung und betrieblichen Planung.
+      </p>
+
+      <p>
+        Sie ersetzen keine fachliche Prüfung, keine Rechtsberatung, keine
+        behördliche Auskunft und keine Prüfung der für den jeweiligen Betrieb
+        geltenden Vorschriften.
+      </p>
+
+      <h2>
+        Berechnungen
+      </h2>
+
+      <p>
+        Die Anwendung berechnet Arbeitstage anhand des gewählten Jahres,
+        Bundeslandes, Wochenendes, der hinterlegten Feiertage und der vom
+        Nutzer eingetragenen freien Tage.
+      </p>
+
+      <p>
+        Trotz sorgfältiger Programmierung kann keine Gewähr dafür übernommen
+        werden, dass jede regionale Besonderheit oder jede individuelle
+        betriebliche Regelung vollständig abgebildet wird.
+      </p>
+
+      <h2>
+        Feiertage
+      </h2>
+
+      <p>
+        Feiertage können regional unterschiedlich gelten. Dies betrifft
+        insbesondere Feiertage, deren Geltung von Gemeinden oder regionalen
+        Voraussetzungen abhängt.
+      </p>
+
+      <p>
+        Für verbindliche Planungen sind die für den jeweiligen Arbeitsort
+        tatsächlich geltenden gesetzlichen Regelungen zu prüfen.
+      </p>
+
+      <h2>
+        Eigene Eingaben
+      </h2>
+
+      <p>
+        Für die Richtigkeit der eingegebenen Planungs- und Leistungsdaten
+        ist der Nutzer selbst verantwortlich.
+      </p>
+
+      <h2>
+        Datensicherung
+      </h2>
+
+      <p>
+        Die Planungsdaten werden lokal im Browser gespeichert. Der Betreiber
+        übernimmt daher keine Garantie für deren dauerhafte Verfügbarkeit.
+      </p>
+
+      <p>
+        Eine Löschung von Browserdaten, eine Deinstallation oder Zurücksetzung
+        des Browsers, bestimmte Browser-Einstellungen oder technische Defekte
+        können zum Verlust der lokal gespeicherten Daten führen.
+      </p>
+
+      <p>
+        Für wichtige betriebliche Daten wird daher empfohlen, eigene
+        Sicherungsmaßnahmen vorzusehen.
+      </p>
+
+      <h2>
+        Externe Dienste
+      </h2>
+
+      <p>
+        Links zu externen Diensten führen zu Angeboten Dritter. Für deren
+        Inhalte, Verfügbarkeit und Datenverarbeitung ist ausschließlich der
+        jeweilige Anbieter verantwortlich.
+      </p>
+
+    </section>
+
+  </section>
+
+</main>
+
+<!-- TERMINMODAL -->
+<div class="sp-modal-backdrop" id="spAppointmentModal" hidden>
+  <div class="sp-modal" role="dialog" aria-modal="true" aria-labelledby="spModalTitle">
+    <h3 id="spModalTitle">Termin anlegen</h3>
+    <div class="sp-form-grid">
+      <div class="field"><label for="spAptDate">Datum</label><input id="spAptDate" type="date"></div>
+      <div class="field"><label for="spAptTime">Uhrzeit</label><input id="spAptTime" type="time" step="900"></div>
+      <div class="field"><label for="spAptCustomer">Kunde</label><input id="spAptCustomer" type="text" placeholder="Vor- und Nachname"></div>
+      <div class="field"><label for="spAptStreet">Straße</label><input id="spAptStreet" type="text" placeholder="Straße"></div>
+      <div class="field"><label for="spAptHouse">Hausnummer</label><input id="spAptHouse" type="text" placeholder="Hausnummer"></div>
+      <div class="field"><label for="spAptZip">PLZ</label><input id="spAptZip" type="text" inputmode="numeric" placeholder="PLZ"></div>
+      <div class="field"><label for="spAptCity">Ort</label><input id="spAptCity" type="text" placeholder="Ort"></div>
+      <div class="field"><label for="spAptDuration">Dauer</label><select id="spAptDuration"><option value="15">15 Minuten</option><option value="30">30 Minuten</option><option value="45">45 Minuten</option><option value="60">60 Minuten</option></select></div>
+    </div>
+    <div class="field" style="margin-top:10px"><label for="spAptNotes">Besonderheiten</label><textarea id="spAptNotes" rows="4" placeholder="Zugang, Besonderheiten, Hinweise …"></textarea></div>
+    <div class="sp-modal-actions">
+      <button class="btn btn-light" type="button" id="spCancelAppointment">Abbrechen</button>
+      <button class="btn btn-danger" type="button" id="spDeleteAppointment" hidden>Löschen</button>
+      <button class="btn btn-primary" type="button" id="spSaveAppointment">Termin speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================
+     FOOTER
+===================================================== -->
+
+<footer>
+
+  <div class="footer-inner">
+
+    <div>
+
+      <div class="footer-title">
+        Schornstein Planer
+      </div>
+
+      <div>
+        Digitale Arbeitsplanung für das Schornsteinfeger-Handwerk
+      </div>
+
+      <!-- SPENDENBUTTON -->
+
+      <a
+        class="donation-button"
+        href="https://paypal.me/stein785"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Schornstein Planer mit einer Spende über PayPal unterstützen"
+      >
+        ☕ Schornstein Planer unterstützen
+      </a>
+
+    </div>
+
+    <div class="footer-links">
+
+      <button
+        type="button"
+        data-legal="impressum"
+      >
+        Impressum
+      </button>
+
+      <button
+        type="button"
+        data-legal="datenschutz"
+      >
+        Datenschutz
+      </button>
+
+      <button
+        type="button"
+        data-legal="hinweise"
+      >
+        Rechtliche Hinweise
+      </button>
+
+    </div>
+
+  </div>
+
+</footer>
+
+<script>
+
+  "use strict";
+
+  /* =====================================================
+     DATEN
+  ===================================================== */
+
+  const STORAGE_KEY =
+    "schornstein-planer-v8";
+
+  const defaultPlan = {
+
+    year:
+      new Date().getFullYear(),
+
+    state:
+      "HE",
+
+    totalAmount:
+      0,
+
+    startDate:
+      "",
+
+    targetDate:
+      "",
+
+    entries:
+      [],
+
+    freeDays:
+      [],
+
+    appointments:
+      [],
+
+    appointmentSettings:
+      {
+        businessName: "",
+        employeeName: "",
+        phone: "",
+        businessAddress: ""
+      }
+
+  };
+
+  let plan =
+    loadData();
+
+  /* =====================================================
+     DOM
+  ===================================================== */
+
+  const yearEl =
+    document.getElementById("year");
+
+  const stateEl =
+    document.getElementById("state");
+
+  const totalAmountEl =
+    document.getElementById("totalAmount");
+
+  const startDateEl =
+    document.getElementById("startDate");
+
+  const targetDateEl =
+    document.getElementById("targetDate");
+
+  const entryDateEl =
+    document.getElementById("entryDate");
+
+  const entryAmountEl =
+    document.getElementById("entryAmount");
+
+  const entryNoteEl =
+    document.getElementById("entryNote");
+
+  const freeDateEl =
+    document.getElementById("freeDate");
+
+  const freeNoteEl =
+    document.getElementById("freeNote");
+
+  const previewEl =
+    document.getElementById("planPreview");
+
+  const legalMenu =
+    document.getElementById("legalMenu");
+
+  const legalButton =
+    document.getElementById("legalButton");
+
+  const legalDropdown =
+    document.getElementById("legalDropdown");
+
+  /* =====================================================
+     INIT
+  ===================================================== */
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    init
+  );
+
+  function init() {
+
+    populateYears();
+
+    loadForm();
+
+    if (!entryDateEl.value) {
+
+      entryDateEl.value =
+        formatDateInput(
+          new Date()
+        );
+
+    }
+
+    setupEvents();
+
+    setupNavigation();
+
+    renderAll();
+
+    handleHash();
+
+  }
+
+  /* =====================================================
+     EVENTS
+  ===================================================== */
+
+  function setupEvents() {
+
+    document
+      .getElementById("previewPlan")
+      .addEventListener(
+        "click",
+        previewPlan
+      );
+
+    document
+      .getElementById("savePlan")
+      .addEventListener(
+        "click",
+        savePlan
+      );
+
+    document
+      .getElementById("resetPlan")
+      .addEventListener(
+        "click",
+        resetPlan
+      );
+
+    document
+      .getElementById("savePerformance")
+      .addEventListener(
+        "click",
+        savePerformance
+      );
+
+    document
+      .getElementById("addFreeDay")
+      .addEventListener(
+        "click",
+        addFreeDay
+      );
+
+    yearEl.addEventListener(
+      "change",
+      onPlanningFieldChange
+    );
+
+    stateEl.addEventListener(
+      "change",
+      onPlanningFieldChange
+    );
+
+    totalAmountEl.addEventListener(
+      "input",
+      onPlanningFieldChange
+    );
+
+    startDateEl.addEventListener(
+      "change",
+      onPlanningFieldChange
+    );
+
+    targetDateEl.addEventListener(
+      "change",
+      onPlanningFieldChange
+    );
+
+    document.addEventListener(
+      "click",
+      event => {
+
+        const deleteEntry =
+          event.target.closest(
+            "[data-delete-entry]"
+          );
+
+        if (deleteEntry) {
+
+          deletePerformance(
+            deleteEntry.dataset.deleteEntry
+          );
+
+          return;
+
+        }
+
+        const deleteFree =
+          event.target.closest(
+            "[data-delete-free]"
+          );
+
+        if (deleteFree) {
+
+          deleteFreeDay(
+            deleteFree.dataset.deleteFree
+          );
+
+        }
+
+      }
+    );
+
+  }
+
+  /* =====================================================
+     NAVIGATION
+  ===================================================== */
+
+  function setupNavigation() {
+
+    if (
+      !legalButton ||
+      !legalDropdown ||
+      !legalMenu
+    ) {
+
+      return;
+
+    }
+
+    legalButton.addEventListener(
+      "click",
+      event => {
+
+        event.preventDefault();
+
+        event.stopPropagation();
+
+        if (
+          legalDropdown.hidden
+        ) {
+
+          openLegalMenu();
+
+        } else {
+
+          closeLegalMenu();
+
+        }
+
+      }
+    );
+
+    legalDropdown.addEventListener(
+      "click",
+      event => {
+
+        event.stopPropagation();
+
+        const button =
+          event.target.closest(
+            "[data-legal]"
+          );
+
+        if (!button) {
+
+          return;
+
+        }
+
+        const page =
+          button.dataset.legal;
+
+        closeLegalMenu();
+
+        showLegalPage(
+          page
+        );
+
+      }
+    );
+
+    document.addEventListener(
+      "click",
+      event => {
+
+        if (
+          !legalMenu.contains(
+            event.target
+          )
+        ) {
+
+          closeLegalMenu();
+
+        }
+
+      }
+    );
+
+    document.addEventListener(
+      "keydown",
+      event => {
+
+        if (
+          event.key === "Escape"
+        ) {
+
+          closeLegalMenu();
+
+        }
+
+      }
+    );
+
+    document
+      .querySelectorAll(
+        "footer [data-legal]"
+      )
+      .forEach(button => {
+
+        button.addEventListener(
+          "click",
+          event => {
+
+            event.preventDefault();
+
+            showLegalPage(
+              button.dataset.legal
+            );
+
+          }
+        );
+
+      });
+
+    document
+      .querySelectorAll(
+        "[data-back-home]"
+      )
+      .forEach(button => {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            showHome();
+
+          }
+        );
+
+      });
+
+    window.addEventListener(
+      "hashchange",
+      handleHash
+    );
+
+  }
+
+  function openLegalMenu() {
+
+    legalDropdown.hidden =
+      false;
+
+    legalButton.setAttribute(
+      "aria-expanded",
+      "true"
+    );
+
+  }
+
+  function closeLegalMenu() {
+
+    legalDropdown.hidden =
+      true;
+
+    legalButton.setAttribute(
+      "aria-expanded",
+      "false"
+    );
+
+  }
+
+  /* =====================================================
+     HASH / RECHTLICHE SEITEN
+  ===================================================== */
+
+  function handleHash() {
+
+    const hash =
+      window.location.hash
+        .replace("#", "");
+
+    if (
+      hash === "impressum" ||
+      hash === "datenschutz" ||
+      hash === "hinweise"
+    ) {
+
+      showLegalPage(
+        hash,
+        false
+      );
+
+      return;
+
+    }
+
+    if (hash === "terminplanung") {
+
+      showHome(false);
+
+      requestAnimationFrame(() => {
+
+        document
+          .getElementById("terminplanung")
+          ?.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+          });
+
+      });
+
+      return;
+
+    }
+
+    showHome(false);
+
+  }
+
+  function showLegalPage(
+    page,
+    updateHash = true
+  ) {
+
+    document
+      .querySelectorAll(".page")
+      .forEach(section => {
+
+        section.classList.remove(
+          "active"
+        );
+
+      });
+
+    const target =
+      document.getElementById(
+        page + "Page"
+      );
+
+    if (target) {
+
+      target.classList.add(
+        "active"
+      );
+
+    }
+
+    closeLegalMenu();
+
+    if (updateHash) {
+
+      history.pushState(
+        null,
+        "",
+        "#" + page
+      );
+
+    }
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+
+  }
+
+  function showHome(
+    updateHash = true
+  ) {
+
+    document
+      .querySelectorAll(".page")
+      .forEach(section => {
+
+        section.classList.remove(
+          "active"
+        );
+
+      });
+
+    document
+      .getElementById("homePage")
+      .classList.add(
+        "active"
+      );
+
+    closeLegalMenu();
+
+    if (updateHash) {
+
+      history.pushState(
+        null,
+        "",
+        "#start"
+      );
+
+    }
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+
+  }
+
+  /* =====================================================
+     JAHRE
+  ===================================================== */
+
+  function populateYears() {
+
+    const currentYear =
+      new Date().getFullYear();
+
+    yearEl.innerHTML = "";
+
+    for (
+      let year =
+        currentYear - 2;
+      year <=
+        currentYear + 5;
+      year++
+    ) {
+
+      const option =
+        document.createElement(
+          "option"
+        );
+
+      option.value =
+        year;
+
+      option.textContent =
+        year;
+
+      yearEl.appendChild(
+        option
+      );
+
+    }
+
+    yearEl.value =
+      plan.year;
+
+  }
+
+  /* =====================================================
+     STORAGE
+  ===================================================== */
+
+  function loadData() {
+
+    try {
+
+      const raw =
+        localStorage.getItem(
+          STORAGE_KEY
+        );
+
+      if (!raw) {
+
+        return structuredClone(
+          defaultPlan
+        );
+
+      }
+
+      const saved =
+        JSON.parse(raw);
+
+      return {
+
+        ...structuredClone(
+          defaultPlan
+        ),
+
+        ...saved,
+
+        entries:
+          Array.isArray(
+            saved.entries
+          )
+            ? saved.entries
+            : [],
+
+        freeDays:
+          Array.isArray(
+            saved.freeDays
+          )
+            ? saved.freeDays
+            : [],
+
+        appointments:
+          Array.isArray(
+            saved.appointments
+          )
+            ? saved.appointments
+            : [],
+
+        appointmentSettings:
+          {
+            ...structuredClone(
+              defaultPlan.appointmentSettings
+            ),
+            ...(saved.appointmentSettings || {})
+          }
+
+      };
+
+    } catch (error) {
+
+      console.error(
+        "Fehler beim Laden:",
+        error
+      );
+
+      return structuredClone(
+        defaultPlan
+      );
+
+    }
+
+  }
+
+  function saveData() {
+
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(plan)
+    );
+
+  }
+
+  function loadForm() {
+
+    yearEl.value =
+      plan.year;
+
+    stateEl.value =
+      plan.state;
+
+    totalAmountEl.value =
+      plan.totalAmount || "";
+
+    startDateEl.value =
+      plan.startDate || "";
+
+    targetDateEl.value =
+      plan.targetDate || "";
+
+  }
+
+  /* =====================================================
+     PLANUNG
+  ===================================================== */
+
+  function getFormPlan() {
+
+    return {
+
+      ...plan,
+
+      year:
+        Number(
+          yearEl.value
+        ),
+
+      state:
+        stateEl.value,
+
+      totalAmount:
+        Number(
+          totalAmountEl.value
+        ) || 0,
+
+      startDate:
+        startDateEl.value,
+
+      targetDate:
+        targetDateEl.value
+
+    };
+
+  }
+
+  function onPlanningFieldChange() {
+
+    renderPreview(
+      getFormPlan()
+    );
+
+  }
+
+  function previewPlan() {
+
+    renderPreview(
+      getFormPlan()
+    );
+
+    previewEl.classList.remove(
+      "hidden"
+    );
+
+  }
+
+  function renderPreview(data) {
+
+    if (
+      !data.startDate ||
+      !data.targetDate ||
+      !data.totalAmount
+    ) {
+
+      previewEl.innerHTML = `
+
+        <strong>Planungsvorschau</strong><br>
+
+        Bitte Jahresmenge, Startdatum und gewünschtes Enddatum eingeben.
+
+      `;
+
+      return;
+
+    }
+
+    const workdays =
+      getWorkdaysBetween(
+        data.startDate,
+        data.targetDate,
+        data
+      );
+
+    const dailyAverage =
+      workdays > 0
+        ? data.totalAmount /
+          workdays
+        : 0;
+
+    previewEl.innerHTML = `
+
+      <strong>
+        Planungsvorschau
+      </strong>
+
+      <br><br>
+
+      Verfügbare Arbeitstage:
+
+      <strong>
+        ${formatNumber(workdays)}
+      </strong>
+
+      <br>
+
+      Erforderlicher Durchschnitt:
+
+      <strong>
+        ${formatNumber(dailyAverage)}
+      </strong>
+
+      pro Arbeitstag
+
+      <br><br>
+
+      Wochenenden, gesetzliche Feiertage
+      und zusätzlich eingetragene freie Tage
+      werden nicht als Arbeitstage berücksichtigt.
+
+    `;
+
+  }
+
+  function savePlan() {
+
+    const data =
+      getFormPlan();
+
+    if (
+      !data.totalAmount ||
+      data.totalAmount <= 0
+    ) {
+
+      alert(
+        "Bitte eine gültige Jahresmenge eingeben."
+      );
+
+      return;
+
+    }
+
+    if (!data.startDate) {
+
+      alert(
+        "Bitte ein Startdatum auswählen."
+      );
+
+      return;
+
+    }
+
+    if (!data.targetDate) {
+
+      alert(
+        "Bitte ein gewünschtes Enddatum auswählen."
+      );
+
+      return;
+
+    }
+
+    if (
+      data.targetDate <
+      data.startDate
+    ) {
+
+      alert(
+        "Das Enddatum darf nicht vor dem Startdatum liegen."
+      );
+
+      return;
+
+    }
+
+    plan =
+      data;
+
+    saveData();
+
+    renderAll();
+
+    alert(
+      "Die Planung wurde gespeichert."
+    );
+
+  }
+
+  function resetPlan() {
+
+    if (
+      !confirm(
+        "Möchtest du die Planung wirklich zurücksetzen?"
+      )
+    ) {
+
+      return;
+
+    }
+
+    plan = {
+
+      ...structuredClone(
+        defaultPlan
+      ),
+
+      year:
+        Number(
+          yearEl.value
+        ) ||
+        new Date().getFullYear()
+
+    };
+
+    saveData();
+
+    loadForm();
+
+    previewEl.classList.add(
+      "hidden"
+    );
+
+    renderAll();
+
+  }
+
+  /* =====================================================
+     LEISTUNG
+  ===================================================== */
+
+  function savePerformance() {
+
+    const date =
+      entryDateEl.value;
+
+    const amount =
+      parseAmount(
+        entryAmountEl.value
+      );
+
+    const note =
+      entryNoteEl.value.trim();
+
+    if (!date) {
+
+      alert(
+        "Bitte ein Datum auswählen."
+      );
+
+      return;
+
+    }
+
+    if (
+      !Number.isFinite(amount) ||
+      amount <= 0
+    ) {
+
+      alert(
+        "Bitte eine gültige erledigte Menge eingeben."
+      );
+
+      return;
+
+    }
+
+    plan.entries.push({
+
+      id:
+        String(Date.now()) +
+        Math.random()
+          .toString(16)
+          .slice(2),
+
+      date,
+
+      amount,
+
+      note
+
+    });
+
+    plan.entries.sort(
+      (a, b) =>
+        a.date.localeCompare(
+          b.date
+        )
+    );
+
+    saveData();
+
+    entryAmountEl.value =
+      "";
+
+    entryNoteEl.value =
+      "";
+
+    renderAll();
+
+  }
+
+  function deletePerformance(id) {
+
+    const entry =
+      plan.entries.find(
+        item =>
+          item.id === id
+      );
+
+    if (!entry) {
+
+      return;
+
+    }
+
+    if (
+      !confirm(
+        `Eintrag vom ${formatDate(entry.date)} mit ${formatNumber(entry.amount)} wirklich löschen?`
+      )
+    ) {
+
+      return;
+
+    }
+
+    plan.entries =
+      plan.entries.filter(
+        item =>
+          item.id !== id
+      );
+
+    saveData();
+
+    renderAll();
+
+  }
+
+  /* =====================================================
+     FREIE TAGE
+  ===================================================== */
+
+  function addFreeDay() {
+
+    const date =
+      freeDateEl.value;
+
+    const note =
+      freeNoteEl.value.trim();
+
+    if (!date) {
+
+      alert(
+        "Bitte einen freien Tag auswählen."
+      );
+
+      return;
+
+    }
+
+    if (
+      plan.freeDays.some(
+        item =>
+          item.date === date
+      )
+    ) {
+
+      alert(
+        "Dieser freie Tag ist bereits eingetragen."
+      );
+
+      return;
+
+    }
+
+    plan.freeDays.push({
+
+      id:
+        String(Date.now()) +
+        Math.random()
+          .toString(16)
+          .slice(2),
+
+      date,
+
+      note
+
+    });
+
+    plan.freeDays.sort(
+      (a, b) =>
+        a.date.localeCompare(
+          b.date
+        )
+    );
+
+    saveData();
+
+    freeDateEl.value =
+      "";
+
+    freeNoteEl.value =
+      "";
+
+    renderAll();
+
+  }
+
+  function deleteFreeDay(id) {
+
+    plan.freeDays =
+      plan.freeDays.filter(
+        item =>
+          item.id !== id
+      );
+
+    saveData();
+
+    renderAll();
+
+  }
+
+  /* =====================================================
+     FEIERTAGE
+  ===================================================== */
+
+  function getHolidays(
+    year,
+    state
+  ) {
+
+    const holidays = [];
+
+    function add(
+      date,
+      name
+    ) {
+
+      holidays.push({
+
+        date:
+          formatDateInput(
+            date
+          ),
+
+        name
+
+      });
+
+    }
+
+    const easter =
+      calculateEaster(
+        year
+      );
+
+    add(
+      new Date(
+        year,
+        0,
+        1
+      ),
+      "Neujahr"
+    );
+
+    add(
+      new Date(
+        year,
+        4,
+        1
+      ),
+      "Tag der Arbeit"
+    );
+
+    add(
+      new Date(
+        year,
+        9,
+        3
+      ),
+      "Tag der Deutschen Einheit"
+    );
+
+    add(
+      new Date(
+        year,
+        11,
+        25
+      ),
+      "1. Weihnachtstag"
+    );
+
+    add(
+      new Date(
+        year,
+        11,
+        26
+      ),
+      "2. Weihnachtstag"
+    );
+
+    add(
+      addDays(
+        easter,
+        -2
+      ),
+      "Karfreitag"
+    );
+
+    add(
+      addDays(
+        easter,
+        1
+      ),
+      "Ostermontag"
+    );
+
+    add(
+      addDays(
+        easter,
+        39
+      ),
+      "Christi Himmelfahrt"
+    );
+
+    add(
+      addDays(
+        easter,
+        50
+      ),
+      "Pfingstmontag"
+    );
+
+    switch (state) {
+
+      case "BW":
+
+        add(
+          new Date(
+            year,
+            0,
+            6
+          ),
+          "Heilige Drei Könige"
+        );
+
+        add(
+          addDays(
+            easter,
+            60
+          ),
+          "Fronleichnam"
+        );
+
+        add(
+          new Date(
+            year,
+            10,
+            1
+          ),
+          "Allerheiligen"
+        );
+
+        break;
+
+      case "BY":
+
+        add(
+          new Date(
+            year,
+            0,
+            6
+          ),
+          "Heilige Drei Könige"
+        );
+
+        add(
+          addDays(
+            easter,
+            60
+          ),
+          "Fronleichnam"
+        );
+
+        add(
+          new Date(
+            year,
+            7,
+            15
+          ),
+          "Mariä Himmelfahrt"
+        );
+
+        add(
+          new Date(
+            year,
+            10,
+            1
+          ),
+          "Allerheiligen"
+        );
+
+        break;
+
+      case "BE":
+
+        add(
+          new Date(
+            year,
+            2,
+            8
+          ),
+          "Internationaler Frauentag"
+        );
+
+        break;
+
+      case "BB":
+
+        add(
+          new Date(
+            year,
+            9,
+            31
+          ),
+          "Reformationstag"
+        );
+
+        break;
+
+      case "HB":
+
+        add(
+          new Date(
+            year,
+            9,
+            31
+          ),
+          "Reformationstag"
+        );
+
+        break;
+
+      case "HH":
+
+        add(
+          new Date(
+            year,
+            9,
+            31
+          ),
+          "Reformationstag"
+        );
+
+        break;
+
+      case "HE":
+
+        add(
+          addDays(
+            easter,
+            60
+          ),
+          "Fronleichnam"
+        );
+
+        break;
+
+      case "MV":
+
+        add(
+          new Date(
+            year,
+            2,
+            8
+          ),
+          "Internationaler Frauentag"
+        );
+
+        add(
+          new Date(
+            year,
+            9,
+            31
+          ),
+          "Reformationstag"
+        );
+
+        break;
+
+      case "NI":
+
+        add(
+          new Date(
+            year,
+            9,
+            31
+          ),
+          "Reformationstag"
+        );
+
+        break;
+
+      case "NW":
+
+        add(
+          addDays(
+            easter,
+            60
+          ),
+          "Fronleichnam"
+        );
+
+        add(
+          new Date(
+            year,
+            10,
+            1
+          ),
+          "Allerheiligen"
+        );
+
+        break;
+
+      case "RP":
+
+        add(
+          addDays(
+            easter,
+            60
+          ),
+          "Fronleichnam"
+        );
+
+        add(
+          new Date(
+            year,
+            10,
+            1
+          ),
+          "Allerheiligen"
+        );
+
+        break;
+
+      case "SL":
+
+        add(
+          addDays(
+            easter,
+            60
+          ),
+          "Fronleichnam"
+        );
+
+        add(
+          new Date(
+            year,
+            7,
+            15
+          ),
+          "Mariä Himmelfahrt"
+        );
+
+        add(
+          new Date(
+            year,
+            10,
+            1
+          ),
+          "Allerheiligen"
+        );
+
+        break;
+
+      case "SN":
+
+        add(
+          new Date(
+            year,
+            9,
+            31
+          ),
+          "Reformationstag"
+        );
+
+        add(
+          getBußUndBettag(
+            year
+          ),
+          "Buß- und Bettag"
+        );
+
+        break;
+
+      case "ST":
+
+        add(
+          new Date(
+            year,
+            0,
+            6
+          ),
+          "Heilige Drei Könige"
+        );
+
+        add(
+          new Date(
+            year,
+            9,
+            31
+          ),
+          "Reformationstag"
+        );
+
+        break;
+
+      case "SH":
+
+        add(
+          new Date(
+            year,
+            9,
+            31
+          ),
+          "Reformationstag"
+        );
+
+        break;
+
+      case "TH":
+
+        add(
+          new Date(
+            year,
+            9,
+            31
+          ),
+          "Reformationstag"
+        );
+
+        add(
+          new Date(
+            year,
+            8,
+            20
+          ),
+          "Weltkindertag"
+        );
+
+        break;
+
+    }
+
+    const unique =
+      new Map();
+
+    holidays.forEach(
+      item => {
+
+        unique.set(
+          item.date,
+          item
+        );
+
+      }
+    );
+
+    return Array
+      .from(
+        unique.values()
+      )
+      .sort(
+        (a, b) =>
+          a.date.localeCompare(
+            b.date
+          )
+      );
+
+  }
+
+  function calculateEaster(year) {
+
+    const a =
+      year % 19;
+
+    const b =
+      Math.floor(
+        year / 100
+      );
+
+    const c =
+      year % 100;
+
+    const d =
+      Math.floor(
+        b / 4
+      );
+
+    const e =
+      b % 4;
+
+    const f =
+      Math.floor(
+        (b + 8) / 25
+      );
+
+    const g =
+      Math.floor(
+        (b - f + 1) / 3
+      );
+
+    const h =
+      (
+        19 * a +
+        b -
+        d -
+        g +
+        15
+      ) % 30;
+
+    const i =
+      Math.floor(
+        c / 4
+      );
+
+    const k =
+      c % 4;
+
+    const l =
+      (
+        32 +
+        2 * e +
+        2 * i -
+        h -
+        k
+      ) % 7;
+
+    const m =
+      Math.floor(
+        (
+          a +
+          11 * h +
+          22 * l
+        ) / 451
+      );
+
+    const month =
+      Math.floor(
+        (
+          h +
+          l -
+          7 * m +
+          114
+        ) / 31
+      );
+
+    const day =
+      (
+        (
+          h +
+          l -
+          7 * m +
+          114
+        ) % 31
+      ) + 1;
+
+    return new Date(
+      year,
+      month - 1,
+      day
+    );
+
+  }
+
+  function getBußUndBettag(year) {
+
+    for (
+      let day = 22;
+      day >= 16;
+      day--
+    ) {
+
+      const date =
+        new Date(
+          year,
+          10,
+          day
+        );
+
+      if (
+        date.getDay() === 3
+      ) {
+
+        return date;
+
+      }
+
+    }
+
+    return new Date(
+      year,
+      10,
+      18
+    );
+
+  }
+
+  /* =====================================================
+     ARBEITSTAGE
+  ===================================================== */
+
+  function isWorkday(
+    date,
+    data = plan
+  ) {
+
+    const day =
+      date.getDay();
+
+    if (
+      day === 0 ||
+      day === 6
+    ) {
+
+      return false;
+
+    }
+
+    const dateString =
+      formatDateInput(
+        date
+      );
+
+    const holidays =
+      getHolidays(
+        date.getFullYear(),
+        data.state
+      );
+
+    if (
+      holidays.some(
+        holiday =>
+          holiday.date ===
+          dateString
+      )
+    ) {
+
+      return false;
+
+    }
+
+    if (
+      data.freeDays.some(
+        item =>
+          item.date ===
+          dateString
+      )
+    ) {
+
+      return false;
+
+    }
+
+    return true;
+
+  }
+
+  function getWorkdaysBetween(
+    start,
+    end,
+    data = plan
+  ) {
+
+    if (
+      !start ||
+      !end ||
+      end < start
+    ) {
+
+      return 0;
+
+    }
+
+    let count = 0;
+
+    const current =
+      parseDate(start);
+
+    const last =
+      parseDate(end);
+
+    while (
+      current <= last
+    ) {
+
+      if (
+        isWorkday(
+          current,
+          data
+        )
+      ) {
+
+        count++;
+
+      }
+
+      current.setDate(
+        current.getDate() + 1
+      );
+
+    }
+
+    return count;
+
+  }
+
+  function getWorkdaysUntilToday(
+    data = plan
+  ) {
+
+    if (
+      !data.startDate
+    ) {
+
+      return 0;
+
+    }
+
+    const today =
+      new Date();
+
+    today.setHours(
+      0,
+      0,
+      0,
+      0
+    );
+
+    const start =
+      parseDate(
+        data.startDate
+      );
+
+    if (
+      today < start
+    ) {
+
+      return 0;
+
+    }
+
+    let end =
+      today;
+
+    if (
+      data.targetDate
+    ) {
+
+      const target =
+        parseDate(
+          data.targetDate
+        );
+
+      if (
+        end > target
+      ) {
+
+        end =
+          target;
+
+      }
+
+    }
+
+    return getWorkdaysBetween(
+      data.startDate,
+      formatDateInput(
+        end
+      ),
+      data
+    );
+
+  }
+
+  function getWorkdaysAfterToday(
+    data = plan
+  ) {
+
+    if (
+      !data.targetDate ||
+      !data.startDate
+    ) {
+
+      return 0;
+
+    }
+
+    const tomorrow =
+      new Date();
+
+    tomorrow.setHours(
+      0,
+      0,
+      0,
+      0
+    );
+
+    tomorrow.setDate(
+      tomorrow.getDate() + 1
+    );
+
+    const target =
+      parseDate(
+        data.targetDate
+      );
+
+    if (
+      tomorrow > target
+    ) {
+
+      return 0;
+
+    }
+
+    return getWorkdaysBetween(
+      formatDateInput(
+        tomorrow
+      ),
+      data.targetDate,
+      data
+    );
+
+  }
+
+  function getSollUntilToday(
+    data = plan
+  ) {
+
+    if (
+      !data.totalAmount ||
+      !data.startDate ||
+      !data.targetDate
+    ) {
+
+      return 0;
+
+    }
+
+    const totalWorkdays =
+      getWorkdaysBetween(
+        data.startDate,
+        data.targetDate,
+        data
+      );
+
+    const workdaysUntilToday =
+      getWorkdaysUntilToday(
+        data
+      );
+
+    if (
+      totalWorkdays <= 0
+    ) {
+
+      return 0;
+
+    }
+
+    return (
+      data.totalAmount *
+      (
+        workdaysUntilToday /
+        totalWorkdays
+      )
+    );
+
+  }
+
+  function getTomorrowNeed(
+    data = plan
+  ) {
+
+    const done =
+      getCompletedAmount(
+        data
+      );
+
+    const remaining =
+      Math.max(
+        0,
+        data.totalAmount -
+        done
+      );
+
+    const workdays =
+      getWorkdaysAfterToday(
+        data
+      );
+
+    if (
+      workdays <= 0
+    ) {
+
+      return remaining;
+
+    }
+
+    return (
+      remaining /
+      workdays
+    );
+
+  }
+
+  /* =====================================================
+     BERECHNUNGEN
+  ===================================================== */
+
+  function getCompletedAmount(
+    data = plan
+  ) {
+
+    return data.entries.reduce(
+      (sum, entry) =>
+        sum +
+        Number(
+          entry.amount || 0
+        ),
+      0
+    );
+
+  }
+
+  function getRemainingAmount(
+    data = plan
+  ) {
+
+    return Math.max(
+      0,
+      Number(
+        data.totalAmount || 0
+      ) -
+      getCompletedAmount(
+        data
+      )
+    );
+
+  }
+
+  function getAverage(
+    data = plan
+  ) {
+
+    const workdays =
+      getWorkdaysBetween(
+        data.startDate,
+        data.targetDate,
+        data
+      );
+
+    if (
+      !workdays
+    ) {
+
+      return 0;
+
+    }
+
+    return (
+      data.totalAmount /
+      workdays
+    );
+
+  }
+
+  /* =====================================================
+     RENDER
+  ===================================================== */
+
+  function renderAll() {
+
+    renderStatus();
+
+    renderStats();
+
+    renderQuickInfo();
+
+    renderFreeDays();
+
+    renderHolidays();
+
+    renderHistory();
+
+    if (window.SchornsteinPlanerTermine) {
+      window.SchornsteinPlanerTermine.render();
+    }
+
+  }
+
+  function renderStatus() {
+
+    const actual =
+      getCompletedAmount(
+        plan
+      );
+
+    const soll =
+      getSollUntilToday(
+        plan
+      );
+
+    const difference =
+      actual - soll;
+
+    const remaining =
+      getRemainingAmount(
+        plan
+      );
+
+    const tomorrowNeed =
+      getTomorrowNeed(
+        plan
+      );
+
+    document
+      .getElementById(
+        "statusActual"
+      )
+      .textContent =
+        formatNumber(
+          actual
+        );
+
+    document
+      .getElementById(
+        "statusTarget"
+      )
+      .textContent =
+        "Soll bis heute: " +
+        formatNumber(
+          soll
+        );
+
+    document
+      .getElementById(
+        "statusSoll"
+      )
+      .textContent =
+        formatNumber(
+          soll
+        );
+
+    document
+      .getElementById(
+        "statusDifference"
+      )
+      .textContent =
+        formatSignedNumber(
+          difference
+        );
+
+    document
+      .getElementById(
+        "statusRemaining"
+      )
+      .textContent =
+        formatNumber(
+          remaining
+        );
+
+    document
+      .getElementById(
+        "statusTomorrow"
+      )
+      .textContent =
+        formatNumber(
+          tomorrowNeed
+        );
+
+    document
+      .getElementById(
+        "progressTargetText"
+      )
+      .textContent =
+        "Ziel: " +
+        formatNumber(
+          plan.totalAmount || 0
+        );
+
+    const percent =
+      plan.totalAmount > 0
+        ? Math.min(
+            100,
+            Math.max(
+              0,
+              actual /
+              plan.totalAmount *
+              100
+            )
+          )
+        : 0;
+
+    document
+      .getElementById(
+        "progressBar"
+      )
+      .style.width =
+        percent + "%";
+
+    document
+      .getElementById(
+        "progressText"
+      )
+      .textContent =
+        formatNumber(
+          percent
+        ) +
+        "% der Jahresmenge";
+
+    const pill =
+      document.getElementById(
+        "statusPill"
+      );
+
+    pill.className =
+      "status-pill";
+
+    if (
+      !plan.totalAmount
+    ) {
+
+      pill.classList.add(
+        "neutral"
+      );
+
+      pill.textContent =
+        "Planung noch nicht eingerichtet";
+
+    } else if (
+      actual >=
+      plan.totalAmount
+    ) {
+
+      pill.classList.add(
+        "good"
+      );
+
+      pill.textContent =
+        "Ziel erreicht";
+
+    } else if (
+      actual === 0 &&
+      soll === 0
+    ) {
+
+      pill.classList.add(
+        "neutral"
+      );
+
+      pill.textContent =
+        "Noch nicht gestartet";
+
+    } else if (
+      difference >= 0
+    ) {
+
+      pill.classList.add(
+        "good"
+      );
+
+      pill.textContent =
+        "Im Soll · " +
+        formatNumber(
+          difference
+        ) +
+        " voraus";
+
+    } else {
+
+      pill.classList.add(
+        "bad"
+      );
+
+      pill.textContent =
+        "Hinter dem Soll · " +
+        formatNumber(
+          Math.abs(
+            difference
+          )
+        ) +
+        " Rückstand";
+
+    }
+
+  }
+
+  function renderStats() {
+
+    const workdays =
+      getWorkdaysBetween(
+        plan.startDate,
+        plan.targetDate,
+        plan
+      );
+
+    document
+      .getElementById(
+        "statTotal"
+      )
+      .textContent =
+        formatNumber(
+          plan.totalAmount || 0
+        );
+
+    document
+      .getElementById(
+        "statDone"
+      )
+      .textContent =
+        formatNumber(
+          getCompletedAmount(
+            plan
+          )
+        );
+
+    document
+      .getElementById(
+        "statWorkdays"
+      )
+      .textContent =
+        formatNumber(
+          workdays
+        );
+
+    document
+      .getElementById(
+        "statAverage"
+      )
+      .textContent =
+        formatNumber(
+          getAverage(
+            plan
+          )
+        );
+
+  }
+
+  function renderQuickInfo() {
+
+    const total =
+      Number(
+        plan.totalAmount || 0
+      );
+
+    const done =
+      getCompletedAmount(
+        plan
+      );
+
+    const remaining =
+      Math.max(
+        0,
+        total - done
+      );
+
+    document
+      .getElementById(
+        "quickTotal"
+      )
+      .textContent =
+        formatNumber(
+          total
+        );
+
+    document
+      .getElementById(
+        "quickDone"
+      )
+      .textContent =
+        formatNumber(
+          done
+        );
+
+    document
+      .getElementById(
+        "quickRemaining"
+      )
+      .textContent =
+        formatNumber(
+          remaining
+        );
+
+  }
+
+  function renderFreeDays() {
+
+    const container =
+      document.getElementById(
+        "freeDaysList"
+      );
+
+    if (
+      !plan.freeDays.length
+    ) {
+
+      container.innerHTML = `
+
+        <div class="empty">
+
+          Noch keine zusätzlichen freien Tage eingetragen.
+
+        </div>
+
+      `;
+
+      return;
+
+    }
+
+    container.innerHTML =
+      plan.freeDays
+        .map(
+          item => `
+
+            <div class="list-item">
+
+              <div class="list-item-main">
+
+                <div class="list-item-title">
+
+                  ${
+                    escapeHtml(
+                      item.note ||
+                      "Freier Tag"
+                    )
+                  }
+
+                </div>
+
+                <div class="list-item-meta">
+
+                  ${formatDate(
+                    item.date
+                  )}
+
+                </div>
+
+              </div>
+
+              <button
+                class="btn btn-danger btn-small"
+                type="button"
+                data-delete-free="${escapeHtml(item.id)}"
+              >
+
+                Löschen
+
+              </button>
+
+            </div>
+
+          `
+        )
+        .join("");
+
+  }
+
+  function renderHolidays() {
+
+    const container =
+      document.getElementById(
+        "holidayList"
+      );
+
+    const holidays =
+      getHolidays(
+        plan.year,
+        plan.state
+      );
+
+    const stateName =
+      stateEl
+        .options[
+          stateEl.selectedIndex
+        ]
+        ?.text ||
+      plan.state;
+
+    document
+      .getElementById(
+        "holidayStateLabel"
+      )
+      .textContent =
+        `Feiertage für ${stateName} im Jahr ${plan.year}.`;
+
+    container.innerHTML =
+      holidays
+        .map(
+          holiday => `
+
+            <div class="holiday-row">
+
+              <div class="holiday-date">
+
+                ${formatDate(
+                  holiday.date
+                )}
+
+              </div>
+
+              <div>
+
+                ${escapeHtml(
+                  holiday.name
+                )}
+
+              </div>
+
+            </div>
+
+          `
+        )
+        .join("");
+
+  }
+
+  function renderHistory() {
+
+    const container =
+      document.getElementById(
+        "historyList"
+      );
+
+    if (
+      !plan.entries.length
+    ) {
+
+      container.innerHTML = `
+
+        <div class="empty">
+
+          Noch keine Leistungen eingetragen.
+
+        </div>
+
+      `;
+
+      return;
+
+    }
+
+    const entries =
+      [...plan.entries]
+        .sort(
+          (a, b) =>
+            b.date.localeCompare(
+              a.date
+            )
+        );
+
+    container.innerHTML =
+      entries
+        .map(
+          entry => `
+
+            <div class="list-item">
+
+              <div class="list-item-main">
+
+                <div class="list-item-title">
+
+                  ${formatDate(
+                    entry.date
+                  )}
+
+                  ·
+
+                  ${formatNumber(
+                    entry.amount
+                  )}
+
+                </div>
+
+                <div class="list-item-meta">
+
+                  ${
+                    entry.note
+                      ? escapeHtml(
+                          entry.note
+                        )
+                      : "Keine Notiz"
+                  }
+
+                </div>
+
+              </div>
+
+              <button
+                class="btn btn-danger btn-small"
+                type="button"
+                data-delete-entry="${escapeHtml(entry.id)}"
+              >
+
+                Löschen
+
+              </button>
+
+            </div>
+
+          `
+        )
+        .join("");
+
+  }
+
+  /* =====================================================
+     HILFSFUNKTIONEN
+  ===================================================== */
+
+  function parseAmount(value) {
+
+    if (
+      value === null ||
+      value === undefined
+    ) {
+
+      return NaN;
+
+    }
+
+    let normalized =
+      String(value)
+        .trim()
+        .replace(
+          /\s/g,
+          ""
+        );
+
+    if (!normalized) {
+
+      return NaN;
+
+    }
+
+    if (
+      normalized.includes(",") &&
+      normalized.includes(".")
+    ) {
+
+      if (
+        normalized.lastIndexOf(",") >
+        normalized.lastIndexOf(".")
+      ) {
+
+        normalized =
+          normalized
+            .replace(
+              /\./g,
+              ""
+            )
+            .replace(
+              ",",
+              "."
+            );
+
+      } else {
+
+        normalized =
+          normalized.replace(
+            /,/g,
+            ""
+          );
+
+      }
+
+    } else if (
+      normalized.includes(",")
+    ) {
+
+      normalized =
+        normalized.replace(
+          ",",
+          "."
+        );
+
+    }
+
+    return Number(
+      normalized
+    );
+
+  }
+
+  function formatNumber(value) {
+
+    return new Intl.NumberFormat(
+      "de-DE",
+      {
+        maximumFractionDigits: 2
+      }
+    ).format(
+      Number(value) || 0
+    );
+
+  }
+
+  function formatSignedNumber(value) {
+
+    const number =
+      Number(value) || 0;
+
+    if (
+      number > 0
+    ) {
+
+      return "+" +
+        formatNumber(
+          number
+        );
+
+    }
+
+    return formatNumber(
+      number
+    );
+
+  }
+
+  function parseDate(value) {
+
+    const parts =
+      value.split("-");
+
+    return new Date(
+      Number(parts[0]),
+      Number(parts[1]) - 1,
+      Number(parts[2])
+    );
+
+  }
+
+  function formatDateInput(date) {
+
+    const year =
+      date.getFullYear();
+
+    const month =
+      String(
+        date.getMonth() + 1
+      ).padStart(
+        2,
+        "0"
+      );
+
+    const day =
+      String(
+        date.getDate()
+      ).padStart(
+        2,
+        "0"
+      );
+
+    return `${year}-${month}-${day}`;
+
+  }
+
+  function formatDate(value) {
+
+    if (!value) {
+
+      return "–";
+
+    }
+
+    const date =
+      parseDate(
+        value
+      );
+
+    return new Intl.DateTimeFormat(
+      "de-DE",
+      {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+      }
+    ).format(
+      date
+    );
+
+  }
+
+  function addDays(
+    date,
+    days
+  ) {
+
+    const result =
+      new Date(
+        date
+      );
+
+    result.setDate(
+      result.getDate() +
+      days
+    );
+
+    return result;
+
+  }
+
+  function escapeHtml(value) {
+
+    return String(
+      value ?? ""
+    )
+      .replace(
+        /&/g,
+        "&amp;"
+      )
+      .replace(
+        /</g,
+        "&lt;"
+      )
+      .replace(
+        />/g,
+        "&gt;"
+      )
+      .replace(
+        /"/g,
+        "&quot;"
+      )
+      .replace(
+        /'/g,
+        "&#039;"
+      );
+
+  }
+
+  /* =====================================================
+     SERVICE WORKER
+  ===================================================== */
+
+  if (
+    "serviceWorker" in navigator
+  ) {
+
+    window.addEventListener(
+      "load",
+      () => {
+
+        navigator.serviceWorker
+          .register(
+            "sw.js"
+          )
+          .catch(
+            error => {
+
+              console.warn(
+                "Service Worker konnte nicht registriert werden:",
+                error
+              );
+
+            }
+          );
+
+      }
+    );
+
+  }
+
+</script>
+
+
+<script>
+(function () {
+  "use strict";
+
+  const KEY = "schornstein-planer-v8";
+  const moduleState = {
+    view: "day",
+    date: new Date(),
+    editingId: null,
+    selectedId: null,
+    showEmpty: false
+  };
+
+  const $ = id => document.getElementById(id);
+  const pad = n => String(n).padStart(2, "0");
+  const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  const fromIso = value => { const [y,m,d] = value.split("-").map(Number); return new Date(y,m-1,d); };
+  const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+  const fmtDate = value => new Intl.DateTimeFormat("de-DE", { weekday:"long", day:"2-digit", month:"2-digit", year:"numeric" }).format(fromIso(value));
+  const shortDate = value => new Intl.DateTimeFormat("de-DE", { day:"2-digit", month:"2-digit", year:"numeric" }).format(fromIso(value));
+  const esc = value => String(value ?? "").replace(/[&<>'"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[c]));
+  const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : `apt-${Date.now()}-${Math.random().toString(16).slice(2)}`);
+
+  function data() {
+    try { return JSON.parse(localStorage.getItem(KEY) || "{}"); } catch { return {}; }
+  }
+  function persist(next) {
+    const current = data();
+    const merged = { ...current, ...next };
+    localStorage.setItem(KEY, JSON.stringify(merged));
+    if (typeof window.renderAll === "function") window.renderAll();
+  }
+  function appointments() { const a = data().appointments; return Array.isArray(a) ? a : []; }
+  function settings() { return { businessName:"", employeeName:"", phone:"", businessAddress:"", ...(data().appointmentSettings || {}) }; }
+  function currentYear() { return Number($("year")?.value || data().year || new Date().getFullYear()); }
+  function currentState() { return $("state")?.value || data().state || "HE"; }
+
+  function holidayMap(year) {
+    const list = typeof window.getHolidays === "function" ? window.getHolidays(year, currentState()) : [];
+    return new Map(list.map(x => [x.date, x.name]));
+  }
+
+  function sameHour(a, b) { return a.date === b.date && a.time.slice(0,2) === b.time.slice(0,2); }
+  function hourCount(date, time, ignoreId) { return appointments().filter(a => a.id !== ignoreId && sameHour(a,{date,time})).length; }
+
+  function showNotice(text) {
+    const el = $("spCalendarNotice"); if (!el) return;
+    el.textContent = text || ""; el.hidden = !text;
+  }
+
+  function init() {
+    if (!$('spCalendar')) return;
+    bind();
+    const today = iso(new Date());
+    ["spProposalFrom","spExportFrom"].forEach(id => { if (!$(id).value) $(id).value = today; });
+    ["spProposalTo","spExportTo"].forEach(id => { if (!$(id).value) $(id).value = iso(addDays(new Date(), 31)); });
+    loadSettings();
+    render();
+  }
+
+  function bind() {
+    $("spPrevPeriod").addEventListener("click", () => move(-1));
+    $("spNextPeriod").addEventListener("click", () => move(1));
+    $("spToday").addEventListener("click", () => { moduleState.date = new Date(); render(); });
+    $("spToggleEmpty").addEventListener("click", () => { moduleState.showEmpty = !moduleState.showEmpty; render(); });
+    $("spNewAppointment").addEventListener("click", () => openModal(iso(moduleState.date), "09:00"));
+    document.querySelectorAll("[data-sp-view]").forEach(b => b.addEventListener("click", () => { moduleState.view = b.dataset.spView; render(); }));
+    $("spSaveAppointment").addEventListener("click", saveAppointment);
+    $("spCancelAppointment").addEventListener("click", closeModal);
+    $("spDeleteAppointment").addEventListener("click", deleteAppointment);
+    $("spPrintProposal").addEventListener("click", printProposal);
+    $("spPrintRange").addEventListener("click", printRangeProposals);
+    $("spExportSelectedIcs").addEventListener("click", () => { const a = appointments().find(x => x.id === moduleState.selectedId); if (a) downloadICS([a], `termin-${a.date}-${a.time.replace(':','')}.ics`); });
+    $("spExportRangeIcs").addEventListener("click", exportRange);
+    $("spBackupData").addEventListener("click", backupData);
+    $("spRestoreData").addEventListener("change", restoreData);
+    ["spBusinessName","spEmployeeName","spPhone","spBusinessAddress"].forEach(id => $(id).addEventListener("input", saveSettings));
+    ["spProposalFrom","spProposalTo"].forEach(id => $(id).addEventListener("change", renderProposalList));
+    $("year").addEventListener("change", () => render());
+    $("state").addEventListener("change", () => render());
+    document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("spAppointmentModal").hidden) closeModal(); });
+    document.addEventListener("click", e => {
+      const dayBtn = e.target.closest("[data-sp-day]"); if (dayBtn) { moduleState.date = fromIso(dayBtn.dataset.spDay); moduleState.view = "day"; render(); return; }
+      const open = e.target.closest("[data-sp-open]"); if (open) openModal(open.dataset.date, open.dataset.time, open.dataset.spOpen);
+      const select = e.target.closest("[data-sp-select]"); if (select) { moduleState.selectedId = select.dataset.spSelect; renderProposalList(); updateActionState(); }
+      const edit = e.target.closest("[data-sp-edit]"); if (edit) openModal("", "", edit.dataset.spEdit);
+      const del = e.target.closest("[data-sp-delete]"); if (del) { moduleState.editingId = del.dataset.spDelete; deleteAppointment(); }
+    });
+  }
+
+  function loadSettings() {
+    const s = settings();
+    $("spBusinessName").value = s.businessName;
+    $("spEmployeeName").value = s.employeeName;
+    $("spPhone").value = s.phone;
+    $("spBusinessAddress").value = s.businessAddress;
+  }
+  function saveSettings() {
+    persist({ appointmentSettings: { businessName:$("spBusinessName").value.trim(), employeeName:$("spEmployeeName").value.trim(), phone:$("spPhone").value.trim(), businessAddress:$("spBusinessAddress").value.trim() } });
+  }
+
+  function move(delta) {
+    moduleState.date = addDays(moduleState.date, moduleState.view === "week" ? delta * 7 : delta);
+    render();
+  }
+  function weekStart(d) { const x = new Date(d); const day = x.getDay(); const diff = day === 0 ? -6 : 1-day; return addDays(x,diff); }
+
+  const byTime = (a, b) => a.time.localeCompare(b.time);
+  function addrLine(a) {
+    return [a.street && `${a.street} ${a.house || ""}`.trim(), [a.zip, a.city].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+  }
+  function apptCard(a, compact) {
+    const addr = addrLine(a);
+    const title = (a.customer || "Ohne Kundennamen") + (addr ? " – " + addr : "");
+    return `<button type="button" class="sp-appt${compact ? " compact" : ""}${a.id === moduleState.selectedId ? " selected" : ""}" data-sp-open="${esc(a.id)}" data-date="${esc(a.date)}" data-time="${esc(a.time)}" title="${esc(title)}"><span class="sp-appt-time">${esc(a.time)}</span><span class="sp-appt-main"><strong>${esc(a.customer || "Ohne Kundennamen")}</strong>${compact || !addr ? "" : `<small>${esc(addr)}</small>`}</span></button>`;
+  }
+  function freeTimeIn(day, hour) {
+    const used = appointments().filter(a => a.date === day && Number(a.time.slice(0, 2)) === hour).map(a => a.time);
+    for (const m of ["00", "15", "30", "45"]) { const tm = `${pad(hour)}:${m}`; if (!used.includes(tm)) return tm; }
+    return `${pad(hour)}:00`;
+  }
+  function firstFreeSlot(day) {
+    for (let h = 8; h <= 17; h++) if (hourCount(day, `${pad(h)}:00`, null) < 4) return freeTimeIn(day, h);
+    return "09:00";
+  }
+  function addBtn(day, time, label, aria) {
+    return `<button type="button" class="sp-add" data-sp-open="" data-date="${esc(day)}" data-time="${esc(time)}" aria-label="${esc(aria || "Termin anlegen")}">${label}</button>`;
+  }
+
+  function renderDay(d, holidayOf) {
+    const key = iso(d), h = holidayOf(d);
+    const list = appointments().filter(a => a.date === key).sort(byTime);
+    const label = h ? `Feiertag: ${esc(h)} – keine Termine möglich` : (list.length ? `${list.length} ${list.length === 1 ? "Termin" : "Termine"}` : "Keine Termine");
+    let html = `<div class="sp-day-summary${h ? " holiday" : ""}">${label}</div>`;
+    if (!list.length && !moduleState.showEmpty) {
+      return html + `<div class="sp-empty-day">${h ? "An Feiertagen werden keine Termine angelegt." : "Für diesen Tag ist noch nichts eingetragen." + "<br>" + addBtn(key, firstFreeSlot(key), "+ Termin anlegen")}</div>`;
+    }
+    for (let hour = 0; hour <= 23; hour++) {
+      const aps = list.filter(a => Number(a.time.slice(0, 2)) === hour);
+      if (!aps.length && !(moduleState.showEmpty && hour >= 6 && hour <= 20)) continue;
+      const canAdd = !h && aps.length < 4;
+      const add = canAdd ? addBtn(key, freeTimeIn(key, hour), aps.length ? "+" : "+ frei", `Termin um ${pad(hour)} Uhr anlegen`) : "";
+      html += `<div class="sp-hour${aps.length ? "" : " empty"}"><div class="sp-hour-time">${pad(hour)}:00</div><div class="sp-hour-body">${aps.map(a => apptCard(a)).join("")}${add}</div></div>`;
+    }
+    return html;
+  }
+
+  function renderWeek(days, holidayOf) {
+    const today = iso(new Date());
+    return `<div class="sp-week">${days.map(d => {
+      const key = iso(d), h = holidayOf(d), weekend = d.getDay() === 0 || d.getDay() === 6;
+      const list = appointments().filter(a => a.date === key).sort(byTime);
+      const wd = new Intl.DateTimeFormat("de-DE", { weekday: "short" }).format(d);
+      return `<div class="sp-week-day${key === today ? " today" : ""}${h ? " holiday" : ""}${weekend ? " weekend" : ""}"><button type="button" class="sp-week-head" data-sp-day="${key}" title="Tagesansicht öffnen"><span>${esc(wd)} ${pad(d.getDate())}.${pad(d.getMonth() + 1)}.</span><span class="sp-count">${list.length || ""}</span>${h ? `<small>${esc(h)}</small>` : ""}</button><div class="sp-week-list">${list.length ? list.map(a => apptCard(a, true)).join("") : `<div class="sp-week-none">–</div>`}</div>${h ? "" : addBtn(key, firstFreeSlot(key), "+", "Termin anlegen")}</div>`;
+    }).join("")}</div>`;
+  }
+
+  function render() {
+    if (!$('spCalendar')) return;
+    const week = moduleState.view === "week";
+    const days = week ? Array.from({ length: 7 }, (_, i) => addDays(weekStart(moduleState.date), i)) : [moduleState.date];
+    const holidays = holidayMap(currentYear());
+    const hmaps = new Map();
+    const holidayOf = d => {
+      const y = d.getFullYear();
+      if (!hmaps.has(y)) hmaps.set(y, typeof window.getHolidays === "function" ? new Map(window.getHolidays(y, currentState()).map(x => [x.date, x.name])) : new Map());
+      return hmaps.get(y).get(iso(d));
+    };
+    $("spCalendarTitle").textContent = week ? `${shortDate(iso(days[0]))} – ${shortDate(iso(days[6]))}` : fmtDate(iso(days[0]));
+    document.querySelectorAll(".sp-view-btn").forEach(b => b.classList.toggle("active", b.dataset.spView === moduleState.view));
+    const toggle = $("spToggleEmpty");
+    if (toggle) { toggle.hidden = week; toggle.textContent = moduleState.showEmpty ? "Freie Stunden ausblenden" : "Freie Stunden zeigen"; }
+    $("spCalendar").innerHTML = week ? renderWeek(days, holidayOf) : renderDay(days[0], holidayOf);
+    showNotice(holidays.size ? `Feiertage des ausgewählten Bundeslandes werden markiert. An Feiertagen kann kein neuer Termin angelegt werden.` : "");
+    renderProposalList();
+    updateActionState();
+  }
+
+  function openModal(date, time, id) {
+    moduleState.editingId = id || null;
+    const a = id ? appointments().find(x=>x.id===id) : null;
+    $("spModalTitle").textContent = a ? "Termin bearbeiten" : "Termin anlegen";
+    $("spAptDate").value = a?.date || date || iso(moduleState.date);
+    $("spAptTime").value = a?.time || time || "09:00";
+    $("spAptCustomer").value = a?.customer || "";
+    $("spAptStreet").value = a?.street || "";
+    $("spAptHouse").value = a?.house || "";
+    $("spAptZip").value = a?.zip || "";
+    $("spAptCity").value = a?.city || "";
+    $("spAptDuration").value = String(a?.duration || 15);
+    $("spAptNotes").value = a?.notes || "";
+    $("spDeleteAppointment").hidden = !a;
+    $("spAppointmentModal").hidden = false;
+    $("spAptCustomer").focus();
+  }
+  function closeModal() { $("spAppointmentModal").hidden=true; moduleState.editingId=null; }
+
+  function saveAppointment() {
+    const date=$("spAptDate").value, time=$("spAptTime").value;
+    if (!date || !time) return alert("Bitte Datum und Uhrzeit angeben.");
+    const holiday=holidayMap(new Date(date).getFullYear()).get(date);
+    if (holiday) return alert(`Am ${fmtDate(date)} ist ${holiday}. Termine an Feiertagen sind standardmäßig gesperrt.`);
+    if (hourCount(date,time,moduleState.editingId) >= 4) return alert("Für diese Stunde sind bereits 4 Termine eingetragen.");
+    const item={ id:moduleState.editingId || uuid(), date,time, customer:$("spAptCustomer").value.trim(), street:$("spAptStreet").value.trim(), house:$("spAptHouse").value.trim(), zip:$("spAptZip").value.trim(), city:$("spAptCity").value.trim(), duration:Number($("spAptDuration").value)||15, notes:$("spAptNotes").value.trim(), updatedAt:new Date().toISOString() };
+    const list=appointments(); const idx=list.findIndex(x=>x.id===item.id); if(idx>=0) list[idx]=item; else list.push(item);
+    persist({appointments:list}); moduleState.selectedId=item.id; moduleState.date=fromIso(date); closeModal(); render();
+  }
+  function deleteAppointment() {
+    if (!moduleState.editingId) return;
+    const a=appointments().find(x=>x.id===moduleState.editingId); if(!a) return;
+    if (!confirm(`Termin für ${a.customer || 'diesen Kunden'} wirklich löschen?`)) return;
+    persist({appointments:appointments().filter(x=>x.id!==moduleState.editingId)}); if(moduleState.selectedId===moduleState.editingId) moduleState.selectedId=null; closeModal(); render();
+  }
+
+  function rangeAppointments(from,to) { return appointments().filter(a=>a.date>=from && a.date<=to).sort((a,b)=>`${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`)); }
+  function renderProposalList() {
+    const from=$("spProposalFrom").value, to=$("spProposalTo").value, el=$("spProposalList"); if(!el) return;
+    if(!from || !to || from>to) { el.innerHTML='<div class="empty">Bitte einen gültigen Zeitraum auswählen.</div>'; return; }
+    const list=rangeAppointments(from,to);
+    if(!list.length) { el.innerHTML='<div class="empty">Keine Termine in diesem Zeitraum.</div>'; updateActionState(); return; }
+    el.innerHTML=list.map(a=>`<div class="sp-proposal-item ${a.id===moduleState.selectedId?'selected':''}"><input type="radio" name="spProposal" ${a.id===moduleState.selectedId?'checked':''} data-sp-select="${esc(a.id)}"><div class="sp-proposal-main"><strong>${esc(fmtDate(a.date))} · ${esc(a.time)} Uhr</strong><span>${esc(a.customer||'Ohne Kundennamen')} · ${esc([a.street&&`${a.street} ${a.house||''}`,a.zip,a.city].filter(Boolean).join(', '))}</span></div><div class="sp-proposal-actions"><button class="btn btn-light" type="button" data-sp-edit="${esc(a.id)}">Bearbeiten</button></div></div>`).join('');
+    updateActionState();
+  }
+  function updateActionState() {
+    const selected=appointments().find(a=>a.id===moduleState.selectedId); const enabled=!!selected;
+    $("spPrintProposal").disabled=!enabled; $("spExportSelectedIcs").disabled=!enabled;
+  }
+
+  function saveBackupObject() { const d=data(); return { schema:"schornstein-planer-local-backup", version:1, exportedAt:new Date().toISOString(), data:d }; }
+  function backupData() {
+    const blob=new Blob([JSON.stringify(saveBackupObject(),null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`schornstein-planer-backup-${iso(new Date())}.json`; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  }
+  function restoreData(event) {
+    const file=event.target.files?.[0]; if(!file) return; const reader=new FileReader();
+    reader.onload=()=>{ try { const obj=JSON.parse(reader.result); if(obj.schema!=="schornstein-planer-local-backup" || !obj.data || typeof obj.data!=="object") throw new Error('Ungültiges Backup'); if(!confirm('Die aktuelle lokale Planung wird durch das Backup ersetzt. Fortfahren?')) return; localStorage.setItem(KEY,JSON.stringify(obj.data)); location.reload(); } catch(e){ alert('Die Sicherungsdatei konnte nicht eingelesen werden.'); } finally { event.target.value=""; } }; reader.readAsText(file);
+  }
+
+  function icsEscape(value) { return String(value||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\r?\n/g,'\\n'); }
+  function icsDateTime(a) { return `${a.date.replaceAll('-','')}T${a.time.replace(':','')}00`; }
+  function downloadICS(list, filename) {
+    if(!list.length) return alert('Keine Termine im gewählten Zeitraum.');
+    const now=new Date(); const stamp=`${now.getUTCFullYear()}${pad(now.getUTCMonth()+1)}${pad(now.getUTCDate())}T${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}${pad(now.getUTCSeconds())}Z`;
+    const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Schornstein Planer//DE','CALSCALE:GREGORIAN','METHOD:PUBLISH'];
+    list.forEach(a=>{ const start=icsDateTime(a); const endDate=new Date(fromIso(a.date)); const [hh,mm]=a.time.split(':').map(Number); endDate.setHours(hh,mm+(Number(a.duration)||15),0,0); const end=`${iso(endDate).replaceAll('-','')}T${pad(endDate.getHours())}${pad(endDate.getMinutes())}00`; const address=[a.street&&`${a.street} ${a.house||''}`,a.zip,a.city].filter(Boolean).join(', '); lines.push('BEGIN:VEVENT',`UID:${icsEscape(a.id)}@schornstein-planer.de`,`DTSTAMP:${stamp}`,`DTSTART:${start}`,`DTEND:${end}`,`SUMMARY:${icsEscape('Schornsteinfegertermin – '+(a.customer||'Kundentermin'))}`,`LOCATION:${icsEscape(address)}`,`DESCRIPTION:${icsEscape(a.notes||'')}`,'END:VEVENT'); });
+    lines.push('END:VCALENDAR'); const blob=new Blob([lines.join('\r\n')+'\r\n'],{type:'text/calendar;charset=utf-8'}); const link=document.createElement('a'); link.href=URL.createObjectURL(blob); link.download=filename; link.click(); setTimeout(()=>URL.revokeObjectURL(link.href),1000);
+  }
+  function exportRange() { const from=$("spExportFrom").value,to=$("spExportTo").value; if(!from||!to||from>to) return alert('Bitte einen gültigen Exportzeitraum auswählen.'); downloadICS(rangeAppointments(from,to),`schornstein-planer-${from}-bis-${to}.ics`); }
+
+  const TWOUP_CSS = `
+    #spPrintRoot .page { display: flex; width: 297mm; height: 209.6mm; overflow: hidden; break-after: page; page-break-after: always; }
+    #spPrintRoot .page:last-child { break-after: auto; page-break-after: auto; }
+    #spPrintRoot .page .sheet + .sheet { border-left: .2mm dashed #b9bec3; }
+  `;
+
+  function cleanupPrint() {
+    document.body.classList.remove("sp-printing");
+    const root = $("spPrintRoot"); if (root) root.remove();
+    const style = $("spPrintStyle"); if (style) style.remove();
+  }
+
+  const printCss = twoUp => `
+    @page { size: ${twoUp ? "A4 landscape" : "A5 portrait"}; margin: 0; }
+    #spPrintRoot { display: none; }
+    @media print {
+      html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; height: auto !important; min-height: 0 !important; overflow: visible !important; }
+      body.sp-printing > *:not(#spPrintRoot) { display: none !important; }
+      #spPrintRoot { display: block !important; position: static !important; }
+      #spPrintRoot, #spPrintRoot * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+    #spPrintRoot, #spPrintRoot * { box-sizing: border-box; }
+    #spPrintRoot { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; color: #22272d; line-height: 1.4; text-align: left; }
+    #spPrintRoot p, #spPrintRoot h1, #spPrintRoot div { margin: 0; padding: 0; }
+    #spPrintRoot .sheet { width: 148mm; height: 209mm; padding: 12mm 14mm 10mm; display: flex; flex-direction: column; overflow: hidden; background: #fff; break-after: avoid; page-break-after: avoid; }
+    #spPrintRoot .head { display: flex; justify-content: space-between; align-items: center; gap: 6mm; padding-bottom: 4mm; border-bottom: .5mm solid #c79a42; }
+    #spPrintRoot .biz-name { font-size: 13pt; font-weight: 700; line-height: 1.2; }
+    #spPrintRoot .biz-role { margin-top: .8mm; font-size: 8.5pt; color: #6c757d; }
+    #spPrintRoot .biz-addr { margin-top: 1.8mm; font-size: 8.5pt; line-height: 1.35; color: #444; }
+    #spPrintRoot .kicker { margin-top: 5.5mm; font-size: 9.5pt; font-weight: 700; color: #9a7220; }
+    #spPrintRoot h1 { margin-top: 1mm; font-size: 19pt; line-height: 1.15; font-weight: 700; letter-spacing: -.01em; color: #22272d; }
+    #spPrintRoot .letter { margin-top: 4.5mm; font-size: 9.5pt; line-height: 1.5; }
+    #spPrintRoot .letter p { margin-bottom: 2.2mm; }
+    #spPrintRoot .opt { display: inline-flex; align-items: center; gap: 1.4mm; margin: 0 2mm 0 .5mm; font-weight: 700; white-space: nowrap; }
+    #spPrintRoot .box { display: inline-block; width: 3.2mm; height: 3.2mm; border: .35mm solid #22272d; border-radius: .6mm; }
+    #spPrintRoot .appt { margin-top: 3mm; border: .4mm solid #22272d; border-radius: 2mm; overflow: hidden; }
+    #spPrintRoot .appt-title { padding: 1.9mm 4mm; background: #22272d; color: #fff; font-size: 10pt; font-weight: 700; }
+    #spPrintRoot .appt-body { padding: 3.5mm 4mm 3.5mm; }
+    #spPrintRoot .when { display: grid; grid-template-columns: 1fr auto; gap: 6mm; padding-bottom: 3.2mm; border-bottom: .2mm solid #d5d9dd; }
+    #spPrintRoot .k { margin-bottom: .6mm; font-size: 8pt; font-weight: 600; color: #6c757d; }
+    #spPrintRoot .v { font-size: 13pt; font-weight: 700; line-height: 1.25; }
+    #spPrintRoot .where { margin-top: 3mm; }
+    #spPrintRoot .where .v { font-size: 10.5pt; font-weight: 600; line-height: 1.4; }
+    #spPrintRoot .notes { margin-top: 3mm; font-size: 9pt; line-height: 1.4; color: #333; }
+    #spPrintRoot .contact { margin-top: 4mm; font-size: 9.5pt; line-height: 1.5; }
+    #spPrintRoot .phone { margin-top: 2.5mm; display: flex; align-items: baseline; justify-content: center; gap: 3mm; padding: 2.4mm 3mm; border: .3mm solid #c79a42; background: #fbf5e7; border-radius: 2mm; }
+    #spPrintRoot .phone .lbl { font-size: 9pt; font-weight: 600; color: #6c757d; }
+    #spPrintRoot .phone .num { font-size: 15pt; font-weight: 700; letter-spacing: .02em; }
+    #spPrintRoot .sign { margin-top: auto; padding-top: 3mm; font-size: 9.5pt; line-height: 1.5; }
+    #spPrintRoot .sign .name { margin-top: 8mm; font-weight: 700; }
+    #spPrintRoot .sign .role { font-size: 8.5pt; color: #555; }
+  `;
+
+  /* ---------- PDF-Ausgabe für Home-Bildschirm-Apps (iOS kann dort nicht direkt drucken) ---------- */
+  function timeWindow(time) {
+    const h = Number(String(time).slice(0, 2));
+    if (!Number.isFinite(h)) return String(time);
+    return `${pad(h)}:00 – ${pad((h + 1) % 24)}:00`;
+  }
+
+  function buildProposalPdf(list, twoUp) {
+    const W = 419.53, H = 595.28, ML = 40, CW = W - 80;
+    const cpMap = { "€": 0x80, "„": 0x84, "…": 0x85, "‘": 0x91, "’": 0x92, "“": 0x93, "”": 0x94, "•": 0x95, "–": 0x96, "—": 0x97 };
+    const enc = str => {
+      let o = "";
+      for (const ch of String(str)) {
+        const c = ch.charCodeAt(0);
+        if (c < 32) o += " ";
+        else if (c < 128 || (c >= 160 && c <= 255)) o += ch;
+        else if (cpMap[ch]) o += String.fromCharCode(cpMap[ch]);
+        else o += "?";
+      }
+      return o.replace(/([\\()])/g, "\\$1");
+    };
+    const cv = document.createElement("canvas").getContext("2d");
+    const wid = (str, bold, size) => { cv.font = (bold ? "bold " : "") + "100px Helvetica, Arial, sans-serif"; return cv.measureText(str).width * size / 100; };
+    const col = hex => { const n = parseInt(hex.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(v => (v / 255).toFixed(3)).join(" "); };
+    const f2 = v => Number(v).toFixed(2);
+    let ops = [], ox = 0;
+
+    const T = (x, y, str, o = {}) => {
+      const size = o.size || 9.5, bold = !!o.bold; let px = x;
+      if (o.align === "center") px = x - wid(str, bold, size) / 2;
+      ops.push(`BT /${bold ? "F2" : "F1"} ${size} Tf ${col(o.color || "#22272d")} rg ${f2(px + ox)} ${f2(H - y)} Td (${enc(str)}) Tj ET`);
+    };
+    const R = (x, y, w, h, o = {}) => {
+      const fill = o.fill ? col(o.fill) + " rg " : "", stroke = o.stroke ? col(o.stroke) + " RG " + (o.lw || 1) + " w " : "";
+      ops.push(`${fill}${stroke}${f2(x + ox)} ${f2(H - y - h)} ${f2(w)} ${f2(h)} re ${o.fill && o.stroke ? "B" : o.fill ? "f" : "S"}`);
+    };
+    const L = (x1, y1, x2, y2, color, lw) => ops.push(`${col(color)} RG ${lw} w ${f2(x1 + ox)} ${f2(H - y1)} m ${f2(x2 + ox)} ${f2(H - y2)} l S`);
+    const wrap = (str, size, bold, maxW) => {
+      const out = [];
+      String(str).split(/\r?\n/).forEach(par => {
+        let line = "";
+        par.split(/\s+/).filter(Boolean).forEach(w => {
+          const test = line ? line + " " + w : w;
+          if (!line || wid(test, bold, size) <= maxW) line = test; else { out.push(line); line = w; }
+        });
+        out.push(line);
+      });
+      return out;
+    };
+    const words = (str, bold) => String(str).split(/\s+/).filter(Boolean).map(w => ({ t: w, b: !!bold }));
+    const flow = (tokens, x, y, maxW, size, lead) => {
+      const sp = wid(" ", false, size); let cx = x, cy = y;
+      tokens.forEach(tk => {
+        const bw = size * 0.8, w = tk.box ? bw + 4 + wid(tk.t, tk.b, size) : wid(tk.t, tk.b, size);
+        if (cx > x && cx + w > x + maxW) { cx = x; cy += lead; }
+        if (tk.box) { R(cx, cy - bw + 0.5, bw, bw, { stroke: "#22272d", lw: 0.9 }); T(cx + bw + 4, cy, tk.t, { size, bold: tk.b }); }
+        else T(cx, cy, tk.t, { size, bold: tk.b });
+        cx += w + sp;
+      });
+      return cy + lead;
+    };
+
+    const drawSheet = d => {
+    let y = 44;
+    T(ML, y, d.business, { size: 13, bold: true });
+    y += 13; T(ML, y, "Schornsteinfegerbetrieb", { size: 8.5, color: "#6c757d" });
+    d.bizAddr.split(/\r?\n/).filter(Boolean).forEach((ln, i) => { y += i ? 11 : 15; T(ML, y, ln, { size: 8.5, color: "#444444" }); });
+    y += 10; L(ML, y, ML + CW, y, "#c79a42", 1.4);
+
+    y += 26; T(ML, y, "Terminvorschlag", { size: 9.5, bold: true, color: "#9a7220" });
+    y += 25; T(ML, y, "Ihr Schornsteinfeger kommt …", { size: 19, bold: true });
+
+    // Brieftext
+    y += 30; T(ML, y, "Sehr geehrte Kundin, sehr geehrter Kunde,");
+    y += 17;
+    const biz = words(d.business, true); biz[biz.length - 1].t += ",";
+    y = flow([
+      ...words("als Schornsteinfegergeselle im Auftrag von"), ...biz,
+      ...words("Schornsteinfegermeister, möchte ich Sie darüber informieren, dass bei Ihnen die nächste"),
+      { box: true, t: "Kehrung", b: true }, { box: true, t: "Messung", b: true }, ...words("ansteht.")
+    ], ML, y, CW, 9.5, 14) + 3;
+    T(ML, y, "Hiermit schlage ich Ihnen folgenden Termin vor:");
+
+    // Terminkasten
+    const top = y + 12;
+    R(ML, top, CW, 19, { fill: "#22272d" });
+    T(ML + 12, top + 13, "Ihr Terminvorschlag", { size: 10, bold: true, color: "#ffffff" });
+    y = top + 19 + 15;
+    const xR = ML + CW * 0.63;
+    T(ML + 12, y, "Datum", { size: 8, color: "#6c757d" }); T(xR, y, "Uhrzeit", { size: 8, color: "#6c757d" });
+    let vs = 13; while (vs > 9 && wid(d.dateStr, true, vs) > xR - ML - 24) vs -= 0.5;
+    y += 17; T(ML + 12, y, d.dateStr, { size: vs, bold: true }); let ts = 13; while (ts > 8 && wid(d.time + " Uhr", true, ts) > ML + CW - 12 - xR) ts -= 0.5;
+    T(xR, y, d.time + " Uhr", { size: ts, bold: true });
+    y += 11; L(ML + 12, y, ML + CW - 12, y, "#d5d9dd", 0.6);
+    if (d.customer || d.addrLines.length) {
+      y += 15; T(ML + 12, y, "Terminadresse", { size: 8, color: "#6c757d" });
+      [d.customer, ...d.addrLines].filter(Boolean).forEach(ln => { y += 15; T(ML + 12, y, ln, { size: 10.5, bold: true }); });
+    }
+    if (d.notes) {
+      y += 16;
+      y = flow([{ t: "Hinweis:", b: true }, ...words(d.notes)], ML + 12, y, CW - 24, 9, 12) - 12;
+    }
+    y += 12; R(ML, top, CW, y - top, { stroke: "#22272d", lw: 1.1 });
+
+    // Kontakt
+    y += 22;
+    wrap("Sollten Sie an diesem Termin verhindert sein, rufen Sie mich bitte an – wir vereinbaren gerne einen alternativen Termin. Sie erreichen mich unter:", 9.5, false, CW)
+      .forEach((ln, i) => { if (i) y += 14; T(ML, y, ln); });
+    y += 12; R(ML, y, CW, 30, { fill: "#fbf5e7", stroke: "#c79a42", lw: 0.9 });
+    T(ML + 14, y + 19, "Telefon", { size: 9, color: "#6c757d" });
+    T(ML + CW / 2 + 16, y + 20, d.phone, { size: 15, bold: true, align: "center" });
+    y += 30;
+
+    // Gruß
+    const sy = Math.max(y + 26, H - 46 - 44);
+    T(ML, sy, "Mit freundlichen Grüßen");
+    T(ML, sy + 30, d.employee, { bold: true });
+    T(ML, sy + 42, "Schornsteinfegerbetrieb " + d.business, { size: 8.5, color: "#555555" });
+
+    };
+
+    const per = twoUp ? 2 : 1, pageW = twoUp ? 841.89 : W;
+    const streams = [];
+    for (let i = 0; i < list.length; i += per) {
+      ops = [];
+      const chunk = list.slice(i, i + per);
+      chunk.forEach((d, k) => { ox = k * (pageW / 2); drawSheet(d); });
+      ox = 0;
+      if (twoUp && chunk.length > 1) ops.push(`q ${col("#b9bec3")} RG 0.5 w [3 3] 0 d ${f2(pageW / 2)} ${f2(H - 18)} m ${f2(pageW / 2)} 18 l S Q`);
+      streams.push(ops.join("\n"));
+    }
+    const objs = [
+      "<< /Type /Catalog /Pages 2 0 R >>",
+      `<< /Type /Pages /Kids [${streams.map((_, i) => `${5 + 2 * i} 0 R`).join(" ")}] /Count ${streams.length} >>`,
+      "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+      "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>"
+    ];
+    streams.forEach((st, i) => {
+      objs.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW} ${H}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${6 + 2 * i} 0 R >>`);
+      objs.push(`<< /Length ${st.length} >>\nstream\n${st}\nendstream`);
+    });
+    let pdf = "%PDF-1.4\n%\u00e2\u00e3\u00cf\u00d3\n"; const offs = [];
+    objs.forEach((o, i) => { offs.push(pdf.length); pdf += `${i + 1} 0 obj\n${o}\nendobj\n`; });
+    const xr = pdf.length;
+    pdf += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n` + offs.map(o => String(o).padStart(10, "0") + " 00000 n \n").join("") +
+      `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xr}\n%%EOF`;
+    const bytes = new Uint8Array(pdf.length);
+    for (let i = 0; i < pdf.length; i++) bytes[i] = pdf.charCodeAt(i) & 255;
+    return new Blob([bytes], { type: "application/pdf" });
+  }
+
+  async function sharePdf(blob, name) {
+    try {
+      const file = new File([blob], name, { type: "application/pdf" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: name });
+        return;
+      }
+    } catch (err) {
+      if (err && err.name === "AbortError") return;
+    }
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url; link.download = name;
+    document.body.appendChild(link); link.click(); link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
+
+  function proposalData(a, s) {
+    return {
+      business: s.businessName || "[Name des Betriebs]",
+      employee: s.employeeName || "[Name des Mitarbeiters]",
+      phone: s.phone || "[Telefonnummer]",
+      bizAddr: s.businessAddress || "",
+      dateStr: new Intl.DateTimeFormat("de-DE", { weekday: "long", day: "2-digit", month: "long", year: "numeric" }).format(fromIso(a.date)),
+      time: timeWindow(a.time),
+      customer: a.customer || "",
+      addrLines: [[a.street, a.house].filter(Boolean).join(" "), [a.zip, a.city].filter(Boolean).join(" ")].filter(Boolean),
+      notes: a.notes || ""
+    };
+  }
+
+  function sheetHtml(d) {
+    const business = esc(d.business), employee = esc(d.employee), phone = esc(d.phone);
+    const addr = d.addrLines.map(esc).join("<br>");
+    const where = (d.customer || addr)
+      ? `<div class="where"><div class="k">Terminadresse</div><div class="v">${d.customer ? esc(d.customer) + (addr ? "<br>" : "") : ""}${addr}</div></div>`
+      : "";
+    const notes = d.notes ? `<div class="notes"><strong>Hinweis:</strong> ${esc(d.notes)}</div>` : "";
+    const bizAddr = d.bizAddr ? `<div class="biz-addr">${esc(d.bizAddr)}</div>` : "";
+    return `
+      <div class="sheet">
+        <div class="head">
+          <div>
+            <div class="biz-name">${business}</div>
+            <div class="biz-role">Schornsteinfegerbetrieb</div>
+            ${bizAddr}
+          </div>
+        </div>
+
+        <div class="kicker">Terminvorschlag</div>
+        <h1>Ihr Schornsteinfeger kommt …</h1>
+
+        <div class="letter">
+          <p>Sehr geehrte Kundin, sehr geehrter Kunde,</p>
+          <p>als Schornsteinfegergeselle im Auftrag von <strong>${business}</strong>, Schornsteinfegermeister, möchte ich Sie darüber informieren, dass bei Ihnen die nächste <span class="opt"><i class="box"></i>Kehrung</span> <span class="opt"><i class="box"></i>Messung</span> ansteht.</p>
+          <p>Hiermit schlage ich Ihnen folgenden Termin vor:</p>
+        </div>
+
+        <div class="appt">
+          <div class="appt-title">Ihr Terminvorschlag</div>
+          <div class="appt-body">
+            <div class="when">
+              <div><div class="k">Datum</div><div class="v">${esc(d.dateStr)}</div></div>
+              <div><div class="k">Uhrzeit</div><div class="v">${esc(d.time)} Uhr</div></div>
+            </div>
+            ${where}
+            ${notes}
+          </div>
+        </div>
+
+        <div class="contact">Sollten Sie an diesem Termin verhindert sein, rufen Sie mich bitte an – wir vereinbaren gerne einen alternativen Termin. Sie erreichen mich unter:</div>
+        <div class="phone"><span class="lbl">Telefon</span><span class="num">${phone}</span></div>
+
+        <div class="sign">
+          Mit freundlichen Grüßen
+          <div class="name">${employee}</div>
+          <div class="role">Schornsteinfegerbetrieb ${business}</div>
+        </div>
+      </div>`;
+  }
+
+  function printProposals(list, twoUp, fname) {
+    if (!list.length) return;
+    cleanupPrint();
+    const items = list.map(a => proposalData(a, settings()));
+
+    // Home-Bildschirm-App auf iPhone/iPad: window.print() ist dort gesperrt -> PDF erzeugen und über das Teilen-Menü drucken
+    if (window.navigator.standalone === true) {
+      sharePdf(buildProposalPdf(items, twoUp), fname);
+      return;
+    }
+
+    let body;
+    if (twoUp) {
+      const pages = [];
+      for (let i = 0; i < items.length; i += 2) pages.push(`<div class="page">${items.slice(i, i + 2).map(sheetHtml).join("")}</div>`);
+      body = pages.join("");
+    } else {
+      body = sheetHtml(items[0]);
+    }
+
+    const style = document.createElement("style"); style.id = "spPrintStyle"; style.textContent = printCss(twoUp) + (twoUp ? TWOUP_CSS : "");
+    const root = document.createElement("div"); root.id = "spPrintRoot"; root.innerHTML = body;
+    document.head.appendChild(style);
+    document.body.appendChild(root);
+    document.body.classList.add("sp-printing");
+
+    window.addEventListener("afterprint", cleanupPrint, { once: true });
+    setTimeout(cleanupPrint, 180000);
+
+    setTimeout(() => window.print(), 120);
+  }
+
+  function printProposal() {
+    const a = appointments().find(x => x.id === moduleState.selectedId); if (!a) return;
+    printProposals([a], false, "Terminvorschlag_" + a.date + ".pdf");
+  }
+
+  function printRangeProposals() {
+    const from = $("spProposalFrom").value, to = $("spProposalTo").value;
+    if (!from || !to || from > to) return alert("Bitte einen gültigen Zeitraum auswählen.");
+    const list = rangeAppointments(from, to);
+    if (!list.length) return alert("In diesem Zeitraum sind keine Termine vorhanden.");
+    printProposals(list, true, `Terminvorschlaege_${from}_bis_${to}.pdf`);
+  }
+
+  window.SchornsteinPlanerTermine = { render };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+</script>
+
+
+<script>
+/* Einklappbare Bereiche: Zustand merken, Navigation öffnet den Bereich automatisch */
+(function () {
+  "use strict";
+  var UI_KEY = "schornstein-planer-ui-collapse";
+  function load() { try { return JSON.parse(localStorage.getItem(UI_KEY) || "{}"); } catch (e) { return {}; } }
+  function save(state) { try { localStorage.setItem(UI_KEY, JSON.stringify(state)); } catch (e) {} }
+
+  var state = load();
+  var boxes = document.querySelectorAll("details[data-sp-collapse]");
+  boxes.forEach(function (box) {
+    var id = box.getAttribute("data-sp-collapse");
+    if (typeof state[id] === "boolean") box.open = state[id];
+    box.addEventListener("toggle", function () {
+      var s = load(); s[id] = box.open; save(s);
+    });
+  });
+
+  var main = document.getElementById("planung-termine");
+  var overview = document.querySelector('details[data-sp-collapse="overview"]');
+
+  function openTarget(hash) {
+    if (!main) return;
+    if (hash === "#planung-termine" || hash === "#terminplanung" || hash === "#planung") {
+      main.open = true;
+      if (hash === "#terminplanung" && overview) overview.open = true;
+    }
+  }
+
+  document.addEventListener("click", function (e) {
+    var link = e.target.closest && e.target.closest('a[href^="#"]');
+    if (link) openTarget(link.getAttribute("href"));
+  });
+  window.addEventListener("hashchange", function () { openTarget(location.hash); });
+  openTarget(location.hash);
+})();
+</script>
+
+</body>
+
+</html>
