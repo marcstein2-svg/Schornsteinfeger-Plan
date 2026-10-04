@@ -112,36 +112,46 @@ function unprint(){
   const s=document.getElementById('lvPrintStyle');
   if(s)s.remove();
 
+  const p=document.getElementById('lvPdfRoot');
+  if(p)p.remove();
+
   document.body.classList.remove('lv-printing');
 }
 
 
 /*
- * Lädt ein externes JavaScript nur einmal.
+ * Externe JavaScript-Bibliothek laden
  */
-function loadScript(src){
+function loadLVScript(src){
+
   return new Promise((resolve,reject)=>{
-    const existing=document.querySelector(
-      'script[data-lv-src="'+src+'"]'
+
+    const old=document.querySelector(
+      'script[data-lv-library="'+src+'"]'
     );
 
-    if(existing){
-      if(existing.dataset.loaded==='1'){
+    if(old){
+
+      if(old.dataset.loaded==='1'){
         resolve();
         return;
       }
 
-      existing.addEventListener('load',()=>resolve(),{once:true});
-      existing.addEventListener('error',()=>reject(
-        new Error('Bibliothek konnte nicht geladen werden: '+src)
-      ),{once:true});
+      old.addEventListener('load',resolve,{once:true});
+      old.addEventListener(
+        'error',
+        ()=>reject(new Error('Bibliothek konnte nicht geladen werden')),
+        {once:true}
+      );
+
       return;
     }
 
     const s=document.createElement('script');
+
     s.src=src;
     s.async=true;
-    s.dataset.lvSrc=src;
+    s.dataset.lvLibrary=src;
 
     s.onload=()=>{
       s.dataset.loaded='1';
@@ -150,27 +160,26 @@ function loadScript(src){
 
     s.onerror=()=>{
       reject(
-        new Error('Bibliothek konnte nicht geladen werden: '+src)
+        new Error(
+          'Bibliothek konnte nicht geladen werden: '+src
+        )
       );
     };
 
     document.head.appendChild(s);
+
   });
 }
 
 
 /*
- * Erstellt aus dem vorhandenen Berechnungsnachweis
- * eine PDF-Datei.
+ * PDF aus dem vorhandenen Berechnungsnachweis erzeugen
  */
 async function createLuftverbundPDF(){
 
   /*
-   * PDF-Inhalt erzeugen.
-   *
-   * Wir verwenden bewusst result() und nicht die sichtbare
-   * Bildschirmansicht. Dadurch enthält die PDF ausschließlich
-   * den Berechnungsnachweis.
+   * Unsichtbaren PDF-Inhalt erzeugen.
+   * Der Inhalt kommt direkt aus der vorhandenen result()-Funktion.
    */
   const pdfRoot=document.createElement('div');
 
@@ -178,10 +187,6 @@ async function createLuftverbundPDF(){
 
   pdfRoot.innerHTML=result();
 
-  /*
-   * A4-Arbeitsfläche.
-   * 794 px entspricht ungefähr einer A4-Breite bei 96 dpi.
-   */
   pdfRoot.style.position='fixed';
   pdfRoot.style.left='-10000px';
   pdfRoot.style.top='0';
@@ -195,238 +200,224 @@ async function createLuftverbundPDF(){
 
   document.body.appendChild(pdfRoot);
 
+
   try{
 
     /*
-     * jsPDF
+     * jsPDF laden
      */
-    await loadScript(
+    await loadLVScript(
       'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js'
     );
 
+
     /*
-     * html2canvas wird von jsPDF.html() für die HTML-Darstellung
-     * benötigt.
+     * html2canvas laden
      */
-    await loadScript(
+    await loadLVScript(
       'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'
     );
+
 
     if(
       !window.jspdf ||
       !window.jspdf.jsPDF ||
       !window.html2canvas
     ){
+
       throw new Error(
-        'PDF-Bibliotheken sind nicht verfügbar.'
+        'Die PDF-Bibliotheken sind nicht verfügbar.'
       );
+
     }
 
-    const {jsPDF}=window.jspdf;
 
+    const jsPDF=window.jspdf.jsPDF;
+
+
+    /*
+     * A4 PDF
+     */
     const pdf=new jsPDF({
+
       orientation:'portrait',
       unit:'mm',
       format:'a4',
       compress:true
+
     });
+
 
     /*
      * HTML -> PDF
      */
     await new Promise((resolve,reject)=>{
 
-      pdf.html(pdfRoot,{
+      try{
 
-        x:10,
-        y:10,
+        pdf.html(pdfRoot,{
 
-        /*
-         * A4:
-         * 210 mm breit
-         * 190 mm nutzbare Breite bei 10 mm Rand
-         */
-        width:190,
+          x:10,
+          y:10,
 
-        windowWidth:794,
+          width:190,
 
-        /*
-         * Automatischer Seitenumbruch.
-         */
-        autoPaging:'text',
+          windowWidth:794,
 
-        margin:[
-          10,
-          10,
-          10,
-          10
-        ],
+          margin:[
+            10,
+            10,
+            10,
+            10
+          ],
 
-        html2canvas:{
-          scale:1.5,
-          useCORS:true,
-          backgroundColor:'#ffffff'
-        },
+          autoPaging:'text',
 
-        callback:function(doc){
-          try{
+          html2canvas:{
+
+            scale:1.5,
+
+            useCORS:true,
+
+            backgroundColor:'#ffffff'
+
+          },
+
+          callback:function(doc){
+
             resolve(doc);
-          }catch(err){
-            reject(err);
-          }
-        }
 
-      });
+          }
+
+        });
+
+      }catch(err){
+
+        reject(err);
+
+      }
 
     });
 
-    /*
-     * PDF als Blob holen.
-     */
-    const pdfBlob=pdf.output('blob');
 
     /*
-     * Dateiname aus Projektnummer bzw. Projektname.
+     * PDF als Blob
      */
-    const projektName=(
+    const blob=pdf.output('blob');
+
+
+    /*
+     * Dateiname
+     */
+    const projekt=(
       D.p.nr ||
       D.p.n ||
       'projekt'
     )
     .replace(/[^\w.-]+/g,'_');
 
-    const date=new Date();
+
+    const d=new Date();
 
     const datum=
-      date.getFullYear()+'-'+
-      String(date.getMonth()+1).padStart(2,'0')+'-'+
-      String(date.getDate()).padStart(2,'0');
+      d.getFullYear()+'-'+
+      String(d.getMonth()+1).padStart(2,'0')+'-'+
+      String(d.getDate()).padStart(2,'0');
 
-    const fileName=
+
+    const filename=
       'Luftverbund-'+
-      projektName+
-      '-'+
+      projekt+'-'+
       datum+
       '.pdf';
 
-    const pdfFile=new File(
-      [pdfBlob],
-      fileName,
-      {
-        type:'application/pdf'
-      }
-    );
 
     /*
-     * Auf Mobilgeräten/PWA:
-     * native Teilen-Funktion benutzen.
-     *
-     * Dadurch kann der Benutzer beispielsweise:
-     * - Drucken
-     * - Dateien
-     * - WhatsApp
-     * - Mail
-     * - AirDrop
-     * usw. auswählen.
+     * PDF-URL erzeugen
      */
-    if(
-      navigator.share &&
-      navigator.canShare &&
-      navigator.canShare({
-        files:[pdfFile]
-      })
-    ){
+    const url=URL.createObjectURL(blob);
 
-      try{
 
-        await navigator.share({
-          title:'Luftverbund – Berechnungsnachweis',
-          text:
-            'Berechnungsnachweis Luftverbund nach TRGI 2018',
-          files:[pdfFile]
-        });
+    /*
+     * Mobil:
+     *
+     * PDF in neuem Tab/Fenster öffnen.
+     *
+     * Auf iPhone/iPad erscheint dadurch der PDF-Viewer.
+     * Dort kann über "Teilen" -> "Drucken" gedruckt werden.
+     *
+     * Auf Android öffnet sich ebenfalls der PDF-Viewer bzw.
+     * der Browser bietet die Datei an.
+     */
+    const opened=window.open(url,'_blank');
 
-        return;
 
-      }catch(err){
+    /*
+     * Falls der Browser das Öffnen eines neuen Fensters
+     * blockiert, wird die Datei direkt heruntergeladen.
+     */
+    if(!opened){
 
-        /*
-         * Benutzer hat die Teilen-Funktion abgebrochen.
-         * Dann nichts weiter tun.
-         */
-        if(err && err.name==='AbortError'){
-          return;
-        }
+      const a=document.createElement('a');
 
-        console.warn(
-          'Native PDF-Freigabe fehlgeschlagen:',
-          err
-        );
-      }
+      a.href=url;
+      a.download=filename;
+
+      document.body.appendChild(a);
+
+      a.click();
+
+      a.remove();
+
     }
 
+
     /*
-     * Fallback:
-     * PDF direkt herunterladen.
+     * URL erst später freigeben.
+     * Der PDF-Viewer braucht die URL noch.
      */
-    const url=URL.createObjectURL(pdfBlob);
-
-    const a=document.createElement('a');
-
-    a.href=url;
-    a.download=fileName;
-    a.style.display='none';
-
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-
     setTimeout(()=>{
-      URL.revokeObjectURL(url);
-    },60000);
 
-    alert(
-      'Die PDF wurde erstellt und gespeichert. '+
-      'Sie können sie jetzt über die Dateien-App öffnen und drucken.'
-    );
+      URL.revokeObjectURL(url);
+
+    },120000);
+
 
   }finally{
 
-    /*
-     * Unsichtbare PDF-Arbeitsfläche wieder entfernen.
-     */
     pdfRoot.remove();
+
   }
+
 }
 
 
 /*
- * Druckfunktion
- *
- * Desktop:
- *   normaler Browser-Druckdialog
- *
- * Mobil / PWA:
- *   PDF erzeugen und über die native Teilen-Funktion
- *   an das Betriebssystem übergeben.
+ * Hauptfunktion Drucken
  */
 async function doPrint(){
 
   unprint();
 
+
   /*
-   * Erkennung Mobilgerät / PWA.
+   * WICHTIG:
+   *
+   * Nicht mehr navigator.maxTouchPoints verwenden.
+   *
+   * Ein Windows-PC mit Touchscreen darf NICHT als Handy
+   * behandelt werden.
    */
   const isMobile=
     /Android|iPhone|iPad|iPod/i.test(
       navigator.userAgent
-    ) ||
-    navigator.maxTouchPoints>1;
+    );
+
 
   /*
-   * ---------------------------------------------------------
-   * MOBIL / PWA
-   * ---------------------------------------------------------
+   * =========================================================
+   * HANDY / PWA
+   * =========================================================
    */
   if(isMobile){
 
@@ -437,7 +428,7 @@ async function doPrint(){
     }catch(err){
 
       console.error(
-        'Fehler bei der PDF-Erzeugung:',
+        'Luftverbund PDF Fehler:',
         err
       );
 
@@ -445,73 +436,119 @@ async function doPrint(){
         'Die PDF konnte nicht erstellt werden.\n\n'+
         'Bitte prüfen Sie die Internetverbindung und versuchen Sie es erneut.'
       );
+
     }
 
     return;
+
   }
 
 
   /*
-   * ---------------------------------------------------------
-   * DESKTOP
-   * ---------------------------------------------------------
+   * =========================================================
+   * PC / DESKTOP
+   * =========================================================
+   *
+   * Hier KEIN setTimeout!
+   *
+   * window.print() wird unmittelbar aus dem Button-Klick
+   * heraus aufgerufen.
    */
-
   const s=document.createElement('style');
 
   s.id='lvPrintStyle';
 
   s.textContent=`
 
-    #lvPrintRoot{
-      display:none;
-    }
-
     @page{
+
       size:A4;
       margin:12mm;
+
     }
 
+
+    /*
+     * Bildschirm
+     */
+    #lvPrintRoot{
+
+      display:block;
+
+    }
+
+
+    /*
+     * Druck
+     */
     @media print{
 
       body.lv-printing>*:not(#lvPrintRoot){
+
         display:none!important;
+
       }
+
 
       #lvPrintRoot{
+
         display:block!important;
+
         position:static!important;
+
         width:auto!important;
+
         margin:0!important;
+
         padding:0!important;
+
         background:#fff!important;
+
       }
+
 
       body{
+
         background:#fff!important;
+
       }
+
 
       #lvPrintRoot .card{
+
         box-shadow:none!important;
-        break-inside:avoid;
-        page-break-inside:avoid;
+
         border:1px solid #999;
+
+        break-inside:avoid;
+
+        page-break-inside:avoid;
+
       }
+
 
       #lvPrintRoot *{
+
         -webkit-print-color-adjust:exact;
+
         print-color-adjust:exact;
+
       }
 
+
       #lvPrintRoot .form-actions{
+
         display:none!important;
+
       }
+
     }
 
   `;
 
+
   /*
-   * Druckcontainer erzeugen.
+   * Druckinhalt erzeugen
    */
   const r=document.createElement('div');
 
@@ -519,25 +556,36 @@ async function doPrint(){
 
   r.innerHTML=result();
 
+
   document.head.appendChild(s);
+
   document.body.appendChild(r);
 
   document.body.classList.add('lv-printing');
 
+
   /*
-   * Kurze Verzögerung, damit der Browser den Druckinhalt
-   * vollständig layouten kann.
+   * Direkt drucken.
+   *
+   * Kein setTimeout!
    */
-  setTimeout(()=>{
-    try{
-      window.print();
-    }catch(err){
-      console.error(
-        'window.print() fehlgeschlagen:',
-        err
-      );
-    }
-  },150);
+  try{
+
+    window.print();
+
+  }catch(err){
+
+    console.error(
+      'window.print() Fehler:',
+      err
+    );
+
+    alert(
+      'Der Druckdialog konnte nicht geöffnet werden.'
+    );
+
+  }
+
 }
 root.addEventListener('click',e=>{const t=e.target.closest('[data-t],[data-a]');if(!t)return;
 if(t.dataset.t!=null){tab=+t.dataset.t;render();root.scrollIntoView();return}
