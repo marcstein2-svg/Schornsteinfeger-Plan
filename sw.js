@@ -1,7 +1,7 @@
 /* Schornstein Planer – Service Worker
    Bei JEDER Änderung an einer der Dateien unten die VERSION erhöhen (z. B. v10 -> v11),
    damit Geräte die neuen Dateien holen und die alten verwerfen. */
-const VERSION = "v23";
+const VERSION = "v24";
 const PREFIX = "schornstein-planer-";
 const CACHE = PREFIX + VERSION;
 /* Alles, was offline verfügbar sein soll (Pfade relativ zu sw.js).
