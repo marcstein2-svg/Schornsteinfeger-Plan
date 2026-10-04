@@ -105,21 +105,379 @@ root.addEventListener('toggle',e=>{const i=e.target.dataset&&e.target.dataset.ri
 async function saveFile(text,name){const f=new File([text],name,{type:'application/json'});try{if(navigator.maxTouchPoints>0&&navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});return}}catch(err){if(err&&err.name==='AbortError')return}const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),6e4)}
 root.addEventListener('change',e=>{if(e.target.id!=='lvImport')return;const f=e.target.files&&e.target.files[0];if(!f)return;const rd=new FileReader();
 rd.onload=()=>{try{const o=JSON.parse(rd.result);if(o.schema!=='schornstein-planer-luftverbund'||!o.project)throw 0;if(!confirm('Das aktuelle Luftverbund-Projekt wird durch die Datei ersetzt. Fortfahren?'))return;D=Object.assign(dflt(),o.project);save();tab=0;render()}catch(x){alert('Die Projektdatei konnte nicht gelesen werden.')}finally{e.target.value=''}};rd.readAsText(f)});
-function unprint(){const r=document.getElementById('lvPrintRoot');if(r)r.remove();const s=document.getElementById('lvPrintStyle');if(s)s.remove();document.body.classList.remove('lv-printing')}
-function doPrint(){
+function unprint(){
+  const r=document.getElementById('lvPrintRoot');
+  if(r)r.remove();
+
+  const s=document.getElementById('lvPrintStyle');
+  if(s)s.remove();
+
+  document.body.classList.remove('lv-printing');
+}
+
+
+/*
+ * Lädt ein externes JavaScript nur einmal.
+ */
+function loadScript(src){
+  return new Promise((resolve,reject)=>{
+    const existing=document.querySelector(
+      'script[data-lv-src="'+src+'"]'
+    );
+
+    if(existing){
+      if(existing.dataset.loaded==='1'){
+        resolve();
+        return;
+      }
+
+      existing.addEventListener('load',()=>resolve(),{once:true});
+      existing.addEventListener('error',()=>reject(
+        new Error('Bibliothek konnte nicht geladen werden: '+src)
+      ),{once:true});
+      return;
+    }
+
+    const s=document.createElement('script');
+    s.src=src;
+    s.async=true;
+    s.dataset.lvSrc=src;
+
+    s.onload=()=>{
+      s.dataset.loaded='1';
+      resolve();
+    };
+
+    s.onerror=()=>{
+      reject(
+        new Error('Bibliothek konnte nicht geladen werden: '+src)
+      );
+    };
+
+    document.head.appendChild(s);
+  });
+}
+
+
+/*
+ * Erstellt aus dem vorhandenen Berechnungsnachweis
+ * eine PDF-Datei.
+ */
+async function createLuftverbundPDF(){
+
+  /*
+   * PDF-Inhalt erzeugen.
+   *
+   * Wir verwenden bewusst result() und nicht die sichtbare
+   * Bildschirmansicht. Dadurch enthält die PDF ausschließlich
+   * den Berechnungsnachweis.
+   */
+  const pdfRoot=document.createElement('div');
+
+  pdfRoot.id='lvPdfRoot';
+
+  pdfRoot.innerHTML=result();
+
+  /*
+   * A4-Arbeitsfläche.
+   * 794 px entspricht ungefähr einer A4-Breite bei 96 dpi.
+   */
+  pdfRoot.style.position='fixed';
+  pdfRoot.style.left='-10000px';
+  pdfRoot.style.top='0';
+  pdfRoot.style.width='794px';
+  pdfRoot.style.boxSizing='border-box';
+  pdfRoot.style.padding='30px';
+  pdfRoot.style.background='#ffffff';
+  pdfRoot.style.color='#111111';
+  pdfRoot.style.fontFamily='Arial, Helvetica, sans-serif';
+  pdfRoot.style.zIndex='-1';
+
+  document.body.appendChild(pdfRoot);
+
+  try{
+
+    /*
+     * jsPDF
+     */
+    await loadScript(
+      'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js'
+    );
+
+    /*
+     * html2canvas wird von jsPDF.html() für die HTML-Darstellung
+     * benötigt.
+     */
+    await loadScript(
+      'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'
+    );
+
+    if(
+      !window.jspdf ||
+      !window.jspdf.jsPDF ||
+      !window.html2canvas
+    ){
+      throw new Error(
+        'PDF-Bibliotheken sind nicht verfügbar.'
+      );
+    }
+
+    const {jsPDF}=window.jspdf;
+
+    const pdf=new jsPDF({
+      orientation:'portrait',
+      unit:'mm',
+      format:'a4',
+      compress:true
+    });
+
+    /*
+     * HTML -> PDF
+     */
+    await new Promise((resolve,reject)=>{
+
+      pdf.html(pdfRoot,{
+
+        x:10,
+        y:10,
+
+        /*
+         * A4:
+         * 210 mm breit
+         * 190 mm nutzbare Breite bei 10 mm Rand
+         */
+        width:190,
+
+        windowWidth:794,
+
+        /*
+         * Automatischer Seitenumbruch.
+         */
+        autoPaging:'text',
+
+        margin:[
+          10,
+          10,
+          10,
+          10
+        ],
+
+        html2canvas:{
+          scale:1.5,
+          useCORS:true,
+          backgroundColor:'#ffffff'
+        },
+
+        callback:function(doc){
+          try{
+            resolve(doc);
+          }catch(err){
+            reject(err);
+          }
+        }
+
+      });
+
+    });
+
+    /*
+     * PDF als Blob holen.
+     */
+    const pdfBlob=pdf.output('blob');
+
+    /*
+     * Dateiname aus Projektnummer bzw. Projektname.
+     */
+    const projektName=(
+      D.p.nr ||
+      D.p.n ||
+      'projekt'
+    )
+    .replace(/[^\w.-]+/g,'_');
+
+    const date=new Date();
+
+    const datum=
+      date.getFullYear()+'-'+
+      String(date.getMonth()+1).padStart(2,'0')+'-'+
+      String(date.getDate()).padStart(2,'0');
+
+    const fileName=
+      'Luftverbund-'+
+      projektName+
+      '-'+
+      datum+
+      '.pdf';
+
+    const pdfFile=new File(
+      [pdfBlob],
+      fileName,
+      {
+        type:'application/pdf'
+      }
+    );
+
+    /*
+     * Auf Mobilgeräten/PWA:
+     * native Teilen-Funktion benutzen.
+     *
+     * Dadurch kann der Benutzer beispielsweise:
+     * - Drucken
+     * - Dateien
+     * - WhatsApp
+     * - Mail
+     * - AirDrop
+     * usw. auswählen.
+     */
+    if(
+      navigator.share &&
+      navigator.canShare &&
+      navigator.canShare({
+        files:[pdfFile]
+      })
+    ){
+
+      try{
+
+        await navigator.share({
+          title:'Luftverbund – Berechnungsnachweis',
+          text:
+            'Berechnungsnachweis Luftverbund nach TRGI 2018',
+          files:[pdfFile]
+        });
+
+        return;
+
+      }catch(err){
+
+        /*
+         * Benutzer hat die Teilen-Funktion abgebrochen.
+         * Dann nichts weiter tun.
+         */
+        if(err && err.name==='AbortError'){
+          return;
+        }
+
+        console.warn(
+          'Native PDF-Freigabe fehlgeschlagen:',
+          err
+        );
+      }
+    }
+
+    /*
+     * Fallback:
+     * PDF direkt herunterladen.
+     */
+    const url=URL.createObjectURL(pdfBlob);
+
+    const a=document.createElement('a');
+
+    a.href=url;
+    a.download=fileName;
+    a.style.display='none';
+
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    setTimeout(()=>{
+      URL.revokeObjectURL(url);
+    },60000);
+
+    alert(
+      'Die PDF wurde erstellt und gespeichert. '+
+      'Sie können sie jetzt über die Dateien-App öffnen und drucken.'
+    );
+
+  }finally{
+
+    /*
+     * Unsichtbare PDF-Arbeitsfläche wieder entfernen.
+     */
+    pdfRoot.remove();
+  }
+}
+
+
+/*
+ * Druckfunktion
+ *
+ * Desktop:
+ *   normaler Browser-Druckdialog
+ *
+ * Mobil / PWA:
+ *   PDF erzeugen und über die native Teilen-Funktion
+ *   an das Betriebssystem übergeben.
+ */
+async function doPrint(){
+
   unprint();
+
+  /*
+   * Erkennung Mobilgerät / PWA.
+   */
+  const isMobile=
+    /Android|iPhone|iPad|iPod/i.test(
+      navigator.userAgent
+    ) ||
+    navigator.maxTouchPoints>1;
+
+  /*
+   * ---------------------------------------------------------
+   * MOBIL / PWA
+   * ---------------------------------------------------------
+   */
+  if(isMobile){
+
+    try{
+
+      await createLuftverbundPDF();
+
+    }catch(err){
+
+      console.error(
+        'Fehler bei der PDF-Erzeugung:',
+        err
+      );
+
+      alert(
+        'Die PDF konnte nicht erstellt werden.\n\n'+
+        'Bitte prüfen Sie die Internetverbindung und versuchen Sie es erneut.'
+      );
+    }
+
+    return;
+  }
+
+
+  /*
+   * ---------------------------------------------------------
+   * DESKTOP
+   * ---------------------------------------------------------
+   */
+
   const s=document.createElement('style');
+
   s.id='lvPrintStyle';
+
   s.textContent=`
-    #lvPrintRoot{display:none}
+
+    #lvPrintRoot{
+      display:none;
+    }
+
     @page{
       size:A4;
       margin:12mm;
     }
+
     @media print{
+
       body.lv-printing>*:not(#lvPrintRoot){
         display:none!important;
       }
+
       #lvPrintRoot{
         display:block!important;
         position:static!important;
@@ -128,149 +486,58 @@ function doPrint(){
         padding:0!important;
         background:#fff!important;
       }
+
       body{
         background:#fff!important;
       }
+
       #lvPrintRoot .card{
         box-shadow:none!important;
         break-inside:avoid;
         page-break-inside:avoid;
         border:1px solid #999;
       }
+
       #lvPrintRoot *{
         -webkit-print-color-adjust:exact;
         print-color-adjust:exact;
       }
-    }
-    @media screen and (max-width:700px){
-      body.lv-printing{
-        background:#fff!important;
-      }
-      body.lv-printing>*:not(#lvPrintRoot){
-        display:none!important;
-      }
-      #lvPrintRoot{
-        display:block!important;
-        position:relative!important;
-        width:100%!important;
-        min-height:100vh;
-        box-sizing:border-box;
-        padding:16px;
-        background:#fff!important;
-      }
-      #lvPrintRoot .card{
-        box-shadow:none!important;
-        border:1px solid #999;
-      }
+
       #lvPrintRoot .form-actions{
         display:none!important;
       }
-      #lvPrintRoot .lv-mu{
-        font-size:12px;
-      }
-      #lvPrintRoot table{
-        width:100%;
-        border-collapse:collapse;
-      }
-      #lvPrintRoot th,
-      #lvPrintRoot td{
-        padding:4px;
-        font-size:12px;
-      }
-      #lvMobilePrintBar{
-        display:flex;
-        position:sticky;
-        top:0;
-        z-index:99999;
-        gap:8px;
-        padding:10px 0 14px;
-        background:#fff;
-      }
-      #lvMobilePrintBar button{
-        flex:1;
-        min-height:44px;
-        border:0;
-        border-radius:8px;
-        padding:10px;
-        font-size:15px;
-        cursor:pointer;
-      }
-      #lvMobilePrintBar .lv-print-btn{
-        background:#222;
-        color:#fff;
-      }
-      #lvMobilePrintBar .lv-close-btn{
-        background:#ddd;
-        color:#111;
-      }
     }
-    @media screen and (min-width:701px){
-      #lvMobilePrintBar{
-        display:none;
-      }
-    }
+
   `;
+
+  /*
+   * Druckcontainer erzeugen.
+   */
   const r=document.createElement('div');
+
   r.id='lvPrintRoot';
-  const mobileBar=document.createElement('div');
-  mobileBar.id='lvMobilePrintBar';
-  const printBtn=document.createElement('button');
-  printBtn.className='lv-print-btn';
-  printBtn.textContent='🖨️ Drucken / PDF';
-  const closeBtn=document.createElement('button');
-  closeBtn.className='lv-close-btn';
-  closeBtn.textContent='← Zurück';
-  mobileBar.appendChild(printBtn);
-  mobileBar.appendChild(closeBtn);
-  r.appendChild(mobileBar);
-  const content=document.createElement('div');
-  content.innerHTML=result();
-  r.appendChild(content);
+
+  r.innerHTML=result();
+
   document.head.appendChild(s);
   document.body.appendChild(r);
+
   document.body.classList.add('lv-printing');
-  closeBtn.addEventListener('click',()=>{
-    unprint();
-    render();
-  });
-  printBtn.addEventListener('click',()=>{
-    /*
-     * Auf normalen Browsern und auf Geräten, die window.print()
-     * im Standalone-Modus unterstützen, wird der native Druckdialog
-     * geöffnet.
-     */
+
+  /*
+   * Kurze Verzögerung, damit der Browser den Druckinhalt
+   * vollständig layouten kann.
+   */
+  setTimeout(()=>{
     try{
       window.print();
-    }catch(e){
-      /*
-       * Falls das Betriebssystem keinen Druckdialog aus der
-       * Home-Bildschirm-App zulässt, bleibt die Druckansicht
-       * geöffnet. Der Benutzer kann sie über die Teilen-Funktion
-       * des Betriebssystems weitergeben bzw. als PDF sichern.
-       */
-      alert(
-        'Der direkte Druckdialog wird von diesem Browser-Modus nicht unterstützt. '+
-        'Bitte verwenden Sie die Teilen-Funktion des Browsers bzw. „Als PDF sichern“.'
+    }catch(err){
+      console.error(
+        'window.print() fehlgeschlagen:',
+        err
       );
     }
-  });
-  /*
-   * Desktop:
-   * automatisch den normalen Druckdialog öffnen.
-   *
-   * Mobil/PWA:
-   * Druckansicht anzeigen und auf Benutzeraktion warten.
-   */
-  const isMobile =
-    /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
-    navigator.maxTouchPoints>1;
-  if(!isMobile){
-    setTimeout(()=>{
-      try{
-        window.print();
-      }catch(e){}
-    },150);
-  }
+  },150);
 }
 root.addEventListener('click',e=>{const t=e.target.closest('[data-t],[data-a]');if(!t)return;
 if(t.dataset.t!=null){tab=+t.dataset.t;render();root.scrollIntoView();return}
