@@ -1,0 +1,331 @@
+<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta 
+name="viewport" content="width=device-width, initial-scale=1"><title>Luftverbund
+Rechner – Schornstein Planer</title><meta name="theme-color" content="#20252b"> 
+<style> 
+:root{--bg:#f3f5f7;--card:#ffffff;--dark:#22272d;--dark-2:#2d343c;--gold:#c79a42;--gold
+light:#f3e4c1;--text:#242a30;--muted:#6c757d;--border:#e1e5e9;--green:#16845b;-
+green-light:#e8f6ef;--red:#c84d4d;--red-light:#fdecec;--shadow:0 8px 28px 
+rgba(28,35,42,.07);--radius:17px} 
+*{box-sizing:border-box} 
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple
+system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.5} 
+button,input,select{font:inherit}button{cursor:pointer} 
+.site-header{position:sticky;top:0;z-index:50;background:linear
+gradient(135deg,#20252b 0%,#282f36 100%);color:#fff;box-shadow:0 4px 20px 
+rgba(0,0,0,.12)} 
+.header-inner{max-width:900px;margin:0 auto;padding:14px 20px 0} 
+.brand-row{display:flex;align-items:center;gap:13px;min-height:56px} 
+.brand-logo{width:48px;height:48px;flex:0 0 48px;display:grid;place
+items:center;border-radius:13px;background:var(--gold);box-shadow:0 5px 15px 
+rgba(0,0,0,.2)} 
+.brand-logo svg{width:36px;height:36px} 
+.brand-title{margin:0;font-size:1.35rem;line-height:1.1;font-weight:800;letter-spacing:
+.02em} 
+.brand-subtitle{margin:3px 0 0;color:#c9cfd4;font-size:.82rem} 
+.hb{margin-left:auto;border:1px solid 
+rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:var(--gold-light);border
+radius:10px;padding:7px 12px;font-size:.8rem;font-weight:750;white-space:nowrap} 
+.hb:hover{background:rgba(255,255,255,.14);color:#fff} 
+.main-nav{display:flex;gap:3px;margin-top:12px;overflow-x:auto} 
+.main-nav button{border:0;background:transparent;color:#d7dce1;padding:9px 
+14px;border-radius:9px 9px 0 0;font-size:.86rem;font-weight:650;white-space:nowrap} 
+.main-nav button:hover{background:rgba(255,255,255,.08);color:#fff} 
+.main-nav button.on{background:var(--bg);color:var(--text);font-weight:800} 
+main{max-width:900px;margin:0 auto;padding:24px 20px 50px} 
+.card,details{background:var(--card);border:1px solid var(--border);border-radius:var(-
+radius);box-shadow:var(--shadow);padding:20px;margin:0 0 19px} 
+summary{font-weight:800;cursor:pointer;font-size:1.02rem} 
+h3{margin:0 0 6px;font-size:1.15rem;letter-spacing:-.02em} 
+h4{margin:16px 0 4px;font-size:.74rem;color:var(--muted);text
+transform:uppercase;letter-spacing:.07em;font-weight:800} 
+.g{display:grid;grid-template-columns:repeat(auto
+fit,minmax(170px,1fr));gap:13px;margin:12px 0} 
+label{display:flex;flex-direction:column;gap:6px;font-size:.79rem;font
+weight:750;color:#4f5962} 
+label.ck{flex-direction:row;align-items:center;gap:8px;font-weight:600} 
+input,select{width:100%;min-width:0;padding:10px 11px;border:1px solid 
+#d5dbe0;border-radius:10px;background:#fff;color:var(-
+text);outline:none;transition:border-color .18s,box-shadow .18s} 
+input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px 
+rgba(199,154,66,.13)} 
+label.ck input{width:auto} 
+.btn{border:0;border-radius:10px;padding:10px 15px;font-weight:750;background:var(-
+dark);color:#fff;transition:transform .16s,background .16s} 
+.btn:hover{transform:translateY(-1px)} 
+.btn[data-a=ar],.btn[data-a=pr]{background:var(--gold);color:#1e180d} 
+.btn.s{background:#edf0f2;color:var(--dark)} 
+.btn.d{background:#fff0f0;color:#a73737} 
+.it{border-top:1px dashed var(--border);padding-top:10px;margin-top:10px} 
+.bd{display:grid;grid-template-columns:repeat(auto
+fit,minmax(230px,1fr));gap:12px;margin:12px 0} 
+.b{padding:15px;border-radius:13px;border:1px solid;font-weight:800;font
+size:1.05rem} 
+.b small{display:block;margin-top:5px;font-weight:500;font-size:.82rem;line
+height:1.5;color:var(--text)} 
+.ok{background:var(--green-light);border-color:var(--green);color:var(--green)} 
+.no{background:var(--red-light);border-color:var(--red);color:#a73737} 
+.na{background:#f7f8f9;border-color:var(--border);color:var(--muted)} 
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:.86rem} 
+th,td{border-bottom:1px solid var(--border);padding:7px 8px;text-align:right}th{font
+size:.74rem;color:var(--muted);font-weight:800}th:first-child,td:first-child{text-align:left} 
+.wn{background:var(--gold-light);border:1px solid #e4ca8d;color:#7d5b20;border
+radius:10px;padding:8px 11px;font-size:.84rem;margin:8px 0} 
+.mu{color:var(--muted);font-size:.84rem} 
+.card>.mu,.card>p.mu{margin:8px 0 0} 
+@media(max-width:720px){.header-inner{padding:12px 12px 0}.brand-title{font
+size:1.08rem}.brand-subtitle{font-size:.7rem}.brand-logo{width:42px;height:42px;flex
+basis:42px}.brand-logo svg{width:32px;height:32px}main{padding:18px 12px 
+35px}.card,details{padding:16px}} 
+@media print{.site
+header,.np{display:none!important}body{background:#fff}.card,details{box
+shadow:none;border-color:#999;break-inside:avoid}*{-webkit-print-color
+adjust:exact;print-color-adjust:exact}main{padding:0}} 
+</style></head><body> 
+<header class="site-header"><div class="header-inner"><div class="brand-row"><div 
+class="brand-logo" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><path 
+d="M7 38L32 17L57 38" stroke="#20252b" stroke-width="6" stroke-linecap="round" 
+stroke-linejoin="round"/><path d="M15 37V52H49V37" stroke="#20252b" stroke
+width="6" stroke-linejoin="round"/><path d="M35 26V10H45V30" stroke="#20252b" 
+stroke-width="5" stroke-linejoin="round"/><path d="M33 10H47" stroke="#20252b" 
+stroke-width="5" stroke-linecap="round"/></svg></div><div><h1 class="brand
+title">Luftverbund-Rechner</h1><p class="brand-subtitle">Verbrennungsluft nach TRGI 
+2018 · Schutzziel 1 und 2</p></div><button class="hb" 
+onclick="if(window.opener){window.close()}else{location.href='index.html'}">✕ 
+Schließen</button></div><nav class="main-nav" aria-label="Rechner"><button data
+t=0>Projekt</button><button data-t=1>Gebäude</button><button data
+t=2>Räume</button><button data-t=3>Ergebnis</button></nav></div></header> 
+<main id="v"></main> 
+<script> 
+//CALC-START 
+const 
+K=[null,[0.8,1.4,2.2,2.7,3.4,3.7,4.2,4.5,5,5.3,5.6,5.8,6.1,6.2,6.6,6.7,6.9,7,7,7.2,7.4,7.5,7
+.5,7.7,7.7,7.8,7.8,8,8,8.2,8.2,8.2,8.2,8.3,8.3,8.3,8.5,8.5,8.5,8.5,8.5,8.6,8.6,8.6,8.6,8.6,8
+.6,8.6,8.8,8.8,8.8,8.8,8.8,8.8,8.8,8.8,8.8,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9
+,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9],[0.8,1.4,2.2,3,3.8,4.5,5.1,5.9,6.6,7.4,8,8.6,9.3,9.9,1
+0.6,11.2,11.7,12.3,13,13.6,14.1,14.6,15,15.7,16.2,16.6,17.1,17.6,18.1,18.6,19,19.4,19.
+8,20.3,20.6,21.1,21.4,21.8,22.2,22.6,22.9,23.2,23.5,23.8,24.2,24.5,24.8,25.1,25.4,25.8,
+25.9,26.2,26.6,26.9,27,27.4,27.5,27.8,28,28.3,28.5,28.6,29,29.1,29.3,29.6,29.8,29.9,30
+.1,30.2,30.4,30.6,30.7,30.9,31,31.2,31.4,31.5,31.7,31.8,32,32.2,32.3,32.5,32.6,32.8,33,
+33.1,33.3,33.4,33.6,33.8,33.9,34.1,34.2,34.4,34.6,34.7,34.9,35],[0.8,1.4,2.2,3,3.8,4.6,5
+.3,6.1,6.9,7.5,8.3,9.1,9.8,10.6,11.4,12,12.6,13.4,14.1,14.9,15.5,16.2,17,17.6,18.2,18.9,
+19.5,20,20.8,21.4,22.1,22.7,23.4,23.8,24.5,25.1,25.6,26.2,26.7,27.4,27.8,28.3,29,29.4,
+29.9,30.4,31,31.5,32,32.5,33,33.3,33.8,34.2,34.7,35.2,35.5,36,36.3,36.8,37.1,37.6,37.9
+,38.4,38.7,39,39.5,39.8,40.2,40.5,40.8,41.1,41.4,41.8,42.1,42.4,42.7,43,43.4,43.7,44,4
+4.3,44.6,45,45.3,45.6,45.9,46.2,46.6,46.9,47.2,47.5,47.8,48.2,48.5,48.8,49.1,49.4,49.8,
+50.1]]; 
+const num=x=>parseFloat(String(x??'').replace(',','.'))||0,n2=x=>Math.round(x*100+1e
+9)/100,r1=x=>Math.round(x*10+1e-9)/10; 
+const ART={ 
+b1:['Gasgerät Art B1/B4 (mit Strömungssicherung)','kW',1,'gas'], 
+b2:['Gasgerät Art B ohne Strömungssicherung (z. B. B22, B23)','kW',1,'gas'], 
+oe:['Ölfeuerstätte, raumluftabhängig','kW',1,'gas'], 
+fs:['Feststofffeuerstätte, handbeschickt (Brennstoffdurchsatz bekannt)','kg/h',8,'gas'], 
+ko:['Kaminofen (nur Nennleistung bekannt)','kW',2.4,'gas'], 
+so:['Speicher-/Kachelgrundofen (nur Nennleistung bekannt)','kW',9.6,'gas'], 
+ok:['Offener Kamin / offen betreibbare Feuerstätte','m² Feuerraumöffnung',340,'gas'], 
+df:['Dekoratives Gasfeuer im offenen Kamin','m² Feuerraumöffnung',225,'gas'], 
+dh:['Abluft-Dunstabzugshaube','m³/h',1,'abl'], 
+wt:['Abluft-Wäschetrockner','m³/h',1,'abl'], 
+lu:['Lüftungs-/Entlüftungsanlage (Abluft)','m³/h',1,'abl']}; 
+function kenn(D){const g=D.g,m=num(g.n50),ein=g.ge=='ein',f=ein?.7:.8;let 
+n50=m,ht=0,err=''; 
+if(!m){if(g.luft=='vent'){if(g.ab=='1')n50=1;else err='Ventilatorgestützte Lüftung in 
+Gebäuden vor 2002: bitte gemessenen n50-Wert eingeben.'} 
+else if(g.ab=='1')n50=1.5;else if(g.aend=='1')n50=g.efh=='1'?2:1.5;else n50=3; 
+if(n50){ht={1:1,1.5:3,2:5,3:7}[n50]+(n50<3&&!ein?1:0)}} 
+let n=n50==3&&!m?.4:n2((n50==3&&!m?.7:f)*n50*.1857); 
+return{n50,ht,n,f:n50==3&&!m?.7:f,err,tab:ht&&g.mod!='fo'}} 
+const qinf=(kn,v)=>{if(kn.tab){let k=0;for(let 
+i=1;i<=100;i++){if(Math.round(.8*i/kn.n)<=v)k=i;else break}return r1(.8*k)}return 
+r1(v*kn.n)}; 
+function anr(D,q,c){if(c==4)return q;const a=K[c],x=q/.8+1e-9;if(x>=100)return 
+a[99];const k=Math.floor(x); 
+if(D.ip=='1'){const lo=k?a[k-1]:0;return lo+(a[k]-lo)*(x-k)}return k?a[k-1]:0} 
+function curve(l){if(l.t=='o'||num(l.o)>0)return 4;if(l.d=='3')return 
+l.k=='0'?1:l.k=='1'?2:3;return l.k=='0'?2:3} 
+function bestC(D,R,A){let b=0;const dfs=(cur,vis,first)=>{for(const l of 
+D.l){if(l.a!=cur&&l.b!=cur)continue;const 
+nx=l.a==cur?l.b:l.a;if(vis.includes(nx))continue; 
+const c=curve(l);if(first&&c!=4)continue;const fc=first||c;if(nx==A)b=Math.max(b,fc);else 
+dfs(nx,vis.concat(nx),fc)}};dfs(R,[R],0);return b} 
+function info(D,r,f,other){const a=ART[f.a];if(!a)return null;const v=num(f.v);let 
+fik=0,bed=0; 
+if(a[3]=='gas'){fik=v*(f.a=='df'&&other?340:a[2]);bed=fik*1.6}else 
+bed=v;return{r,f,abl:a[3]=='abl',fik,bed,art:f.a}} 
+function run(D){const kn=kenn(D),dv=[];D.r.forEach(r=>(r.f||[]).forEach(f=>{const 
+i=info(D,r,f,0);if(i)dv.push(i)})); 
+const 
+oth=dv.some(d=>!d.abl&&d.art!='df');dv.forEach(d=>{if(d.art=='df'&&oth){d.fik=num(d.f.v
+)*340;d.bed=d.fik*1.6}}); 
+const abl=dv.filter(d=>d.abl&&!d.f.s),ablS=abl.reduce((s,d)=>s+d.bed,0),res=[],used={}; 
+D.r.forEach(A=>{const m=dv.filter(d=>d.r==A&&!d.abl);if(!m.length)return;const 
+w=[],Bcb=m.reduce((s,d)=>s+d.bed,0),Bed=r1(Bcb+ablS); 
+const rows=[];let ist=0; 
+D.r.forEach(R=>{const 
+out=num(R.fen)+num(R.tuer)>0,al=num(R.ald)*num(R.qa);if(!out&&al<=0)return; 
+const 
+qi=out?qinf(kn,num(R.v)):0,qs=r1(qi+al),c=R==A?4:bestC(D,R.id,A.id),an=c?r1(anr(D,qs,
+c)):0; 
+if(c){ist+=an;if(R!=A)(used[R.id]=used[R.id]||[]).push(A.n||'Raum')}else 
+w.push((R.n||'Raum')+': keine gültige Verbindung zum Aufstellraum (mittelbar nur mit 
+Öffnungen ≥ 150 cm² zwischen Verbundräumen und Aufstellraum) – nicht 
+angerechnet.'); 
+rows.push({n:R.n||'Raum',c,qi,al,qs,an})}); 
+ist=r1(ist);if(m.some(d=>d.art=='ok'||d.art=='df'))w.push('Offene Kamine/dekorative 
+Gasfeuer benötigen grundsätzlich eine eigene Verbrennungsluftöffnung bzw. -leitung ins 
+Freie (TRGI 9.2.2) – über Infiltration/ALD nicht nachweisbar.'); 
+const lim=Bed>80;if(lim)w.push('Bedarf inkl. Abluft über 80 m³/h (≙ 50 kW): Nachweis 
+über Infiltration/ALD nicht zulässig, nur Öffnungen ins Freie (TRGI 8.3.2.3.2–4, 9.2.3.3).'); 
+if(ablS>0)w.push('Abluft-Einrichtungen ('+r1(ablS)+' m³/h) wurden zum Bedarf addiert 
+(TRGI 8.3.2.3.3).'); 
+const sz2=!(lim||m.some(d=>d.art=='ok'||d.art=='df'))&&ist>=Bed-1e-9; 
+const b1=m.filter(d=>d.art=='b1'),kw=b1.reduce((s,d)=>s+d.fik,0);let s1=null; 
+if(kw>0){let V=num(A.v);const nb=[];const 
+rlv0=V/kw;if(rlv0<1)D.l.forEach(l=>{if(l.a!=A.id&&l.b!=A.id)return;if(!(l.t=='o'||num(l.o)>=2
+))return;const 
+o=D.r.find(x=>x.id==(l.a==A.id?l.b:l.a));if(o&&!nb.includes(o)){nb.push(o);V+=num(o.v)}})
+; 
+s1={kw,V0:num(A.v),V,rlv0,rlv:V/kw,nb:nb.map(x=>x.n||'Raum'),ok:V/kw>=1-1e-9}} 
+res.push({A,rows,Bcb,Bed,ablS,ist,sz2,s1,w})}); 
+Object.keys(used).forEach(id=>{if(used[id].length>1)res.forEach(x=>x.w.push('Raum 
+"'+(D.r.find(r=>r.id==id).n||'Raum')+'" wird für mehrere Aufstellräume angerechnet – 
+gemeinsame Betrachtung der Nutzungseinheit prüfen.'))}); 
+return{kn,res,dv}} 
+//CALC-END 
+const 
+$=s=>document.querySelector(s),E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','
+<':'&lt;','>':'&gt;','"':'&quot;'}[c])); 
+const D={p:{},g:{ge:'ein',efh:'0',ab:'1',luft:'frei',aend:'0',n50:'',mod:'ht'},ip:'0',r:[],l:[],id:1};let 
+tab=0; 
+const 
+save=()=>{try{localStorage.setItem('schornsteinplaner_luftverbund_v1',JSON.stringify(D)
+)}catch(e){}}; 
+try{const 
+s=localStorage.getItem('schornsteinplaner_luftverbund_v1');if(s)Object.assign(D,JSON.
+parse(s))}catch(e){} 
+const get=k=>k.split('.').reduce((o,p)=>o?.[p],D)??'',set=(k,v)=>{const 
+a=k.split('.'),l=a.pop();a.reduce((o,p)=>o[p],D)[l]=v}; 
+const inp=(k,l,o={})=>`<label>${l}<input data-k="${k}" value="${E(get(k))}" 
+${o.t?`type="${o.t}"`:''} ${o.m?'inputmode="decimal"':''}></label>`; 
+const sel=(k,l,op,re=1)=>`<label>${l}<select data-k="${k}" ${re?'data
+re=1':''}>${op.map(([v,t])=>`<option value="${v}" 
+${get(k)==v?'selected':''}>${t}</option>`).join('')}</select></label>`; 
+const f1=x=>(+x).toFixed(1).replace('.',','),f2=x=>(+x).toFixed(2).replace('.',','); 
+const KT={1:'Kurve 1',2:'Kurve 2',3:'Kurve 3',4:'Kurve 4'}; 
+function v0(){return `<div class=card><h3>Projekt</h3><div 
+class=g>${inp('p.n','Projektname')}${inp('p.nr','Projektnummer')}${inp('p.dt','Datum',{t:'dat
+e'})}${inp('p.ers','Ersteller / Betrieb')}</div></div> 
+<div class=card><h3>Eigentümer</h3><div 
+class=g>${inp('p.en','Name')}${inp('p.ea','Anschrift')}${inp('p.et','Telefon / E
+Mail')}</div></div> 
+<div class=card><h3>Gebäude / Nutzungseinheit</h3><div 
+class=g>${inp('p.ga','Anschrift des Gebäudes')}${inp('p.gl','Lage der Nutzungseinheit (z. B. 
+2. OG links)')}</div></div>`} 
+function infoTxt(){const k=kenn(D);if(k.err)return `<span 
+class=wn>${k.err}</span>`;return `n50 = ${f1(k.n50)} h⁻¹ 
+${num(D.g.n50)?'(gemessen)':'(Auslegungswert, Tab. 9-2'+(k.ht?', Haustyp '+k.ht:'')+')'} · 
+f<sub>wirk.komp.</sub> = ${String(k.f).replace('.',',')} · n = ${f2(k.n)} h⁻¹`} 
+function v1(){const g=D.g;return `<div class=card><h3>Kennwerte der 
+Nutzungseinheit</h3><div class=g> 
+${sel('g.ge','Geschosse der 
+Wohnung/Nutzungseinheit',[['ein','eingeschossig'],['mehr','mehrgeschossig']])} 
+${sel('g.efh','Gebäudeart',[['0','Mehrfamilienhaus'],['1','Einfamilienhaus']])} 
+${sel('g.ab','Errichtet',[['1','ab 2002'],['0','vor 2002']])} 
+${sel('g.luft','Lüftung',[['frei','freie Lüftung (Fugen)'],['vent','ventilatorgestützt']])} 
+${g.ab=='0'&&g.luft=='frei'?sel('g.aend','Wesentliche Änderung der Luftdurchlässigkeit (> 
+⅓ Fenster getauscht, EFH: oder > ⅓ Dach abgedichtet)',[['0','nein'],['1','ja']]):''} 
+${inp('g.n50','Gemessener n50-Wert (optional, h⁻¹)',{m:1})} 
+${sel('g.mod','Berechnung ohne Messwert',[['ht','Tabelle 9-3 (Haustyp)'],['fo','Formel 9-3 
+bis 9-5']])} 
+${sel('ip','Tabellenwert',[['0','nächstkleinerer Wert (Formblatt)'],['1','interpoliert']])}</div> 
+<div class=mu id=info>${infoTxt()}</div></div>`} 
+function v2(){return `<button class="btn np" data-a=ar>+ Raum 
+hinzufügen</button>`+D.r.map((r,i)=>{const 
+lk=D.l.map((l,j)=>[l,j]).filter(([l])=>l.a==r.id||l.b==r.id); 
+return `<details data-ri=${i} ${r.o?'open':''}><summary>${E(r.n||'Raum '+(i+1))} · 
+${E(r.v||'?')} m³${(r.f||[]).some(f=>ART[f.a]&&ART[f.a][3]=='gas')?' · 
+Aufstellraum':''}</summary> 
+<div class=g>${inp(`r.${i}.n`,'Bezeichnung / Nutzung')}${inp(`r.${i}.v`,'Raumvolumen 
+(m³)',{m:1})}${inp(`r.${i}.fen`,'Öffenbare Fenster (Anzahl)',{m:1})}${inp(`r.${i}.tuer`,'Türen 
+ins Freie (Anzahl)',{m:1})}${inp(`r.${i}.ald`,'ALD 
+(Anzahl)',{m:1})}${inp(`r.${i}.qa`,'Luftstrom je ALD bei 4 Pa (m³/h)',{m:1})}</div> 
+<h4>Feuerstätten / Abluft</h4>`+(r.f||[]).map((f,j)=>{const a=ART[f.a]||ART.b1;return 
+`<div class=it><div 
+class=g>${sel(`r.${i}.f.${j}.a`,'Art',Object.keys(ART).map(k=>[k,ART[k][0]]))}${inp(`r.${i}.f.
+${j}.n`,'Name / Typ')}${inp(`r.${i}.f.${j}.v`,'Wert in '+a[1],{m:1})}</div> 
+${a[3]=='abl'?`<label class=ck><input type=checkbox data-k="r.${i}.f.${j}.s" 
+${f.s?'checked':''}> gleichzeitiger Betrieb ausgeschlossen (Sicherheitseinrichtung mit 
+Zulassung)</label>`:''} 
+<button class="btn d s np" data-a=df data-i=${i} data
+j=${j}>Entfernen</button></div>`}).join('')+`<button class="btn s np" data-a=af data
+i=${i}>+ Feuerstätte / Abluft</button> 
+<h4>Verbindungen zu anderen Räumen</h4>`+lk.map(([l,j])=>{const 
+o=l.a==r.id?l.b:l.a;return `<div class=it><div class=g> 
+<label>Verbunden mit<select data
+lp="${j}:${r.id}">${D.r.filter(x=>x.id!=r.id).map(x=>`<option value=${x.id} 
+${x.id==o?'selected':''}>${E(x.n||'Raum')}</option>`).join('')}</select></label> 
+${sel(`l.${j}.t`,'Art',[['t','Tür'],['o','Offener Durchgang (ohne Tür)']])} 
+${l.t=='t'?sel(`l.${j}.d`,'Dichtung',[['3','dreiseitig umlaufend'],['0','ohne umlaufende 
+Dichtung / Überströmdichtung']],0)+sel(`l.${j}.k`,'Türblatt',[['0','ungekürzt'],['1','um 1,0 
+cm gekürzt'],['1.5','um 1,5 cm gekürzt']],0)+sel(`l.${j}.o`,'Verbrennungsluftöffnung in 
+Tür/Wand',[['0','keine'],['1','1 × 150 cm²'],['2','2 × 150 cm² (auch Schutzziel 1)']],0):''}</div> 
+<button class="btn d s np" data-a=dl data-i=${j}>Verbindung 
+löschen</button></div>`}).join('')+(D.r.length>1?`<button class="btn s np" data-a=al 
+data-i=${i}>+ Verbindung</button>`:'')+`<div><button class="btn d np" data-a=dr data
+i=${i} style="margin-top:10px">Raum löschen</button></div></details>`}).join('')} 
+function v3(){const R=run(D),k=R.kn,P=D.p;let h=`<div class="card"><h3>Berechnung 
+der Verbrennungsluftversorgung</h3><div class=mu>${E(P.n)} ${P.nr?'· Nr. '+E(P.nr):''} 
+${P.dt?'· '+E(P.dt):''}<br>Eigentümer: ${E(P.en)} ${E(P.ea)}<br>Gebäude: ${E(P.ga)} 
+${E(P.gl)}<br>${infoTxt()}</div></div>`; 
+if(!R.res.length)return h+'<div class=card>Noch keine Feuerstätte (Gas-/Feststoff
+/Ölgerät) in einem Raum erfasst.</div>'; 
+R.res.forEach(x=>{const s=x.s1;h+=`<div class=card><h3>Aufstellraum: 
+${E(x.A.n||'Raum')} (${E(x.A.v)} m³)</h3><div class=bd> 
+<div class="b ${s?(s.ok?'ok':'no'):'na'}">Schutzziel 1 ${s?(s.ok?'✓ erfüllt':'✗ nicht 
+erfüllt'):'– nicht erforderlich'}<small>${s?`RLV ${f2(s.rlv0)} (${E(s.V0)} m³ / ${f1(s.kw)} 
+kW)${s.nb.length?`<br>mit 2×150 cm² zu ${E(s.nb.join(', '))}: ${f2(s.rlv)} (${f1(s.V)} 
+m³)`:''}<br>gefordert ≥ 1,0 m³/kW`:'nur bei Gasgeräten Art B1/B4'}</small></div> 
+<div class="b ${k.err?'na':x.sz2?'ok':'no'}">Schutzziel 2 ${k.err?'–':x.sz2?'✓ erfüllt':'✗ 
+nicht erfüllt'}<small>Bedarf ${f1(x.Bed)} m³/h<br>IST (anrechenbar) ${f1(x.ist)} 
+m³/h<br>${x.ist>=x.Bed?'Überschuss':'Fehlbetrag'} ${f1(Math.abs(x.ist-x.Bed))} 
+m³/h</small></div></div> 
+<div 
+class=tw><table><tr><th>Raum</th><th>Kurve</th><th>Infiltr.</th><th>ALD</th><th>
+q<sub>s</sub></th><th>anrechenbar</th></tr>${x.rows.map(r=>`<tr><td>${E(r.n)}</td
+><td>${r.c?KT[r.c]:'
+'}</td><td>${f1(r.qi)}</td><td>${f1(r.al)}</td><td>${f1(r.qs)}</td><td>${f1(r.an)}</td></tr>
+`).join('')}<tr><th>Σ 
+(m³/h)</th><td></td><td></td><td></td><td></td><th>${f1(x.ist)}</th></tr></table></di
+v> 
+<p class=mu>Bedarf = Σ Nennleistung × 1,6 m³/(h·kW) = ${f1(x.Bcb)} m³/h${x.ablS?` + 
+Abluft ${f1(x.ablS)} m³/h`:''} = ${f1(x.Bed)} m³/h (Formel 9-2)</p>${x.w.map(t=>`<div 
+class=wn>⚠ ${E(t)}</div>`).join('')}</div>`}); 
+return h+`<div class=mu>Die Rechnung folgt TRGI 2018 Abschnitt 9.2 und Anhang D 
+(Tabelle 9-2/9-3, Formeln 9-2 bis 9-6, Schutzziel 1 nach 8.3.2.4.2.1). Sie ersetzt keine 
+Prüfung durch den Fachbetrieb bzw. den bevollmächtigten 
+Bezirksschornsteinfeger.</div><button class="btn np" data-a=pr style="margin
+top:12px">Drucken / als PDF speichern</button>`} 
+function render(){document.querySelectorAll('nav 
+button').forEach((b,i)=>b.classList.toggle('on',i==tab));$('#v').innerHTML=[v0,v1,v2,v3][ta
+b]()} 
+document.addEventListener('input',e=>{const 
+el=e.target;if(el.dataset.lp){const[j,id]=el.dataset.lp.split(':'),l=D.l[j];if(l.a==id)l.b=+el.valu
+e;else l.a=+el.value;save();return} 
+if(!el.dataset.k)return;set(el.dataset.k,el.type=='checkbox'?el.checked:el.value);save();if
+(el.dataset.re)render();else if($('#info'))$('#info').innerHTML=infoTxt()}); 
+document.addEventListener('toggle',e=>{const 
+i=e.target.dataset?.ri;if(i!=null&&D.r[i]){D.r[i].o=e.target.open;save()}},true); 
+document.addEventListener('click',e=>{const t=e.target.closest('[data-t],[data
+a]');if(!t)return;if(t.dataset.t!=null){tab=+t.dataset.t;render();window.scrollTo(0,0);return} 
+const a=t.dataset.a,i=+t.dataset.i,j=+t.dataset.j; 
+if(a=='ar'){D.r.push({id:D.id++,n:'',v:'',fen:'',tuer:'',ald:'',qa:'',f:[],o:true});D.r.forEach((r,x)=>r.
+o=x==D.r.length-1)} 
+if(a=='dr'){const id=D.r[i].id;D.r.splice(i,1);D.l=D.l.filter(l=>l.a!=id&&l.b!=id)} 
+if(a=='af')D.r[i].f.push({a:'b1',n:'',v:''});if(a=='df')D.r[i].f.splice(j,1); 
+if(a=='al'){const 
+me=D.r[i].id,o=D.r.find(x=>x.id!=me&&!D.l.some(l=>(l.a==me&&l.b==x.id)||(l.b==me&&l.
+a==x.id)))||D.r.find(x=>x.id!=me);D.l.push({a:me,b:o.id,t:'t',d:'3',k:'0',o:'0'})} 
+if(a=='dl')D.l.splice(i,1);if(a=='pr'){window.print();return} 
+save();render()}); 
+if(typeof module=='undefined')render(); 
+</script></body></html> 
