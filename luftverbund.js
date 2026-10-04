@@ -106,6 +106,7 @@ async function saveFile(text,name){const f=new File([text],name,{type:'applicati
 root.addEventListener('change',e=>{if(e.target.id!=='lvImport')return;const f=e.target.files&&e.target.files[0];if(!f)return;const rd=new FileReader();
 rd.onload=()=>{try{const o=JSON.parse(rd.result);if(o.schema!=='schornstein-planer-luftverbund'||!o.project)throw 0;if(!confirm('Das aktuelle Luftverbund-Projekt wird durch die Datei ersetzt. Fortfahren?'))return;D=Object.assign(dflt(),o.project);save();tab=0;render()}catch(x){alert('Die Projektdatei konnte nicht gelesen werden.')}finally{e.target.value=''}};rd.readAsText(f)});
 function unprint(){
+
   const r=document.getElementById('lvPrintRoot');
   if(r)r.remove();
 
@@ -113,14 +114,1465 @@ function unprint(){
   if(s)s.remove();
 
   document.body.classList.remove('lv-printing');
+
 }
 
 
-function doPrint(){
+/* =========================================================
+   PDF-HILFSFUNKTIONEN
+   ========================================================= */
+
+/*
+ * PDF-Text für WinAnsi/Helvetica vorbereiten.
+ *
+ * jsPDF brauchen wir hier bewusst NICHT.
+ * Die PDF wird direkt als PDF 1.4 erzeugt.
+ */
+function lvPdfEncode(str){
+
+  const cpMap={
+    '€':0x80,
+    '‚':0x82,
+    'ƒ':0x83,
+    '„':0x84,
+    '…':0x85,
+    '†':0x86,
+    '‡':0x87,
+    'ˆ':0x88,
+    '‰':0x89,
+    'Š':0x8A,
+    '‹':0x8B,
+    'Œ':0x8C,
+    'Ž':0x8E,
+    '‘':0x91,
+    '’':0x92,
+    '“':0x93,
+    '”':0x94,
+    '•':0x95,
+    '–':0x96,
+    '—':0x97,
+    '˜':0x98,
+    '™':0x99,
+    'š':0x9A,
+    '›':0x9B,
+    'œ':0x9C,
+    'ž':0x9E,
+    'Ÿ':0x9F
+  };
+
+  let out='';
+
+  for(const ch of String(str??'')){
+
+    const c=ch.charCodeAt(0);
+
+    if(c<32){
+
+      out+=' ';
+
+    }else if(c<128){
+
+      out+=ch;
+
+    }else if(c>=160 && c<=255){
+
+      out+=ch;
+
+    }else if(cpMap[ch]){
+
+      out+=String.fromCharCode(cpMap[ch]);
+
+    }else{
+
+      /*
+       * Nicht darstellbare Sonderzeichen.
+       * Beispielsweise ✓ / ✗ werden als Text ersetzt.
+       */
+      out+='?';
+
+    }
+
+  }
+
+  /*
+   * PDF-Klammern und Backslash escapen.
+   */
+  return out.replace(/([\\()])/g,'\\$1');
+
+}
+
+
+/*
+ * Farbe #rrggbb -> PDF-Farbwert.
+ */
+function lvPdfColor(hex){
+
+  const n=parseInt(
+    String(hex).replace('#',''),
+    16
+  );
+
+  return [
+    ((n>>16)&255)/255,
+    ((n>>8)&255)/255,
+    (n&255)/255
+  ]
+  .map(v=>v.toFixed(3))
+  .join(' ');
+
+}
+
+
+/*
+ * Textbreite ungefähr bestimmen.
+ */
+function lvPdfWidth(str,bold,size){
+
+  const canvas=document.createElement('canvas');
+
+  const ctx=canvas.getContext('2d');
+
+  if(!ctx){
+
+    return String(str).length*size*0.5;
+
+  }
+
+  ctx.font=
+    (bold?'bold ':'')+
+    size+
+    'px Helvetica, Arial, sans-serif';
+
+  return ctx.measureText(String(str)).width;
+
+}
+
+
+/*
+ * Wörter umbrechen.
+ */
+function lvPdfWrap(str,size,bold,maxWidth){
+
+  const result=[];
+
+  String(str??'')
+    .split(/\r?\n/)
+    .forEach(paragraph=>{
+
+      let line='';
+
+      paragraph
+        .split(/\s+/)
+        .filter(Boolean)
+        .forEach(word=>{
+
+          const test=
+            line
+              ? line+' '+word
+              : word;
+
+          if(
+            !line ||
+            lvPdfWidth(
+              test,
+              bold,
+              size
+            )<=maxWidth
+          ){
+
+            line=test;
+
+          }else{
+
+            result.push(line);
+
+            line=word;
+
+          }
+
+        });
+
+      if(line)result.push(line);
+
+    });
+
+  return result;
+
+}
+
+
+/* =========================================================
+   LUFTVERBUND-PDF
+   ========================================================= */
+
+function buildLuftverbundPdf(){
+
+  const R=run(D);
+
+  const pageW=595.28;
+  const pageH=841.89;
+
+  const margin=42;
+
+  const contentW=
+    pageW-
+    margin*2;
+
+  const pages=[];
+
+  let ops=[];
+
+  let y=margin;
+
+
+  /*
+   * Neue PDF-Seite
+   */
+  function newPage(){
+
+    if(ops.length){
+
+      pages.push(
+        ops.join('\n')
+      );
+
+    }
+
+    ops=[];
+
+    y=margin;
+
+  }
+
+
+  /*
+   * Seitenumbruch prüfen.
+   */
+  function need(h){
+
+    if(y+h>pageH-margin){
+
+      newPage();
+
+    }
+
+  }
+
+
+  /*
+   * Text
+   */
+  function text(
+    x,
+    yy,
+    value,
+    options={}
+  ){
+
+    const size=
+      options.size||
+      10;
+
+    const bold=
+      !!options.bold;
+
+    const color=
+      options.color||
+      '#22272d';
+
+    const font=
+      bold
+        ? 'F2'
+        : 'F1';
+
+    const tx=
+      options.align==='center'
+        ? x-lvPdfWidth(value,bold,size)/2
+        : x;
+
+    ops.push(
+      `BT /${font} ${size} Tf `+
+      `${lvPdfColor(color)} rg `+
+      `${tx.toFixed(2)} `+
+      `${(pageH-yy).toFixed(2)} Td `+
+      (${lvPdfEncode(value)}) Tj ET
+    );
+
+  }
+
+
+  /*
+   * Mehrzeiliger Text
+   */
+  function paragraph(
+    value,
+    options={}
+  ){
+
+    const size=
+      options.size||
+      9.5;
+
+    const bold=
+      !!options.bold;
+
+    const leading=
+      options.leading||
+      size*1.45;
+
+    const lines=
+      lvPdfWrap(
+        value,
+        size,
+        bold,
+        options.width||
+        contentW
+      );
+
+    lines.forEach(line=>{
+
+      need(leading);
+
+      text(
+        options.x||
+        margin,
+        y,
+        line,
+        {
+          size,
+          bold,
+          color:
+            options.color
+        }
+      );
+
+      y+=leading;
+
+    });
+
+  }
+
+
+  /*
+   * Rechteck
+   */
+  function rect(
+    x,
+    yy,
+    w,
+    h,
+    options={}
+  ){
+
+    const fill=
+      options.fill
+        ? `${lvPdfColor(options.fill)} rg `
+        : '';
+
+    const stroke=
+      options.stroke
+        ? `${lvPdfColor(options.stroke)} RG `
+        : '';
+
+    const lw=
+      options.lw||
+      1;
+
+    ops.push(
+      `${fill}${stroke}${lw} w `+
+      `${x.toFixed(2)} `+
+      `${(pageH-yy-h).toFixed(2)} `+
+      `${w.toFixed(2)} `+
+      `${h.toFixed(2)} re `+
+      (
+        options.fill&&options.stroke
+          ? 'B'
+          : options.fill
+            ? 'f'
+            : 'S'
+      )
+    );
+
+  }
+
+
+  /*
+   * Linie
+   */
+  function line(
+    x1,
+    y1,
+    x2,
+    y2,
+    color='#999999',
+    lw=1
+  ){
+
+    ops.push(
+      `${lvPdfColor(color)} RG `+
+      `${lw} w `+
+      `${x1.toFixed(2)} `+
+      `${(pageH-y1).toFixed(2)} m `+
+      `${x2.toFixed(2)} `+
+      ${(pageH-y2).toFixed(2)} l S
+    );
+
+  }
+
+
+  /*
+   * Überschrift
+   */
+  function heading(
+    title,
+    subtitle=''
+  ){
+
+    need(65);
+
+    text(
+      margin,
+      y,
+      title,
+      {
+        size:17,
+        bold:true,
+        color:'#22272d'
+      }
+    );
+
+    y+=22;
+
+    if(subtitle){
+
+      paragraph(
+        subtitle,
+        {
+          size:9,
+          width:contentW,
+          color:'#6c757d',
+          leading:13
+        }
+      );
+
+    }
+
+    y+=6;
+
+    line(
+      margin,
+      y,
+      margin+contentW,
+      y,
+      '#c79a42',
+      1.4
+    );
+
+    y+=18;
+
+  }
+
+
+  /*
+   * Kleine Statusbox
+   */
+  function statusBox(
+    x,
+    yy,
+    w,
+    h,
+    title,
+    value,
+    ok,
+    small=''
+  ){
+
+    const fill=
+      ok
+        ? '#eef7f0'
+        : '#fbeeee';
+
+    const stroke=
+      ok
+        ? '#3d8b50'
+        : '#bd4b4b';
+
+    rect(
+      x,
+      yy,
+      w,
+      h,
+      {
+        fill,
+        stroke,
+        lw:1
+      }
+    );
+
+    text(
+      x+10,
+      yy+18,
+      title,
+      {
+        size:9,
+        bold:true,
+        color:stroke
+      }
+    );
+
+    text(
+      x+10,
+      yy+36,
+      value,
+      {
+        size:11,
+        bold:true,
+        color:stroke
+      }
+    );
+
+    if(small){
+
+      const lines=
+        lvPdfWrap(
+          small,
+          7.5,
+          false,
+          w-20
+        );
+
+      let sy=yy+49;
+
+      lines.slice(0,3).forEach(t=>{
+
+        text(
+          x+10,
+          sy,
+          t,
+          {
+            size:7.5,
+            color:'#555555'
+          }
+        );
+
+        sy+=10;
+
+      });
+
+    }
+
+  }
+
+
+  /*
+   * Tabellenzeile
+   */
+  function tableRow(
+    values,
+    widths,
+    options={}
+  ){
+
+    const size=
+      options.size||
+      7.8;
+
+    const bold=
+      !!options.bold;
+
+    const rowH=
+      options.rowH||
+      22;
+
+    need(rowH);
+
+    let x=margin;
+
+    values.forEach((value,i)=>{
+
+      const w=widths[i];
+
+      rect(
+        x,
+        y,
+        w,
+        rowH,
+        {
+          fill:
+            options.header
+              ? '#f2f3f4'
+              : '#ffffff',
+          stroke:'#d4d7da',
+          lw:.5
+        }
+      );
+
+      const lines=
+        lvPdfWrap(
+          String(value??''),
+          size,
+          bold,
+          w-8
+        );
+
+      let ty=
+        y+11;
+
+      lines.slice(0,2).forEach(t=>{
+
+        text(
+          x+4,
+          ty,
+          t,
+          {
+            size,
+            bold,
+            color:
+              options.header
+                ? '#22272d'
+                : '#333333'
+          }
+        );
+
+        ty+=9;
+
+      });
+
+      x+=w;
+
+    });
+
+    y+=rowH;
+
+  }
+
+
+  /*
+   * Kopf
+   */
+  const P=D.p||{};
+
+  heading(
+    'Berechnung der Verbrennungsluftversorgung',
+    [
+      P.n||'',
+      P.nr
+        ? 'Nr. '+P.nr
+        : '',
+      P.dt
+        ? P.dt
+        : ''
+    ]
+    .filter(Boolean)
+    .join(' · ')
+  );
+
+
+  /*
+   * Projektinformationen
+   */
+  need(100);
+
+  rect(
+    margin,
+    y,
+    contentW,
+    84,
+    {
+      fill:'#f7f8f9',
+      stroke:'#d4d7da',
+      lw:.7
+    }
+  );
+
+  text(
+    margin+12,
+    y+18,
+    'Projekt / Gebäude',
+    {
+      size:11,
+      bold:true
+    }
+  );
+
+  let iy=y+34;
+
+  const projectLines=[
+    ['Eigentümer',P.en],
+    ['Anschrift',P.ea],
+    ['Gebäude',P.ga],
+    ['Lage',P.gl],
+    ['Ersteller',P.ers]
+  ];
+
+  projectLines.forEach(([label,value])=>{
+
+    if(!value)return;
+
+    text(
+      margin+12,
+      iy,
+      label+':',
+      {
+        size:8,
+        bold:true,
+        color:'#6c757d'
+      }
+    );
+
+    text(
+      margin+90,
+      iy,
+      String(value),
+      {
+        size:8.5
+      }
+    );
+
+    iy+=11;
+
+  });
+
+  y+=98;
+
+
+  /*
+   * Gebäudekennwerte
+   */
+  need(65);
+
+  text(
+    margin,
+    y,
+    'Kennwerte der Nutzungseinheit',
+    {
+      size:11,
+      bold:true
+    }
+  );
+
+  y+=17;
+
+  const kn=R.kn;
+
+  paragraph(
+    n50 = ${f1(kn.n50)} h⁻¹ · f_wirk.komp. = ${String(kn.f).replace('.',',')} · n = ${f2(kn.n)} h⁻¹,
+    {
+      size:9,
+      width:contentW
+    }
+  );
+
+  if(kn.err){
+
+    need(35);
+
+    paragraph(
+      kn.err,
+      {
+        size:8.5,
+        color:'#9a5f00',
+        width:contentW
+      }
+    );
+
+  }
+
+  y+=6;
+
+
+  /*
+   * Keine Feuerstätten
+   */
+  if(!R.res.length){
+
+    need(80);
+
+    rect(
+      margin,
+      y,
+      contentW,
+      55,
+      {
+        fill:'#f7f8f9',
+        stroke:'#d4d7da'
+      }
+    );
+
+    paragraph(
+      'Noch keine Feuerstätte (Gas-/Feststoff-/Ölgerät) in einem Raum erfasst.',
+      {
+        x:margin+12,
+        width:contentW-24,
+        size:10
+      }
+    );
+
+    newPage();
+
+  }else{
+
+
+    /*
+     * Jeden Aufstellraum ausgeben.
+     */
+    R.res.forEach((x,index)=>{
+
+      /*
+       * Aufstellraum-Überschrift
+       */
+      need(75);
+
+      heading(
+        Aufstellraum: ${x.A.n||'Raum'} (${x.A.v||'?'} m³),
+        Berechnungsnachweis ${index+1} von ${R.res.length}
+      );
+
+
+      /*
+       * Statusboxen
+       */
+      const gap=10;
+
+      const boxW=
+        (contentW-gap)/2;
+
+      const s=x.s1;
+
+      const sz1=
+        s
+          ? (
+            s.ok
+              ? '✓ erfüllt'
+              : '✗ nicht erfüllt'
+          )
+          : '– nicht erforderlich';
+
+      const sz2=
+        kn.err
+          ? '–'
+          : (
+            x.sz2
+              ? '✓ erfüllt'
+              : '✗ nicht erfüllt'
+          );
+
+      const sz1small=
+        s
+          ? RLV ${f2(s.rlv0)} (${s.V0} m³ / ${f1(s.kw)} kW), gefordert ≥ 1,0 m³/kW
+          : 'nur bei Gasgeräten Art B1/B4';
+
+      const sz2small=
+        Bedarf ${f1(x.Bed)} m³/h · IST ${f1(x.ist)} m³/h;
+
+      statusBox(
+        margin,
+        y,
+        boxW,
+        70,
+        'Schutzziel 1',
+        sz1,
+        !!(s&&s.ok),
+        sz1small
+      );
+
+      statusBox(
+        margin+boxW+gap,
+        y,
+        boxW,
+        70,
+        'Schutzziel 2',
+        sz2,
+        !!x.sz2,
+        sz2small
+      );
+
+      y+=82;
+
+
+      /*
+       * Tabelle
+       */
+      text(
+        margin,
+        y,
+        'Anrechenbare Luftmengen',
+        {
+          size:10,
+          bold:true
+        }
+      );
+
+      y+=12;
+
+      const widths=[
+        125,
+        65,
+        72,
+        65,
+        72,
+        contentW-
+          (125+65+72+65+72)
+      ];
+
+      tableRow(
+        [
+          'Raum',
+          'Kurve',
+          'Infiltration',
+          'ALD',
+          'q_s',
+          'anrechenbar'
+        ],
+        widths,
+        {
+          header:true,
+          bold:true,
+          rowH:24
+        }
+      );
+
+
+      x.rows.forEach(r=>{
+
+        tableRow(
+          [
+            r.n,
+            r.c
+              ? KT[r.c]
+              : '–',
+            f1(r.qi),
+            f1(r.al),
+            f1(r.qs),
+            f1(r.an)
+          ],
+          widths,
+          {
+            rowH:23
+          }
+        );
+
+      });
+
+
+      tableRow(
+        [
+          'Σ (m³/h)',
+          '',
+          '',
+          '',
+          '',
+          f1(x.ist)
+        ],
+        widths,
+        {
+          bold:true,
+          rowH:24
+        }
+      );
+
+
+      y+=12;
+
+
+      /*
+       * Bedarf
+       */
+      need(48);
+
+      paragraph(
+        Bedarf = Σ Nennleistung × 1,6 m³/(h·kW) = ${f1(x.Bcb)} m³/h+
+        (
+          x.ablS
+            ? ` + Abluft ${f1(x.ablS)} m³/h`
+            : ''
+        )+
+        ` = ${f1(x.Bed)} m³/h (Formel 9-2).`,
+        {
+          size:9,
+          bold:true,
+          width:contentW
+        }
+      );
+
+
+      /*
+       * Überschuss / Fehlbetrag
+       */
+      const diff=
+        Math.abs(x.ist-x.Bed);
+
+      paragraph(
+        x.ist>=x.Bed
+          ? Überschuss: ${f1(diff)} m³/h
+          : Fehlbetrag: ${f1(diff)} m³/h,
+        {
+          size:9,
+          bold:true,
+          color:
+            x.ist>=x.Bed
+              ? '#3d8b50'
+              : '#bd4b4b',
+          width:contentW
+        }
+      );
+
+
+      /*
+       * Schutzziel 1 Zusatzinformation
+       */
+      if(s){
+
+        if(s.nb&&s.nb.length){
+
+          paragraph(
+            Zusätzlich angerechnet über 2 × 150 cm² zu: ${s.nb.join(', ')}. Gesamtvolumen ${f1(s.V)} m³; RLV ${f2(s.rlv)}.,
+            {
+              size:8.5,
+              width:contentW
+            }
+          );
+
+        }
+
+      }
+
+
+      /*
+       * Warnungen
+       */
+      if(x.w&&x.w.length){
+
+        x.w.forEach(w=>{
+
+          need(45);
+
+          const lines=
+            lvPdfWrap(
+              'Hinweis: '+w,
+              8,
+              false,
+              contentW-24
+            );
+
+          const h=
+            Math.max(
+              30,
+              lines.length*11+18
+            );
+
+          rect(
+            margin,
+            y,
+            contentW,
+            h,
+            {
+              fill:'#fbf5e7',
+              stroke:'#e7d19d',
+              lw:.7
+            }
+          );
+
+          let wy=y+14;
+
+          lines.forEach(t=>{
+
+            text(
+              margin+10,
+              wy,
+              t,
+              {
+                size:8,
+                color:'#6b531c'
+              }
+            );
+
+            wy+=11;
+
+          });
+
+          y+=h+8;
+
+        });
+
+      }
+
+      y+=12;
+
+    });
+
+  }
+
+
+  /*
+   * Fußtext
+   */
+  need(60);
+
+  line(
+    margin,
+    y,
+    margin+contentW,
+    y,
+    '#c79a42',
+    1
+  );
+
+  y+=17;
+
+  paragraph(
+    'Berechnung nach DVGW-TRGI 2018 (G 600) Abschnitt 9.2 und Anhang D sowie 8.3.2.4.2.1. Planungshilfe – ersetzt keine Prüfung durch den Fachbetrieb bzw. den bevollmächtigten Bezirksschornsteinfeger.',
+    {
+      size:7.5,
+      color:'#6c757d',
+      width:contentW,
+      leading:10
+    }
+  );
+
+
+  /*
+   * Letzte Seite speichern.
+   */
+  if(ops.length){
+
+    pages.push(
+      ops.join('\n')
+    );
+
+  }
+
+
+  /*
+   * PDF-Objekte.
+   */
+  const objects=[
+
+    '<< /Type /Catalog /Pages 2 0 R >>',
+
+    << /Type /Pages /Kids [+
+      pages
+        .map(
+          (_,i)=>
+            ${5+i*2} 0 R
+        )
+        .join(' ')+
+      ] /Count ${pages.length} >>,
+
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>',
+
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>'
+
+  ];
+
+
+  /*
+   * Seitenobjekte.
+   */
+  pages.forEach((stream,i)=>{
+
+    objects.push(
+      `<< /Type /Page `+
+      `/Parent 2 0 R `+
+      `/MediaBox [0 0 ${pageW} ${pageH}] `+
+      `/Resources << /Font << `+
+      `/F1 3 0 R /F2 4 0 R `+
+      `>> >> `+
+      /Contents ${6+i*2} 0 R >>
+    );
+
+    objects.push(
+      << /Length ${stream.length} >>\n+
+      stream\n+
+      ${stream}\n+
+      endstream
+    );
+
+  });
+
+
+  /*
+   * PDF zusammenbauen.
+   */
+  let pdf=
+    '%PDF-1.4\n'+
+    '%\u00e2\u00e3\u00cf\u00d3\n';
+
+  const offsets=[];
+
+
+  objects.forEach((obj,i)=>{
+
+    offsets.push(pdf.length);
+
+    pdf+=
+      ${i+1} 0 obj\n+
+      ${obj}\n+
+      endobj\n;
+
+  });
+
+
+  const xref=
+    pdf.length;
+
+  pdf+=
+    xref\n+
+    0 ${objects.length+1}\n+
+    0000000000 65535 f \n+
+    offsets
+      .map(
+        o=>
+          String(o)
+            .padStart(10,'0')+
+          ' 00000 n \n'
+      )
+      .join('')+
+    trailer\n+
+    << /Size ${objects.length+1} /Root 1 0 R >>\n+
+    startxref\n+
+    ${xref}\n+
+    %%EOF;
+
+
+  /*
+   * String -> ByteArray
+   */
+  const bytes=
+    new Uint8Array(
+      pdf.length
+    );
+
+  for(
+    let i=0;
+    i<pdf.length;
+    i++
+  ){
+
+    bytes[i]=
+      pdf.charCodeAt(i)&255;
+
+  }
+
+
+  return new Blob(
+    [bytes],
+    {
+      type:'application/pdf'
+    }
+  );
+
+}
+
+
+/* =========================================================
+   PDF TEILEN / SPEICHERN
+   ========================================================= */
+
+async function shareLuftverbundPdf(
+  blob,
+  name
+){
+
+  try{
+
+    const file=
+      new File(
+        [blob],
+        name,
+        {
+          type:'application/pdf'
+        }
+      );
+
+
+    /*
+     * Smartphone kann PDF-Dateien teilen.
+     */
+    if(
+      navigator.canShare &&
+      navigator.canShare({
+        files:[file]
+      })
+    ){
+
+      await navigator.share({
+
+        files:[file],
+
+        title:name,
+
+        text:
+          'Berechnungsnachweis Luftverbund nach TRGI 2018'
+
+      });
+
+      return;
+
+    }
+
+  }catch(err){
+
+    /*
+     * Benutzer hat Teilen abgebrochen.
+     */
+    if(
+      err &&
+      err.name==='AbortError'
+    ){
+
+      return;
+
+    }
+
+  }
+
+
+  /*
+   * Fallback:
+   * PDF herunterladen.
+   */
+  const url=
+    URL.createObjectURL(blob);
+
+  const a=
+    document.createElement('a');
+
+  a.href=url;
+
+  a.download=name;
+
+  a.style.display='none';
+
+  document.body.appendChild(a);
+
+  a.click();
+
+  a.remove();
+
+
+  setTimeout(
+    ()=>{
+      URL.revokeObjectURL(url);
+    },
+    60000
+  );
+
+}
+
+
+/* =========================================================
+   DRUCKFUNKTION
+   ========================================================= */
+
+async function doPrint(){
 
   unprint();
 
-  const s=document.createElement('style');
+
+  /*
+   * ---------------------------------------------------------
+   * iOS HOME-BILDSCHIRM / PWA
+   * ---------------------------------------------------------
+   *
+   * window.navigator.standalone ist die klassische
+   * iOS-Erkennung.
+   */
+  const iosStandalone=
+    window.navigator.standalone===true;
+
+
+  /*
+   * ---------------------------------------------------------
+   * Android / andere installierte PWA
+   * ---------------------------------------------------------
+   */
+  const standalone=
+    window.matchMedia &&
+    window.matchMedia(
+      '(display-mode: standalone)'
+    ).matches;
+
+
+  /*
+   * ---------------------------------------------------------
+   * PDF auf PWA erzeugen
+   * ---------------------------------------------------------
+   */
+  if(
+    iosStandalone||
+    standalone
+  ){
+
+    try{
+
+      const blob=
+        buildLuftverbundPdf();
+
+
+      const projekt=
+        (
+          D.p.nr||
+          D.p.n||
+          'projekt'
+        )
+        .replace(
+          /[^\w.-]+/g,
+          '_'
+        );
+
+
+      const datum=
+        new Date()
+          .toISOString()
+          .slice(0,10);
+
+
+      const filename=
+        'Luftverbund-Berechnungsnachweis-'+
+        projekt+
+        '-'+
+        datum+
+        '.pdf';
+
+
+      await shareLuftverbundPdf(
+        blob,
+        filename
+      );
+
+
+    }catch(err){
+
+      console.error(
+        'Luftverbund-PDF:',
+        err
+      );
+
+      alert(
+        'Die PDF konnte nicht erstellt werden.\n\n'+
+        (
+          err&&err.message
+            ? err.message
+            : 'Unbekannter Fehler'
+        )
+      );
+
+    }
+
+    return;
+
+  }
+
+
+  /*
+   * ---------------------------------------------------------
+   * NORMALER BROWSER / PC
+   * ---------------------------------------------------------
+   */
+
+  const s=
+    document.createElement('style');
 
   s.id='lvPrintStyle';
 
@@ -131,9 +1583,14 @@ function doPrint(){
       margin:12mm;
     }
 
+    #lvPrintRoot{
+      display:none;
+    }
+
     @media print{
 
-      body.lv-printing>*:not(#lvPrintRoot){
+      body.lv-printing>
+      *:not(#lvPrintRoot){
         display:none!important;
       }
 
@@ -168,124 +1625,52 @@ function doPrint(){
 
     }
 
-
-    @media screen{
-
-      #lvPrintRoot{
-        display:block;
-        background:#fff;
-      }
-
-    }
-
   `;
 
 
   /*
-   * Druckinhalt erzeugen
+   * Druckinhalt
    */
-  const r=document.createElement('div');
+  const r=
+    document.createElement('div');
 
   r.id='lvPrintRoot';
 
-  r.innerHTML=result();
+  r.innerHTML=
+    result();
 
 
   document.head.appendChild(s);
+
   document.body.appendChild(r);
 
-  document.body.classList.add('lv-printing');
-
-
-  /*
-   * PC:
-   * Druckdialog direkt aus der Benutzeraktion heraus öffnen.
-   */
-  const isMobile=/Android|iPhone|iPad|iPod/i.test(
-    navigator.userAgent
+  document.body.classList.add(
+    'lv-printing'
   );
 
 
-  if(!isMobile){
+  /*
+   * Direkter Druckdialog.
+   *
+   * Kein zusätzlicher PDF-Aufruf.
+   */
+  try{
 
     window.print();
 
-    return;
+  }catch(err){
+
+    console.error(
+      'window.print():',
+      err
+    );
+
+    alert(
+      'Der Druckdialog konnte nicht geöffnet werden.'
+    );
 
   }
 
-
-  /*
-   * Handy:
-   *
-   * Die Druckansicht bleibt stehen.
-   * Der Benutzer kann anschließend die
-   * Browserfunktion "Drucken" / "Teilen" / "Als PDF sichern"
-   * verwenden.
-   *
-   * KEIN window.print() im PWA-Modus erzwingen.
-   */
-  const bar=document.createElement('div');
-
-  bar.id='lvMobilePrintBar';
-
-  bar.style.cssText=`
-    position:sticky;
-    top:0;
-    z-index:99999;
-    display:flex;
-    gap:8px;
-    padding:10px;
-    margin:-16px -16px 16px;
-    background:#fff;
-    border-bottom:1px solid #ddd;
-  `;
-
-
-  const info=document.createElement('div');
-
-  info.style.cssText=`
-    flex:1;
-    font-size:14px;
-    line-height:1.3;
-    padding:6px;
-  `;
-
-  info.textContent=
-    'Druckansicht geöffnet. '+
-    'Zum Drucken bitte die Teilen-/Druckfunktion des Browsers verwenden.';
-
-
-  const close=document.createElement('button');
-
-  close.className='btn btn-light';
-
-  close.textContent='← Zurück';
-
-  close.style.cssText=`
-    min-height:44px;
-    padding:8px 12px;
-  `;
-
-
-  bar.appendChild(info);
-  bar.appendChild(close);
-
-  r.insertBefore(bar,r.firstChild);
-
-
-  close.addEventListener('click',()=>{
-
-    unprint();
-    render();
-
-  });
-
-
-  /*
-   * Auf Mobilgeräten nicht automatisch window.print()
-   * aufrufen.
-   */
 }
 root.addEventListener('click',e=>{const t=e.target.closest('[data-t],[data-a]');if(!t)return;
 if(t.dataset.t!=null){tab=+t.dataset.t;render();root.scrollIntoView();return}
