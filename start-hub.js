@@ -35,6 +35,9 @@
   var v = document.createElement("section");
   v.id = f.show[0].replace("#", "");
   home.appendChild(v);
+    var sc = document.createElement("script");
+sc.src = f.script;
+document.body.appendChild(sc);
 });
   var css = document.createElement("style");
   css.textContent =
