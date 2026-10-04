@@ -106,9 +106,172 @@ async function saveFile(text,name){const f=new File([text],name,{type:'applicati
 root.addEventListener('change',e=>{if(e.target.id!=='lvImport')return;const f=e.target.files&&e.target.files[0];if(!f)return;const rd=new FileReader();
 rd.onload=()=>{try{const o=JSON.parse(rd.result);if(o.schema!=='schornstein-planer-luftverbund'||!o.project)throw 0;if(!confirm('Das aktuelle Luftverbund-Projekt wird durch die Datei ersetzt. Fortfahren?'))return;D=Object.assign(dflt(),o.project);save();tab=0;render()}catch(x){alert('Die Projektdatei konnte nicht gelesen werden.')}finally{e.target.value=''}};rd.readAsText(f)});
 function unprint(){const r=document.getElementById('lvPrintRoot');if(r)r.remove();const s=document.getElementById('lvPrintStyle');if(s)s.remove();document.body.classList.remove('lv-printing')}
-function doPrint(){unprint();const s=document.createElement('style');s.id='lvPrintStyle';s.textContent='#lvPrintRoot{display:none}@page{size:A4;margin:12mm}@media print{body.lv-printing>*:not(#lvPrintRoot){display:none!important}#lvPrintRoot{display:block!important}body{background:#fff!important}#lvPrintRoot .card{box-shadow:none;break-inside:avoid;border:1px solid #999}#lvPrintRoot *{-webkit-print-color-adjust:exact;print-color-adjust:exact}}';
-const r=document.createElement('div');r.id='lvPrintRoot';r.innerHTML=result();document.head.appendChild(s);document.body.appendChild(r);document.body.classList.add('lv-printing');
-setTimeout(()=>{const g=()=>{document.removeEventListener('pointerdown',g,true);document.removeEventListener('keydown',g,true);unprint()};if(document.getElementById('lvPrintRoot')){document.addEventListener('pointerdown',g,true);document.addEventListener('keydown',g,true)}},1500);setTimeout(()=>window.print(),120)}
+function doPrint(){
+  unprint();
+  const s=document.createElement('style');
+  s.id='lvPrintStyle';
+  s.textContent=`
+    #lvPrintRoot{display:none}
+    @page{
+      size:A4;
+      margin:12mm;
+    }
+    @media print{
+      body.lv-printing>*:not(#lvPrintRoot){
+        display:none!important;
+      }
+      #lvPrintRoot{
+        display:block!important;
+        position:static!important;
+        width:auto!important;
+        margin:0!important;
+        padding:0!important;
+        background:#fff!important;
+      }
+      body{
+        background:#fff!important;
+      }
+      #lvPrintRoot .card{
+        box-shadow:none!important;
+        break-inside:avoid;
+        page-break-inside:avoid;
+        border:1px solid #999;
+      }
+      #lvPrintRoot *{
+        -webkit-print-color-adjust:exact;
+        print-color-adjust:exact;
+      }
+    }
+    @media screen and (max-width:700px){
+      body.lv-printing{
+        background:#fff!important;
+      }
+      body.lv-printing>*:not(#lvPrintRoot){
+        display:none!important;
+      }
+      #lvPrintRoot{
+        display:block!important;
+        position:relative!important;
+        width:100%!important;
+        min-height:100vh;
+        box-sizing:border-box;
+        padding:16px;
+        background:#fff!important;
+      }
+      #lvPrintRoot .card{
+        box-shadow:none!important;
+        border:1px solid #999;
+      }
+      #lvPrintRoot .form-actions{
+        display:none!important;
+      }
+      #lvPrintRoot .lv-mu{
+        font-size:12px;
+      }
+      #lvPrintRoot table{
+        width:100%;
+        border-collapse:collapse;
+      }
+      #lvPrintRoot th,
+      #lvPrintRoot td{
+        padding:4px;
+        font-size:12px;
+      }
+      #lvMobilePrintBar{
+        display:flex;
+        position:sticky;
+        top:0;
+        z-index:99999;
+        gap:8px;
+        padding:10px 0 14px;
+        background:#fff;
+      }
+      #lvMobilePrintBar button{
+        flex:1;
+        min-height:44px;
+        border:0;
+        border-radius:8px;
+        padding:10px;
+        font-size:15px;
+        cursor:pointer;
+      }
+      #lvMobilePrintBar .lv-print-btn{
+        background:#222;
+        color:#fff;
+      }
+      #lvMobilePrintBar .lv-close-btn{
+        background:#ddd;
+        color:#111;
+      }
+    }
+    @media screen and (min-width:701px){
+      #lvMobilePrintBar{
+        display:none;
+      }
+    }
+  `;
+  const r=document.createElement('div');
+  r.id='lvPrintRoot';
+  const mobileBar=document.createElement('div');
+  mobileBar.id='lvMobilePrintBar';
+  const printBtn=document.createElement('button');
+  printBtn.className='lv-print-btn';
+  printBtn.textContent='🖨️ Drucken / PDF';
+  const closeBtn=document.createElement('button');
+  closeBtn.className='lv-close-btn';
+  closeBtn.textContent='← Zurück';
+  mobileBar.appendChild(printBtn);
+  mobileBar.appendChild(closeBtn);
+  r.appendChild(mobileBar);
+  const content=document.createElement('div');
+  content.innerHTML=result();
+  r.appendChild(content);
+  document.head.appendChild(s);
+  document.body.appendChild(r);
+  document.body.classList.add('lv-printing');
+  closeBtn.addEventListener('click',()=>{
+    unprint();
+    render();
+  });
+  printBtn.addEventListener('click',()=>{
+    /*
+     * Auf normalen Browsern und auf Geräten, die window.print()
+     * im Standalone-Modus unterstützen, wird der native Druckdialog
+     * geöffnet.
+     */
+    try{
+      window.print();
+    }catch(e){
+      /*
+       * Falls das Betriebssystem keinen Druckdialog aus der
+       * Home-Bildschirm-App zulässt, bleibt die Druckansicht
+       * geöffnet. Der Benutzer kann sie über die Teilen-Funktion
+       * des Betriebssystems weitergeben bzw. als PDF sichern.
+       */
+      alert(
+        'Der direkte Druckdialog wird von diesem Browser-Modus nicht unterstützt. '+
+        'Bitte verwenden Sie die Teilen-Funktion des Browsers bzw. „Als PDF sichern“.'
+      );
+    }
+  });
+  /*
+   * Desktop:
+   * automatisch den normalen Druckdialog öffnen.
+   *
+   * Mobil/PWA:
+   * Druckansicht anzeigen und auf Benutzeraktion warten.
+   */
+  const isMobile =
+    /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+    navigator.maxTouchPoints>1;
+  if(!isMobile){
+    setTimeout(()=>{
+      try{
+        window.print();
+      }catch(e){}
+    },150);
+  }
+}
 root.addEventListener('click',e=>{const t=e.target.closest('[data-t],[data-a]');if(!t)return;
 if(t.dataset.t!=null){tab=+t.dataset.t;render();root.scrollIntoView();return}
 const a=t.dataset.a,i=+t.dataset.i,j=+t.dataset.j;
