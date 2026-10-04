@@ -1,4 +1,4 @@
-const CACHE_NAME = "schornstein-planer-v20";
+const CACHE_NAME = "schornstein-planer-v21";
 
 const APP_SHELL = [
   "./",
