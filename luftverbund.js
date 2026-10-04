@@ -105,7 +105,84 @@ root.addEventListener('toggle',e=>{const i=e.target.dataset&&e.target.dataset.ri
 async function saveFile(text,name){const f=new File([text],name,{type:'application/json'});try{if(navigator.maxTouchPoints>0&&navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});return}}catch(err){if(err&&err.name==='AbortError')return}const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),6e4)}
 root.addEventListener('change',e=>{if(e.target.id!=='lvImport')return;const f=e.target.files&&e.target.files[0];if(!f)return;const rd=new FileReader();
 rd.onload=()=>{try{const o=JSON.parse(rd.result);if(o.schema!=='schornstein-planer-luftverbund'||!o.project)throw 0;if(!confirm('Das aktuelle Luftverbund-Projekt wird durch die Datei ersetzt. Fortfahren?'))return;D=Object.assign(dflt(),o.project);save();tab=0;render()}catch(x){alert('Die Projektdatei konnte nicht gelesen werden.')}finally{e.target.value=''}};rd.readAsText(f)});
+function unprint(){
+  const r=document.getElementById('lvPrintRoot');
+  if(r)r.remove();
 
+  const s=document.getElementById('lvPrintStyle');
+  if(s)s.remove();
+
+  document.body.classList.remove('lv-printing');
+}
+
+
+function doPrint(){
+
+  unprint();
+
+  const style=document.createElement('style');
+
+  style.id='lvPrintStyle';
+
+  style.textContent=`
+    @page{
+      size:A4;
+      margin:12mm;
+    }
+
+    #lvPrintRoot{
+      display:none;
+    }
+
+    @media print{
+
+      body.lv-printing>*:not(#lvPrintRoot){
+        display:none!important;
+      }
+
+      #lvPrintRoot{
+        display:block!important;
+        position:static!important;
+        width:auto!important;
+        margin:0!important;
+        padding:0!important;
+        background:#fff!important;
+      }
+
+      body{
+        background:#fff!important;
+      }
+
+      #lvPrintRoot .card{
+        box-shadow:none!important;
+        break-inside:avoid;
+        page-break-inside:avoid;
+      }
+
+      #lvPrintRoot *{
+        -webkit-print-color-adjust:exact;
+        print-color-adjust:exact;
+      }
+
+      #lvPrintRoot .form-actions{
+        display:none!important;
+      }
+    }
+  `;
+
+  const rootPrint=document.createElement('div');
+
+  rootPrint.id='lvPrintRoot';
+
+  rootPrint.innerHTML=result();
+
+  document.head.appendChild(style);
+  document.body.appendChild(rootPrint);
+
+  document.body.classList.add('lv-printing');
+
+  window.print();
+}
 root.addEventListener('click',e=>{const t=e.target.closest('[data-t],[data-a]');if(!t)return;
 if(t.dataset.t!=null){tab=+t.dataset.t;render();root.scrollIntoView();return}
 const a=t.dataset.a,i=+t.dataset.i,j=+t.dataset.j;
