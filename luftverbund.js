@@ -112,348 +112,14 @@ function unprint(){
   const s=document.getElementById('lvPrintStyle');
   if(s)s.remove();
 
-  const p=document.getElementById('lvPdfRoot');
-  if(p)p.remove();
-
   document.body.classList.remove('lv-printing');
 }
 
 
-/*
- * Externe JavaScript-Bibliothek laden
- */
-function loadLVScript(src){
-
-  return new Promise((resolve,reject)=>{
-
-    const old=document.querySelector(
-      'script[data-lv-library="'+src+'"]'
-    );
-
-    if(old){
-
-      if(old.dataset.loaded==='1'){
-        resolve();
-        return;
-      }
-
-      old.addEventListener('load',resolve,{once:true});
-      old.addEventListener(
-        'error',
-        ()=>reject(new Error('Bibliothek konnte nicht geladen werden')),
-        {once:true}
-      );
-
-      return;
-    }
-
-    const s=document.createElement('script');
-
-    s.src=src;
-    s.async=true;
-    s.dataset.lvLibrary=src;
-
-    s.onload=()=>{
-      s.dataset.loaded='1';
-      resolve();
-    };
-
-    s.onerror=()=>{
-      reject(
-        new Error(
-          'Bibliothek konnte nicht geladen werden: '+src
-        )
-      );
-    };
-
-    document.head.appendChild(s);
-
-  });
-}
-
-
-/*
- * PDF aus dem vorhandenen Berechnungsnachweis erzeugen
- */
-async function createLuftverbundPDF(){
-
-  /*
-   * Unsichtbaren PDF-Inhalt erzeugen.
-   * Der Inhalt kommt direkt aus der vorhandenen result()-Funktion.
-   */
-  const pdfRoot=document.createElement('div');
-
-  pdfRoot.id='lvPdfRoot';
-
-  pdfRoot.innerHTML=result();
-
-  pdfRoot.style.position='fixed';
-  pdfRoot.style.left='-10000px';
-  pdfRoot.style.top='0';
-  pdfRoot.style.width='794px';
-  pdfRoot.style.boxSizing='border-box';
-  pdfRoot.style.padding='30px';
-  pdfRoot.style.background='#ffffff';
-  pdfRoot.style.color='#111111';
-  pdfRoot.style.fontFamily='Arial, Helvetica, sans-serif';
-  pdfRoot.style.zIndex='-1';
-
-  document.body.appendChild(pdfRoot);
-
-
-  try{
-
-    /*
-     * jsPDF laden
-     */
-    await loadLVScript(
-      'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js'
-    );
-
-
-    /*
-     * html2canvas laden
-     */
-    await loadLVScript(
-      'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'
-    );
-
-
-    if(
-      !window.jspdf ||
-      !window.jspdf.jsPDF ||
-      !window.html2canvas
-    ){
-
-      throw new Error(
-        'Die PDF-Bibliotheken sind nicht verfügbar.'
-      );
-
-    }
-
-
-    const jsPDF=window.jspdf.jsPDF;
-
-
-    /*
-     * A4 PDF
-     */
-    const pdf=new jsPDF({
-
-      orientation:'portrait',
-      unit:'mm',
-      format:'a4',
-      compress:true
-
-    });
-
-
-    /*
-     * HTML -> PDF
-     */
-    await new Promise((resolve,reject)=>{
-
-      try{
-
-        pdf.html(pdfRoot,{
-
-          x:10,
-          y:10,
-
-          width:190,
-
-          windowWidth:794,
-
-          margin:[
-            10,
-            10,
-            10,
-            10
-          ],
-
-          autoPaging:'text',
-
-          html2canvas:{
-
-            scale:1.5,
-
-            useCORS:true,
-
-            backgroundColor:'#ffffff'
-
-          },
-
-          callback:function(doc){
-
-            resolve(doc);
-
-          }
-
-        });
-
-      }catch(err){
-
-        reject(err);
-
-      }
-
-    });
-
-
-    /*
-     * PDF als Blob
-     */
-    const blob=pdf.output('blob');
-
-
-    /*
-     * Dateiname
-     */
-    const projekt=(
-      D.p.nr ||
-      D.p.n ||
-      'projekt'
-    )
-    .replace(/[^\w.-]+/g,'_');
-
-
-    const d=new Date();
-
-    const datum=
-      d.getFullYear()+'-'+
-      String(d.getMonth()+1).padStart(2,'0')+'-'+
-      String(d.getDate()).padStart(2,'0');
-
-
-    const filename=
-      'Luftverbund-'+
-      projekt+'-'+
-      datum+
-      '.pdf';
-
-
-    /*
-     * PDF-URL erzeugen
-     */
-    const url=URL.createObjectURL(blob);
-
-
-    /*
-     * Mobil:
-     *
-     * PDF in neuem Tab/Fenster öffnen.
-     *
-     * Auf iPhone/iPad erscheint dadurch der PDF-Viewer.
-     * Dort kann über "Teilen" -> "Drucken" gedruckt werden.
-     *
-     * Auf Android öffnet sich ebenfalls der PDF-Viewer bzw.
-     * der Browser bietet die Datei an.
-     */
-    const opened=window.open(url,'_blank');
-
-
-    /*
-     * Falls der Browser das Öffnen eines neuen Fensters
-     * blockiert, wird die Datei direkt heruntergeladen.
-     */
-    if(!opened){
-
-      const a=document.createElement('a');
-
-      a.href=url;
-      a.download=filename;
-
-      document.body.appendChild(a);
-
-      a.click();
-
-      a.remove();
-
-    }
-
-
-    /*
-     * URL erst später freigeben.
-     * Der PDF-Viewer braucht die URL noch.
-     */
-    setTimeout(()=>{
-
-      URL.revokeObjectURL(url);
-
-    },120000);
-
-
-  }finally{
-
-    pdfRoot.remove();
-
-  }
-
-}
-
-
-/*
- * Hauptfunktion Drucken
- */
-async function doPrint(){
+function doPrint(){
 
   unprint();
 
-
-  /*
-   * WICHTIG:
-   *
-   * Nicht mehr navigator.maxTouchPoints verwenden.
-   *
-   * Ein Windows-PC mit Touchscreen darf NICHT als Handy
-   * behandelt werden.
-   */
-  const isMobile=
-    /Android|iPhone|iPad|iPod/i.test(
-      navigator.userAgent
-    );
-
-
-  /*
-   * =========================================================
-   * HANDY / PWA
-   * =========================================================
-   */
-  if(isMobile){
-
-    try{
-
-      await createLuftverbundPDF();
-
-    }catch(err){
-
-      console.error(
-        'Luftverbund PDF Fehler:',
-        err
-      );
-
-      alert(
-        'Die PDF konnte nicht erstellt werden.\n\n'+
-        'Bitte prüfen Sie die Internetverbindung und versuchen Sie es erneut.'
-      );
-
-    }
-
-    return;
-
-  }
-
-
-  /*
-   * =========================================================
-   * PC / DESKTOP
-   * =========================================================
-   *
-   * Hier KEIN setTimeout!
-   *
-   * window.print() wird unmittelbar aus dem Button-Klick
-   * heraus aufgerufen.
-   */
   const s=document.createElement('style');
 
   s.id='lvPrintStyle';
@@ -461,85 +127,53 @@ async function doPrint(){
   s.textContent=`
 
     @page{
-
       size:A4;
       margin:12mm;
-
     }
 
-
-    /*
-     * Bildschirm
-     */
-    #lvPrintRoot{
-
-      display:block;
-
-    }
-
-
-    /*
-     * Druck
-     */
     @media print{
 
       body.lv-printing>*:not(#lvPrintRoot){
-
         display:none!important;
-
       }
-
 
       #lvPrintRoot{
-
         display:block!important;
-
         position:static!important;
-
         width:auto!important;
-
         margin:0!important;
-
         padding:0!important;
-
         background:#fff!important;
-
       }
-
 
       body{
-
         background:#fff!important;
-
       }
-
 
       #lvPrintRoot .card{
-
         box-shadow:none!important;
-
-        border:1px solid #999;
-
         break-inside:avoid;
-
         page-break-inside:avoid;
-
+        border:1px solid #999;
       }
-
 
       #lvPrintRoot *{
-
         -webkit-print-color-adjust:exact;
-
         print-color-adjust:exact;
-
       }
 
-
       #lvPrintRoot .form-actions{
-
         display:none!important;
+      }
 
+    }
+
+
+    @media screen{
+
+      #lvPrintRoot{
+        display:block;
+        background:#fff;
       }
 
     }
@@ -558,34 +192,100 @@ async function doPrint(){
 
 
   document.head.appendChild(s);
-
   document.body.appendChild(r);
 
   document.body.classList.add('lv-printing');
 
 
   /*
-   * Direkt drucken.
-   *
-   * Kein setTimeout!
+   * PC:
+   * Druckdialog direkt aus der Benutzeraktion heraus öffnen.
    */
-  try{
+  const isMobile=/Android|iPhone|iPad|iPod/i.test(
+    navigator.userAgent
+  );
+
+
+  if(!isMobile){
 
     window.print();
 
-  }catch(err){
-
-    console.error(
-      'window.print() Fehler:',
-      err
-    );
-
-    alert(
-      'Der Druckdialog konnte nicht geöffnet werden.'
-    );
+    return;
 
   }
 
+
+  /*
+   * Handy:
+   *
+   * Die Druckansicht bleibt stehen.
+   * Der Benutzer kann anschließend die
+   * Browserfunktion "Drucken" / "Teilen" / "Als PDF sichern"
+   * verwenden.
+   *
+   * KEIN window.print() im PWA-Modus erzwingen.
+   */
+  const bar=document.createElement('div');
+
+  bar.id='lvMobilePrintBar';
+
+  bar.style.cssText=`
+    position:sticky;
+    top:0;
+    z-index:99999;
+    display:flex;
+    gap:8px;
+    padding:10px;
+    margin:-16px -16px 16px;
+    background:#fff;
+    border-bottom:1px solid #ddd;
+  `;
+
+
+  const info=document.createElement('div');
+
+  info.style.cssText=`
+    flex:1;
+    font-size:14px;
+    line-height:1.3;
+    padding:6px;
+  `;
+
+  info.textContent=
+    'Druckansicht geöffnet. '+
+    'Zum Drucken bitte die Teilen-/Druckfunktion des Browsers verwenden.';
+
+
+  const close=document.createElement('button');
+
+  close.className='btn btn-light';
+
+  close.textContent='← Zurück';
+
+  close.style.cssText=`
+    min-height:44px;
+    padding:8px 12px;
+  `;
+
+
+  bar.appendChild(info);
+  bar.appendChild(close);
+
+  r.insertBefore(bar,r.firstChild);
+
+
+  close.addEventListener('click',()=>{
+
+    unprint();
+    render();
+
+  });
+
+
+  /*
+   * Auf Mobilgeräten nicht automatisch window.print()
+   * aufrufen.
+   */
 }
 root.addEventListener('click',e=>{const t=e.target.closest('[data-t],[data-a]');if(!t)return;
 if(t.dataset.t!=null){tab=+t.dataset.t;render();root.scrollIntoView();return}
