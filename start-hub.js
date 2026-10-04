@@ -29,15 +29,13 @@
   var pl = document.getElementById("planung"), le = document.getElementById("leistung");
   if (pl && le) le.before(pl);
   /* Ansichten, die ein eigenes Skript brauchen (z. B. Luftverbund) */
-  FUNCTIONS.forEach(function (f) {
-    if (!f.script) return;
-    var v = document.createElement("section");
-    v.id = f.show[0].replace("#", "");
-    home.appendChild(v);
-    var sc = document.createElement("script");
-    sc.src = f.script;
-    document.body.appendChild(sc);
-  });
+ FUNCTIONS.forEach(function (f) {
+  if (!f.script) return;
+
+  var v = document.createElement("section");
+  v.id = f.show[0].replace("#", "");
+  home.appendChild(v);
+});
   var css = document.createElement("style");
   css.textContent =
     ".hub-hide{display:none!important}" +
