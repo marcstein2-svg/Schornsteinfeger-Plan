@@ -36,7 +36,7 @@ D.r.forEach(A=>{const m=dv.filter(d=>d.r==A&&!d.abl);if(!m.length)return;const w
 const rows=[];let ist=0;
 D.r.forEach(R=>{const out=num(R.fen)+num(R.tuer)>0,al=num(R.ald)*num(R.qa);if(!out&&al<=0)return;
 const qi=out?qinf(kn,num(R.v)):0,qs=r1(qi+al),c=R==A?4:bestC(D,R.id,A.id),an=c?r1(anr(D,qs,c)):0;
-if(c){ist+=an;if(R!=A)(used[R.id]=used[R.id]||[]).push(A.n||'Raum')}else w.push((R.n||'Raum')+': keine gültige Verbindung zum Aufstellraum (mittelbar nur mit Öffnungen 
+if(c){ist+=an;if(R!=A)(used[R.id]=used[R.id]||[]).push(A.n||'Raum')}else w.push((R.n||'Raum')+': keine gültige Verbindung zum Aufstellraum (mittelbar nur mit Öffnungen ≥ 150 cm² zwischen Verbundräumen und Aufstellraum) – nicht angerechnet.');
 rows.push({n:R.n||'Raum',c,qi,al,qs,an})});
 ist=r1(ist);if(m.some(d=>d.art=='ok'||d.art=='df'))w.push('Offene Kamine/dekorative Gasfeuer benötigen grundsätzlich eine eigene Verbrennungsluftöffnung bzw. -leitung ins Freie (TRGI 9.2.2) – über Infiltration/ALD nicht nachweisbar.');
 const lim=Bed>80;if(lim)w.push('Bedarf inkl. Abluft über 80 m³/h (≙ 50 kW): Nachweis über Infiltration/ALD nicht zulässig, nur Öffnungen ins Freie (TRGI 8.3.2.3.2–4, 9.2.3.3).');
@@ -49,6 +49,7 @@ res.push({A,rows,Bcb,Bed,ablS,ist,sz2,s1,w})});
 Object.keys(used).forEach(id=>{if(used[id].length>1)res.forEach(x=>x.w.push('Raum "'+(D.r.find(r=>r.id==id).n||'Raum')+'" wird für mehrere Aufstellräume angerechnet – gemeinsame Betrachtung der Nutzungseinheit prüfen.'))});
 return{kn,res,dv}}
 //CALC-END
+
 const root=document.getElementById('luftverbundView');if(!root)return;
 const E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const IC={save:'\u{1F4BE}',open:'\u{1F4C2}',fire:'\u{1F525}',print:'\u{1F5A8}',warn:'\u26A0\uFE0F'};
@@ -63,7 +64,7 @@ const sel=(k,l,op,re=1)=>`<div class="field"><label>${l}</label><select data-k="
 const f1=x=>(+x).toFixed(1).replace('.',','),f2=x=>(+x).toFixed(2).replace('.',',');
 const KT={1:'Kurve 1',2:'Kurve 2',3:'Kurve 3',4:'Kurve 4'};
 const card=(ic,t,p,body)=>`<div class="card"><div class="card-header"><div><h2>${t}</h2>${p?`<p>${p}</p>`:''}</div><div class="section-icon">${ic}</div></div>${body}</div>`;
-function infoTxt(){const k=kenn(D);if(k.err)return `<span class="lv-wn">${k.err}</span>`;return `n50 = ${f1(k.n50)} h
+function infoTxt(){const k=kenn(D);if(k.err)return `<span class="lv-wn">${k.err}</span>`;return `n50 = ${f1(k.n50)} h⁻¹ ${num(D.g.n50)?'(gemessen)':'(Auslegungswert, Tab. 9-2'+(k.ht?', Haustyp '+k.ht:'')+')'} · f<sub>wirk.komp.</sub> = ${String(k.f).replace('.',',')} · n = ${f2(k.n)} h⁻¹`}
 function v0(){return card('\u{1F4C1}','Projekt','Name und Nummer des Auftrags',`<div class="form-grid">${inp('p.n','Projektname')}${inp('p.nr','Projektnummer')}${inp('p.dt','Datum',{t:'date'})}${inp('p.ers','Ersteller / Betrieb')}</div>`)
 +card('\u{1F464}','Eigentümer und Gebäude','',`<div class="form-grid">${inp('p.en','Name des Eigentümers')}${inp('p.ea','Anschrift des Eigentümers')}${inp('p.et','Telefon / E-Mail')}${inp('p.ga','Anschrift des Gebäudes')}${inp('p.gl','Lage der Nutzungseinheit (z. B. 2. OG links)')}</div>`)
 +card(IC.save,'Datensicherung','„Alle Daten“ sichert die komplette Planer-Sicherung inklusive aller Luftverbund-Projekte. „Projekt“ sichert nur diese Berechnung als Datei.',`<div class="form-actions" style="justify-content:flex-start"><button class="btn btn-gold" data-a="gb">${IC.save} Alle Daten sichern</button><label class="btn btn-light" for="spRestoreData">${IC.open} Alle Daten wiederherstellen</label><button class="btn btn-light" data-a="pe">Projekt als Datei sichern</button><label class="btn btn-light" for="lvImport">Projekt aus Datei laden</label><input id="lvImport" type="file" accept=".json,application/json" hidden><button class="btn btn-danger" data-a="np">Neues Projekt</button></div>`)}
@@ -72,29 +73,28 @@ ${sel('g.ge','Geschosse der Nutzungseinheit',[['ein','eingeschossig'],['mehr','m
 ${sel('g.efh','Gebäudeart',[['0','Mehrfamilienhaus'],['1','Einfamilienhaus']])}
 ${sel('g.ab','Errichtet',[['1','ab 2002'],['0','vor 2002']])}
 ${sel('g.luft','Lüftung',[['frei','freie Lüftung (Fugen)'],['vent','ventilatorgestützt']])}
-${g.ab=='0'&&g.luft=='frei'?sel('g.aend','Wesentliche Änderung der Luftdurchlässigkeit (> ⅓ Fenster getauscht, EFH: oder > 
+${g.ab=='0'&&g.luft=='frei'?sel('g.aend','Wesentliche Änderung der Luftdurchlässigkeit (> ⅓ Fenster getauscht, EFH: oder > ⅓ Dach abgedichtet)',[['0','nein'],['1','ja']]):''}
 ${inp('g.n50','Gemessener n50-Wert (optional, h⁻¹)',{m:1})}
 ${sel('g.mod','Berechnung ohne Messwert',[['ht','Tabelle 9-3 (Haustyp)'],['fo','Formel 9-3 bis 9-5']])}
 ${sel('ip','Tabellenwert',[['0','nächstkleinerer Wert (Formblatt)'],['1','interpoliert']])}</div><p class="lv-mu" id="lvInfo">${infoTxt()}</p>`)}
 function v2(){return `<div class="form-actions" style="justify-content:flex-start;margin:0 0 14px"><button class="btn btn-gold" data-a="ar">+ Raum hinzufügen</button></div>`+D.r.map((r,i)=>{const lk=D.l.map((l,j)=>[l,j]).filter(([l])=>l.a==r.id||l.b==r.id);
-return `<details class="lv-room" data-ri="${i}" ${r.o?'open':''}><summary>${E(r.n||'Raum '+(i+1))} 
-<div class="form-grid">${inp(`r.${i}.n`,'Bezeichnung / Nutzung')}${inp(`r.${i}.v`,'Raumvolumen (m
+return `<details class="lv-room" data-ri="${i}" ${r.o?'open':''}><summary>${E(r.n||'Raum '+(i+1))} · ${E(r.v||'?')} m³${(r.f||[]).some(f=>ART[f.a]&&ART[f.a][3]=='gas')?' · Aufstellraum':''}</summary><div class="lv-body">
+<div class="form-grid">${inp(`r.${i}.n`,'Bezeichnung / Nutzung')}${inp(`r.${i}.v`,'Raumvolumen (m³)',{m:1})}${inp(`r.${i}.fen`,'Öffenbare Fenster (Anzahl)',{m:1})}${inp(`r.${i}.tuer`,'Türen ins Freie (Anzahl)',{m:1})}${inp(`r.${i}.ald`,'ALD (Anzahl)',{m:1})}${inp(`r.${i}.qa`,'Luftstrom je ALD bei 4 Pa (m³/h)',{m:1})}</div>
 <div class="lv-h4">Feuerstätten / Abluft</div>`+(r.f||[]).map((f,j)=>{const a=ART[f.a]||ART.b1;return `<div class="lv-it"><div class="form-grid">${sel(`r.${i}.f.${j}.a`,'Art',Object.keys(ART).map(k=>[k,ART[k][0]]))}${inp(`r.${i}.f.${j}.n`,'Name / Typ')}${inp(`r.${i}.f.${j}.v`,'Wert in '+a[1],{m:1})}</div>
 ${a[3]=='abl'?`<label class="lv-ck"><input type="checkbox" data-k="r.${i}.f.${j}.s" ${f.s?'checked':''}> gleichzeitiger Betrieb ausgeschlossen (Sicherheitseinrichtung mit Zulassung)</label>`:''}
 <button class="btn btn-danger btn-small" data-a="df" data-i="${i}" data-j="${j}">Entfernen</button></div>`}).join('')+`<button class="btn btn-light" data-a="af" data-i="${i}">+ Feuerstätte / Abluft</button>
 <div class="lv-h4">Verbindungen zu anderen Räumen</div>`+lk.map(([l,j])=>{const o=l.a==r.id?l.b:l.a;return `<div class="lv-it"><div class="form-grid">
 <div class="field"><label>Verbunden mit</label><select data-lp="${j}:${r.id}">${D.r.filter(x=>x.id!=r.id).map(x=>`<option value="${x.id}" ${x.id==o?'selected':''}>${E(x.n||'Raum')}</option>`).join('')}</select></div>
 ${sel(`l.${j}.t`,'Art',[['t','Tür'],['o','Offener Durchgang (ohne Tür)']])}
-${l.t=='t'?sel(`l.${j}.d`,'Dichtung',[['3','dreiseitig umlaufend'],['0','ohne umlaufende Dichtung / Überströmdichtung']],0)+sel(`l.${j}.k`,'Türblatt',[['0','ungekürzt'],['1','um 1,0 cm gekürzt'],['1.5','um 1,5 cm gekürzt']],0)+sel(`l.${j}.o`,'Verbrennungsluftöffnung in Tür/Wand',[['0','keine'],['1','1 
-${l.t=='t'?sel(`l.${j}.d`,'Dichtung',[['3','dreiseitig umlaufend'],['0','ohne umlaufende Dichtung / Überströmdichtung']],0)+sel(`l.${j}.k`,'Türblatt',[['0','ungekürzt'],['1','um 1,0 cm gekürzt'],['1.5','um 1,5 cm gekürzt']],0)+sel(`l.${j}.o`,'Verbrennungsluftöffnung in Tür/Wand',[['0','keine'],['1','1 
+${l.t=='t'?sel(`l.${j}.d`,'Dichtung',[['3','dreiseitig umlaufend'],['0','ohne umlaufende Dichtung / Überströmdichtung']],0)+sel(`l.${j}.k`,'Türblatt',[['0','ungekürzt'],['1','um 1,0 cm gekürzt'],['1.5','um 1,5 cm gekürzt']],0)+sel(`l.${j}.o`,'Verbrennungsluftöffnung in Tür/Wand',[['0','keine'],['1','1 × 150 cm²'],['2','2 × 150 cm² (auch Schutzziel 1)']],0):''}</div>
 <button class="btn btn-danger btn-small" data-a="dl" data-i="${j}">Verbindung löschen</button></div>`}).join('')+(D.r.length>1?`<button class="btn btn-light" data-a="al" data-i="${i}">+ Verbindung</button>`:'')+`<div><button class="btn btn-danger" data-a="dr" data-i="${i}" style="margin-top:12px">Raum löschen</button></div></div></details>`}).join('')}
-function result(){const R=run(D),k=R.kn,P=D.p;let h=`<div class="card"><div class="card-header"><div><h2>Berechnung der Verbrennungsluftversorgung</h2><p>${E(P.n)} ${P.nr?'
+function result(){const R=run(D),k=R.kn,P=D.p;let h=`<div class="card"><div class="card-header"><div><h2>Berechnung der Verbrennungsluftversorgung</h2><p>${E(P.n)} ${P.nr?'· Nr. '+E(P.nr):''} ${P.dt?'· '+E(P.dt):''}<br>Eigentümer: ${E(P.en)} ${E(P.ea)}<br>Gebäude: ${E(P.ga)} ${E(P.gl)}<br>${infoTxt()}</p></div><div class="section-icon">${IC.fire}</div></div></div>`;
 if(!R.res.length)return h+'<div class="card"><div class="empty">Noch keine Feuerstätte (Gas-/Feststoff-/Ölgerät) in einem Raum erfasst.</div></div>';
-R.res.forEach(x=>{const s=x.s1;h+=`<div class="card"><div class="card-header"><div><h2>Aufstellraum: ${E(x.A.n||'Raum')} (${E(x.A.v)} m
-<div class="lv-b ${s?(s.ok?'lv-ok':'lv-no'):'lv-na'}">Schutzziel 1 ${s?(s.ok?'✓ erfüllt':'✗ nicht erfüllt'):'– nicht erforderlich'}<small>${s?`RLV ${f2(s.rlv0)} (${E(s.V0)} m
-<div class="lv-b ${k.err?'lv-na':x.sz2?'lv-ok':'lv-no'}">Schutzziel 2 ${k.err?'–':x.sz2?'✓ erfüllt':'
-<div class="lv-tw"><table class="lv-t"><tr><th>Raum</th><th>Kurve</th><th>Infiltr.</th><th>ALD</th><th>q<sub>s</sub></th><th>anrechenbar</th></tr>${x.rows.map(r=>`<tr><td>${E(r.n)}</td><td>${r.c?KT[r.c]:'–'}</td><td>${f1(r.qi)}</td><td>${f1(r.al)}</td><td>${f1(r.qs)}</td><td>${f1(r.an)}</td></tr>`).join('')}<tr><th>
-<p class="lv-mu">Bedarf = Σ Nennleistung × 1,6 m³/(h·kW) = ${f1(x.Bcb)} m³/h${x.ablS?` + Abluft ${f1(x.ablS)} m
+R.res.forEach(x=>{const s=x.s1;h+=`<div class="card"><div class="card-header"><div><h2>Aufstellraum: ${E(x.A.n||'Raum')} (${E(x.A.v)} m³)</h2></div></div><div class="lv-bd">
+<div class="lv-b ${s?(s.ok?'lv-ok':'lv-no'):'lv-na'}">Schutzziel 1 ${s?(s.ok?'✓ erfüllt':'✗ nicht erfüllt'):'– nicht erforderlich'}<small>${s?`RLV ${f2(s.rlv0)} (${E(s.V0)} m³ / ${f1(s.kw)} kW)${s.nb.length?`<br>mit 2×150 cm² zu ${E(s.nb.join(', '))}: ${f2(s.rlv)} (${f1(s.V)} m³)`:''}<br>gefordert ≥ 1,0 m³/kW`:'nur bei Gasgeräten Art B1/B4'}</small></div>
+<div class="lv-b ${k.err?'lv-na':x.sz2?'lv-ok':'lv-no'}">Schutzziel 2 ${k.err?'–':x.sz2?'✓ erfüllt':'✗ nicht erfüllt'}<small>Bedarf ${f1(x.Bed)} m³/h<br>IST (anrechenbar) ${f1(x.ist)} m³/h<br>${x.ist>=x.Bed?'Überschuss':'Fehlbetrag'} ${f1(Math.abs(x.ist-x.Bed))} m³/h</small></div></div>
+<div class="lv-tw"><table class="lv-t"><tr><th>Raum</th><th>Kurve</th><th>Infiltr.</th><th>ALD</th><th>q<sub>s</sub></th><th>anrechenbar</th></tr>${x.rows.map(r=>`<tr><td>${E(r.n)}</td><td>${r.c?KT[r.c]:'–'}</td><td>${f1(r.qi)}</td><td>${f1(r.al)}</td><td>${f1(r.qs)}</td><td>${f1(r.an)}</td></tr>`).join('')}<tr><th>Σ (m³/h)</th><td></td><td></td><td></td><td></td><th>${f1(x.ist)}</th></tr></table></div>
+<p class="lv-mu">Bedarf = Σ Nennleistung × 1,6 m³/(h·kW) = ${f1(x.Bcb)} m³/h${x.ablS?` + Abluft ${f1(x.ablS)} m³/h`:''} = ${f1(x.Bed)} m³/h (Formel 9-2)</p>${x.w.map(t=>`<div class="lv-wn">${IC.warn} ${E(t)}</div>`).join('')}</div>`});
 return h+`<p class="lv-mu">Berechnung nach DVGW-TRGI 2018 (G 600) Abschnitt 9.2 und Anhang D sowie 8.3.2.4.2.1. Planungshilfe – ersetzt keine Prüfung durch den Fachbetrieb bzw. den bevollmächtigten Bezirksschornsteinfeger.</p>`}
 function v3(){return result()+`<div class="form-actions" style="justify-content:flex-start"><button class="btn btn-gold" data-a="pr">${IC.print} Drucken</button></div>`}
 const TABS=['Projekt','Gebäude','Räume','Ergebnis'];
