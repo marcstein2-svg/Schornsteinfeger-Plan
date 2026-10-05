@@ -1836,7 +1836,7 @@
             <span class="sp-chevron" aria-hidden="true"></span>
           </summary>
           <div class="sp-collapse-body">
-          <p class="sp-muted">Wähle einen Zeitraum. Du kannst einen einzelnen Termin als A5-Blatt drucken oder alle Termine des Zeitraums gesammelt (2 Terminvorschläge pro A4-Seite quer). Falls dein Browser nicht automatisch auf Querformat stellt, wähle es im Druckdialog.</p>
+          <p class="sp-muted">Wähle einen Zeitraum. Du kannst einen einzelnen Termin als A5-Blatt drucken (er steht auf der linken Hälfte einer A4-Seite im Querformat) oder alle Termine des Zeitraums gesammelt (2 Terminvorschläge pro A4-Seite quer). Falls dein Browser nicht automatisch auf Querformat stellt, wähle es im Druckdialog.</p>
           <div class="sp-form-grid">
             <div class="field"><label for="spProposalFrom">Von</label><input id="spProposalFrom" type="date"></div>
             <div class="field"><label for="spProposalTo">Bis</label><input id="spProposalTo" type="date"></div>
@@ -1849,7 +1849,7 @@
             <div class="field"><label for="spBusinessAddress">Betriebsanschrift</label><input id="spBusinessAddress" type="text" placeholder="Straße, PLZ Ort"></div>
           </div>
           <div class="form-actions">
-            <button class="btn btn-primary" type="button" id="spPrintProposal" disabled>🖨 Ausgewählten Termin drucken (A5)</button>
+            <button class="btn btn-primary" type="button" id="spPrintProposal" disabled>🖨 Ausgewählten Termin drucken (A5 auf halber A4-Seite)</button>
             <button class="btn btn-gold" type="button" id="spPrintRange">🖨 Alle Termine im Zeitraum drucken (2 pro A4)</button>
             <button class="btn btn-light" type="button" id="spExportSelectedIcs" disabled>📅 Diesen Termin exportieren</button>
           </div>
@@ -6694,7 +6694,7 @@
 
   function printProposal() {
     const a = appointments().find(x => x.id === moduleState.selectedId); if (!a) return;
-    printProposals([a], false, "Terminvorschlag_" + a.date + ".pdf");
+    printProposals([a], true, "Terminvorschlag_" + a.date + ".pdf");
   }
 
   function printRangeProposals() {
