@@ -718,15 +718,24 @@ const f = ein ? 0.7 : 0.8;
       }[c])
     );
 
+  const svg = d =>
+    '<svg class="lv-ic" viewBox="0 0 24 24" width="18" height="18" ' +
+    'fill="none" stroke="currentColor" stroke-width="2" ' +
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    d +
+    "</svg>";
+
   const IC = {
-    save: "       ",
-    open: "    ",
-    fire: "    ",
-    print: "           ",
-    warn: "   ",
-    folder: "    ",
-    copy: "    ",
-    trash: "       "
+    save: svg('<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/>'),
+    open: svg('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5M12 3v12"/>'),
+    fire: svg('<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.3 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>'),
+    print: svg('<path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>'),
+    warn: svg('<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/>'),
+    folder: svg('<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>'),
+    copy: svg('<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>'),
+    trash: svg('<path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/>'),
+    building: svg('<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M12 6h.01M16 6h.01M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01"/>'),
+    sliders: svg('<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>')
   };
 
   const KEY =
@@ -1195,23 +1204,17 @@ const f = ein ? 0.7 : 0.8;
                           data-id="${E(p.id)}"
                           title="Projekt duplizieren"
                         >
-                          ${IC.copy}
+                          ${IC.copy} Duplizieren
                         </button>
 
-                        ${
-                          projects.length > 1
-                            ? `
-                              <button
+                        <button
                                 class="btn btn-danger"
                                 data-a="deleteproject"
                                 data-id="${E(p.id)}"
                                 title="Projekt löschen"
                               >
-                                ${IC.trash}
+                                ${IC.trash} Löschen
                               </button>
-                            `
-                            : ""
-                        }
                       </div>
                     </div>
                   `
@@ -1273,7 +1276,7 @@ const f = ein ? 0.7 : 0.8;
   function v0() {
     return (
       card(
-        "    ",
+        IC.folder,
         "Projekt",
         "Name und Nummer des Auftrags",
         `
@@ -1291,7 +1294,7 @@ const f = ein ? 0.7 : 0.8;
         `
       ) +
       card(
-        "    ",
+        IC.building,
         "Eigentümer und Gebäude",
         "",
         `
@@ -1358,7 +1361,7 @@ const f = ein ? 0.7 : 0.8;
     const g = D.g;
 
     return card(
-      "      ",
+      IC.sliders,
       "Kennwerte der Nutzungseinheit",
       "",
       `
@@ -1923,6 +1926,86 @@ const f = ein ? 0.7 : 0.8;
     return h + "</div>";
   }
 
+  /* =========================================================
+     ÜBERNOMMENE LÖSUNGSVORSCHLÄGE
+     ========================================================= */
+
+  /* Liste der übernommenen Maßnahmen (alte Speicherform: Objekt je Raum) */
+  function appliedList() {
+    const a = D.sgApplied;
+
+    if (!a) return [];
+
+    return (Array.isArray(a) ? a : Object.values(a))
+      .filter(x => x && (x.title || (x.ops && x.ops.length)))
+      .map(x => ({
+        room: x.room || "",
+        title: x.title || "Übernommene Variante",
+        ops: (x.ops || [])
+          .map(o => (o && typeof o === "object" ? o.txt : o))
+          .filter(Boolean)
+      }));
+  }
+
+  /* Einzelmaßnahmen nur zeigen, wenn sie die Überschrift ergänzen
+     (wie bei den Lösungsvorschlägen) */
+  const appliedOps = a =>
+    a.ops.length > 1 && a.ops.length < 7 ? a.ops : [];
+
+  function appliedNoteHtml(print) {
+    const list = appliedList();
+
+    if (!list.length) return "";
+
+    return `
+      <div class="card lv-applied">
+        <div class="card-header">
+          <div>
+            <h2>Erforderliche Maßnahmen</h2>
+            <p>
+              Das Ergebnis dieser Berechnung wurde mit Lösungsvorschlägen
+              erreicht. Die Schutzziele gelten nur, wenn die folgenden
+              Maßnahmen umgesetzt werden:
+            </p>
+          </div>
+          <div class="section-icon">${IC.warn}</div>
+        </div>
+
+        ${list
+          .map(
+            (a, i) => `
+              <div class="lv-applied-item">
+                <div>
+                  ${a.room
+                    ? `<small>Aufstellraum: ${E(a.room)}</small>`
+                    : ""}
+                  <strong>${E(a.title)}</strong>
+                  ${appliedOps(a).length
+                    ? `<ul>${appliedOps(a)
+                        .map(o => `<li>${E(o)}</li>`)
+                        .join("")}</ul>`
+                    : ""}
+                </div>
+                ${print
+                  ? ""
+                  : `<button class="btn btn-light btn-small"
+                       data-a="sgnote" data-i="${i}"
+                       title="Hinweis aus dem Ausdruck entfernen">
+                       Entfernen
+                     </button>`}
+              </div>
+            `
+          )
+          .join("")}
+
+        <p class="lv-mu">
+          Planungshilfe – die Maßnahmen sind vor der Ausführung
+          fachlich zu prüfen.
+        </p>
+      </div>
+    `;
+  }
+
   function result(print) {
     const R = run(D);
     const SG = suggest(D, R);
@@ -1973,67 +2056,8 @@ const f = ein ? 0.7 : 0.8;
         </div>
       </div>
     `;
-        /*
-     * Hinweis auf bereits übernommene
-     * Lösungsvorschläge.
-     *
-     * Nur im Druckausdruck anzeigen.
-     */
-    if (print && D.sgApplied) {
-      const applied = Object.values(D.sgApplied);
-
-      if (applied.length) {
-        h += `
-          <div class="card lv-print-sg-note">
-            <div class="lv-h4">
-              Rechnerisch angewendeter Lösungsvorschlag
-            </div>
-
-            <p>
-              Für diese Berechnung wurde ein
-              Lösungsvorschlag rechnerisch übernommen.
-              Die folgenden Maßnahmen wurden dabei
-              zugrunde gelegt:
-            </p>
-
-            ${applied
-              .map(
-                (a, i) => `
-                  <div class="lv-print-sg-item">
-                    <strong>
-                      ${E(a.title || "Übernommene Variante")}
-                    </strong>
-
-                    ${
-                      a.ops && a.ops.length
-                        ? `
-                          <ul>
-                            ${a.ops
-                              .map(
-                                o =>
-                                  `<li>${E(o.txt)}</li>`
-                              )
-                              .join("")}
-                          </ul>
-                        `
-                        : ""
-                    }
-                  </div>
-                `
-              )
-              .join("")}
-
-            <p class="lv-mu">
-              Hinweis: Die oben genannten Maßnahmen
-              stellen die rechnerisch angesetzte Variante
-              dar. Sie sind nicht als Nachweis einer
-              tatsächlich ausgeführten Änderung zu verstehen
-              und vor Ausführung fachlich zu prüfen.
-            </p>
-          </div>
-        `;
-      }
-    }
+    /* Hinweis auf übernommene Lösungsvorschläge (Bildschirm, Druck, PDF) */
+    h += appliedNoteHtml(print);
 
     if (!R.res.length) {
       return (
@@ -2368,7 +2392,7 @@ const f = ein ? 0.7 : 0.8;
     render();
   }
 
-  function duplicateProject(id) {
+  function duplicateProject(id, openCopy) {
     const original =
       projects.find(
         x => x.id === id
@@ -2405,9 +2429,13 @@ const f = ein ? 0.7 : 0.8;
 
     projects.push(x);
 
-    activeProjectId = x.id;
-    D = p;
-    tab = 0;
+    /* Aus der Projektübersicht heraus bleibt man dort;
+       aus einem geöffneten Projekt heraus wird die Kopie geöffnet. */
+    if (openCopy) {
+      activeProjectId = x.id;
+      D = p;
+      tab = 0;
+    }
 
     save();
     render();
@@ -2451,8 +2479,8 @@ const f = ein ? 0.7 : 0.8;
     if (
       activeProjectId === id
     ) {
-      activeProjectId =
-        projects[0].id;
+      /* zurück zur Projektübersicht */
+      activeProjectId = null;
 
       D =
         Object.assign(
@@ -2564,168 +2592,838 @@ const f = ein ? 0.7 : 0.8;
      DRUCKEN
      ========================================================= */
 
-  function doPrint() {
-  // Vorhandene Druckansicht entfernen
-  const old =
-    document.getElementById("lvPrintRoot");
-  if (old) {
-    old.remove();
+  /* ---------- Hilfsfunktionen für die Ausgabe ---------- */
+
+  function plainDate(s) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s || ""));
+    return m ? m[3] + "." + m[2] + "." + m[1] : String(s || "");
   }
-  // Vorhandenes Druck-Stylesheet entfernen
-  const oldStyle =
-    document.getElementById("lvPrintStyle");
-  if (oldStyle) {
-    oldStyle.remove();
-  }
-  // Druck-CSS erzeugen
-  const style =
-    document.createElement("style");
-  style.id = "lvPrintStyle";
-  style.textContent = `
-    @page {
-      size: A4;
-      margin: 12mm;
-    }
-    @media print {
-      /*
-       * Beim Drucken zunächst die komplette normale
-       * Seite unsichtbar machen.
-       *
-       * visibility statt display sorgt dafür,
-       * dass die Druckstruktur des Dokuments
-       * erhalten bleibt.
-       */
-      html,
-      body {
-        margin: 0 !important;
-        padding: 0 !important;
-        background: #fff !important;
-      }
-      body > * {
-        visibility: hidden !important;
-      }
-      /*
-       * Ausschließlich die erzeugte Druckansicht
-       * und deren Inhalt sichtbar machen.
-       */
-      #lvPrintRoot,
-      #lvPrintRoot * {
-        visibility: visible !important;
-      }
-      #lvPrintRoot {
-        display: block !important;
-        position: absolute !important;
-        left: 0 !important;
-        top: 0 !important;
-        width: 100% !important;
-        min-height: 0 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        background: #fff !important;
-        color: #000 !important;
-      }
-      /*
-       * Bildschirm-Navigation und Buttons
-       * gehören nicht auf das Druckblatt.
-       */
-      #lvPrintRoot .form-actions,
-      #lvPrintRoot .lv-project-bar,
-      #lvPrintRoot .lv-tabs {
-        display: none !important;
-      }
-      /*
-       * Karten für den Druck optimieren.
-       */
-      #lvPrintRoot .card {
-        box-shadow: none !important;
-        border: 1px solid #999 !important;
-        break-inside: avoid;
-        page-break-inside: avoid;
-      }
-      /*
-       * Tabellen nicht unnötig auseinanderreißen.
-       */
-      #lvPrintRoot table {
-        break-inside: auto;
-        page-break-inside: auto;
-      }
-      #lvPrintRoot tr {
-        break-inside: avoid;
-        page-break-inside: avoid;
-      }
-      /*
-       * Farben und Hintergründe möglichst auch
-       * auf dem Ausdruck erhalten.
-       */
-      #lvPrintRoot * {
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-      }
-      /*
-       * Keine unnötigen Außenabstände durch
-       * das normale Seitenlayout.
-       */
-      #lvPrintRoot h1,
-      #lvPrintRoot h2,
-      #lvPrintRoot h3,
-      #lvPrintRoot h4,
-      #lvPrintRoot p {
-        break-inside: avoid;
-      }
-    }
-  `;
-  // Druckcontainer erzeugen
-  const r =
-    document.createElement("div");
-  r.id = "lvPrintRoot";
-  /*
-   * WICHTIG:
-   * result(true) erzeugt die Druckversion des
-   * Ergebnisses einschließlich der
-   * Lösungsvorschläge.
-   */
-  r.innerHTML =
-    projectBar() +
-    result(true);
-  // Erst CSS und Druckansicht in den DOM einfügen
-  document.head.appendChild(style);
-  document.body.appendChild(r);
-  /*
-   * Dem Browser einen kurzen Moment geben,
-   * damit das Drucklayout vollständig aufgebaut
-   * und berechnet werden kann.
-   */
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      window.print();
-    });
-  });
-  /*
-   * Nach dem tatsächlichen Druckvorgang
-   * aufräumen.
-   *
-   * afterprint ist wesentlich zuverlässiger als
-   * ein festes setTimeout(..., 1000), weil der
-   * Druckdialog unterschiedlich lange geöffnet
-   * bleiben kann.
-   */
-  const cleanup = () => {
-    if (r && r.parentNode) {
-      r.remove();
-    }
-    if (style && style.parentNode) {
-      style.remove();
-    }
-    window.removeEventListener(
-      "afterprint",
-      cleanup
+
+  function plainInfo() {
+    const k = kenn(D);
+
+    if (k.err) return k.err;
+
+    return (
+      "n50 = " + f1(k.n50) + " 1/h " +
+      (num(D.g.n50)
+        ? "(gemessen)"
+        : "(Auslegungswert, Tab. 9-2" +
+          (k.ht ? ", Haustyp " + k.ht : "") + ")") +
+      " · f(wirk.komp.) = " + String(k.f).replace(".", ",") +
+      " · n = " + f2(k.n) + " 1/h"
     );
-  };
-  window.addEventListener(
-    "afterprint",
-    cleanup
-  );
-}
+  }
+
+  function fileSafe(s) {
+    return String(s || "Projekt")
+      .trim()
+      .replace(/[^\w.-]+/g, "_")
+      .replace(/^_+|_+$/g, "") || "Projekt";
+  }
+
+  /* ---------- PDF-Ausgabe (Home-Bildschirm-App auf iPhone/iPad) ----------
+     In einer Home-Bildschirm-App ist window.print() gesperrt.
+     Daher wird ein PDF erzeugt und über das Teilen-Menü geöffnet
+     (dort: „Drucken“, „In Dateien sichern“ usw.) – wie beim Terminvorschlag. */
+
+  function buildResultPdf() {
+    const W = 595.28,
+      H = 841.89,
+      ML = 42,
+      MT = 46,
+      MB = 52,
+      CW = W - 2 * ML;
+
+    const cpMap = {
+      "€": 0x80, "„": 0x84, "…": 0x85, "‘": 0x91, "’": 0x92,
+      "“": 0x93, "”": 0x94, "•": 0x95, "–": 0x96, "—": 0x97
+    };
+
+    const tr = {
+      "≥": ">=", "≤": "<=", "→": "->", "←": "<-", "✓": "", "✗": "",
+      "Σ": "Summe", "≙": "=", "≈": "~", "Δ": "Delta", "−": "-",
+      "↔": "<->", "⅓": "1/3", "⁻": "-", "↩": "",
+      "\u2009": " ", "\u202f": " ", "\u2007": " ", "\u200b": ""
+    };
+
+    /* Text in WinAnsi-taugliche Zeichen umsetzen */
+    const nz = str => {
+      let o = "";
+      for (const ch of String(str ?? "").replace(/⁻¹/g, "^-1")) {
+        const c = ch.codePointAt(0);
+        if (c < 32) o += " ";
+        else if (c < 128 || (c >= 160 && c <= 255)) o += ch;
+        else if (cpMap[ch]) o += ch;
+        else if (tr[ch] !== undefined) o += tr[ch];
+        else {
+          const d = ch.normalize("NFKD").replace(/[^\x20-\x7e]/g, "");
+          o += d || "?";
+        }
+      }
+      return o;
+    };
+
+    const enc = str => {
+      let o = "";
+      for (const ch of str) {
+        o += cpMap[ch] ? String.fromCharCode(cpMap[ch]) : ch;
+      }
+      return o.replace(/([\\()])/g, "\\$1");
+    };
+
+    const cv = document.createElement("canvas").getContext("2d");
+
+    /* Hochzahlen (², ³) werden selbst klein und hochgestellt gezeichnet,
+       damit sie in jeder PDF-Anzeige sicher erscheinen. */
+    const SUP = { "²": "2", "³": "3", "¹": "1" };
+    const SUPK = 0.62;
+
+    const segs = s2 =>
+      s2.split(/([²³¹])/).filter(p => p !== "").map(p => (
+        SUP[p] ? { t: SUP[p], sup: true } : { t: p, sup: false }
+      ));
+
+    const wid = (str, bold, size) => {
+      cv.font = (bold ? "bold " : "") + "100px Helvetica, Arial, sans-serif";
+      let w = 0;
+      segs(nz(str)).forEach(sg => {
+        w += cv.measureText(sg.t).width * size / 100 * (sg.sup ? SUPK : 1);
+      });
+      return w * 1.02;
+    };
+
+    const col = hex => {
+      const n = parseInt(hex.slice(1), 16);
+      return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
+        .map(v => (v / 255).toFixed(3))
+        .join(" ");
+    };
+
+    const f = v => Number(v).toFixed(2);
+
+    const pages = [];
+    let ops = [];
+    let y = MT;
+
+    /* Text-Operator (y = Grundlinie von oben gemessen) */
+    const tx = (x, yy, str, o = {}) => {
+      const size = o.size || 9.5;
+      const bold = !!o.bold;
+      let px = x;
+      if (o.align === "right") px = x - wid(str, bold, size);
+      if (o.align === "center") px = x - wid(str, bold, size) / 2;
+
+      const out = [];
+      const font = "/" + (bold ? "F2" : "F1");
+      const color = col(o.color || "#22272d") + " rg";
+
+      cv.font = (bold ? "bold " : "") + "100px Helvetica, Arial, sans-serif";
+
+      segs(nz(str)).forEach(sg => {
+        const sz = sg.sup ? size * SUPK : size;
+        const rise = sg.sup ? size * 0.36 : 0;
+        out.push(
+          "BT " + font + " " + f(sz) + " Tf " + color + " " +
+          f(px) + " " + f(H - yy + rise) + " Td (" + enc(sg.t) + ") Tj ET"
+        );
+        px += cv.measureText(sg.t).width * sz / 100 * 1.02;
+      });
+
+      return out.join("\n");
+    };
+
+    const txt = (x, yy, str, o) => ops.push(tx(x, yy, str, o));
+
+    const rect = (x, yy, w, h, o = {}) => {
+      const fill = o.fill ? col(o.fill) + " rg " : "";
+      const stroke = o.stroke
+        ? col(o.stroke) + " RG " + (o.lw || 0.8) + " w "
+        : "";
+      ops.push(
+        fill + stroke + f(x) + " " + f(H - yy - h) + " " + f(w) + " " +
+        f(h) + " re " +
+        (o.fill && o.stroke ? "B" : o.fill ? "f" : "S")
+      );
+    };
+
+    const line = (x1, y1, x2, y2, color, lw) =>
+      ops.push(
+        col(color) + " RG " + lw + " w " +
+        f(x1) + " " + f(H - y1) + " m " + f(x2) + " " + f(H - y2) + " l S"
+      );
+
+    const newPage = () => {
+      if (ops.length) pages.push(ops.join("\n"));
+      ops = [];
+      y = MT;
+    };
+
+    const ensure = h => {
+      if (y + h > H - MB) newPage();
+    };
+
+    const wrap = (str, size, bold, maxW) => {
+      const out = [];
+      String(str ?? "").split(/\r?\n/).forEach(par => {
+        let ln = "";
+        par.split(/\s+/).filter(Boolean).forEach(w => {
+          const test = ln ? ln + " " + w : w;
+          if (!ln || wid(test, bold, size) <= maxW) ln = test;
+          else {
+            out.push(ln);
+            ln = w;
+          }
+        });
+        out.push(ln);
+      });
+      return out;
+    };
+
+    const para = (str, o = {}) => {
+      const size = o.size || 9.5;
+      const lead = o.lead || size * 1.4;
+      const x = o.x ?? ML;
+      const w = o.w || CW;
+      wrap(str, size, !!o.bold, w).forEach(ln => {
+        ensure(lead);
+        txt(x, y + size, ln, { size, bold: o.bold, color: o.color });
+        y += lead;
+      });
+      y += o.after ?? 0;
+    };
+
+    /* Hinweis-/Warnkasten */
+    const callout = (str, o = {}) => {
+      const size = 8.8,
+        lead = 12,
+        pad = 6;
+      const lines = wrap(str, size, false, CW - 2 * pad - 4);
+      const h = lines.length * lead + 2 * pad - 2;
+      ensure(h + 6);
+      rect(ML, y, CW, h, {
+        fill: o.fill || "#fbf5e7",
+        stroke: o.stroke || "#e7d19d",
+        lw: 0.7
+      });
+      lines.forEach((ln, i) =>
+        txt(ML + pad + 2, y + pad + size - 1 + i * lead, ln, {
+          size,
+          color: o.color || "#3a3226"
+        })
+      );
+      y += h + 6;
+    };
+
+    /* Tabelle: cols = [{w: Anteil, a: "l"|"r", h: Kopf}] */
+    const table = (cols, rows) => {
+      const size = 8.6,
+        lead = 11.4,
+        padX = 5,
+        padY = 4;
+      const widths = cols.map(c => c.w * CW);
+
+      const drawHead = () => {
+        const hh = lead + 2 * padY - 1;
+        ensure(hh);
+        rect(ML, y, CW, hh, { fill: "#eef0f2" });
+        let cx = ML;
+        cols.forEach((c, i) => {
+          if (c.a === "r") {
+            txt(cx + widths[i] - padX, y + padY + size - 1, c.h, {
+              size, bold: true, align: "right"
+            });
+          } else {
+            txt(cx + padX, y + padY + size - 1, c.h, { size, bold: true });
+          }
+          cx += widths[i];
+        });
+        y += hh;
+      };
+
+      drawHead();
+
+      rows.forEach(r => {
+        const cells = r.cells.map((c, i) =>
+          wrap(c, size, !!r.bold, widths[i] - 2 * padX)
+        );
+        const n = Math.max(1, ...cells.map(c => c.length));
+        const rh = n * lead + 2 * padY - 1;
+
+        if (y + rh > H - MB) {
+          newPage();
+          drawHead();
+        }
+
+        if (r.fill) rect(ML, y, CW, rh, { fill: r.fill });
+
+        let cx = ML;
+        cells.forEach((lines, i) => {
+          lines.forEach((ln, k2) => {
+            const yy = y + padY + size - 1 + k2 * lead;
+            if (cols[i].a === "r") {
+              txt(cx + widths[i] - padX, yy, ln, {
+                size, bold: r.bold, align: "right"
+              });
+            } else {
+              txt(cx + padX, yy, ln, { size, bold: r.bold });
+            }
+          });
+          cx += widths[i];
+        });
+
+        y += rh;
+        line(ML, y, ML + CW, y, "#d5d9dd", 0.5);
+      });
+
+      y += 6;
+    };
+
+    const tone = st =>
+      st === "ok"
+        ? { fill: "#e7f4ec", stroke: "#3f8f5b", text: "#2e6f45" }
+        : st === "no"
+          ? { fill: "#fdecec", stroke: "#c84d4d", text: "#a73737" }
+          : { fill: "#f4f5f6", stroke: "#c9ced2", text: "#6c757d" };
+
+    /* Zwei Schutzziel-Kästen nebeneinander */
+    const goalBoxes = (a, b) => {
+      const gap = 10,
+        w = (CW - gap) / 2,
+        pad = 8,
+        size = 8.6,
+        lead = 11.6;
+
+      const prep = g => {
+        const lines = [];
+        g.lines.forEach(l => wrap(l, size, false, w - 2 * pad - 4).forEach(x => lines.push(x)));
+        const tl = wrap(g.title, 10.5, true, w - 2 * pad - 4);
+        return { g, lines, tl, h: pad * 2 + tl.length * 13 + 3 + lines.length * lead };
+      };
+
+      const A = prep(a),
+        B = prep(b);
+      const h = Math.max(A.h, B.h);
+
+      ensure(h + 8);
+
+      [A, B].forEach((p, i) => {
+        const x = ML + i * (w + gap);
+        const t = tone(p.g.st);
+        rect(x, y, w, h, { fill: t.fill, stroke: t.stroke, lw: 0.8 });
+        rect(x, y, 4, h, { fill: t.stroke });
+        let yy = y + pad + 9;
+        p.tl.forEach(l => {
+          txt(x + pad + 3, yy, l, { size: 10.5, bold: true, color: t.text });
+          yy += 13;
+        });
+        yy += 1;
+        p.lines.forEach(l => {
+          txt(x + pad + 3, yy, l, { size, color: "#333333" });
+          yy += lead;
+        });
+      });
+
+      y += h + 8;
+    };
+
+    /* ================= Inhalt ================= */
+
+    const RES = run(D);
+    const SG = suggest(D, RES);
+    const k = RES.kn;
+    const P = D.p;
+
+    txt(ML, y + 15, "Luftverbund – Verbrennungsluftversorgung", {
+      size: 15,
+      bold: true
+    });
+    y += 21;
+    txt(ML, y + 9, "Berechnung der Verbrennungsluftversorgung nach DVGW-TRGI 2018 (G 600)", {
+      size: 8.6,
+      color: "#6c757d"
+    });
+    y += 15;
+    line(ML, y, ML + CW, y, "#c79a42", 1.4);
+    y += 10;
+
+    const kv = (label, value) => {
+      if (!value) return;
+      const lw = 78;
+      const lines = wrap(value, 9.2, false, CW - lw);
+      ensure(lines.length * 13);
+      txt(ML, y + 9.2, label, { size: 9.2, bold: true, color: "#6c757d" });
+      lines.forEach((ln, i) => {
+        txt(ML + lw, y + 9.2 + i * 13, ln, { size: 9.2 });
+      });
+      y += lines.length * 13;
+    };
+
+    kv(
+      "Projekt",
+      [P.n, P.nr ? "Nr. " + P.nr : "", P.dt ? plainDate(P.dt) : ""]
+        .filter(Boolean)
+        .join(" · ") || "Neues Projekt"
+    );
+    kv("Ersteller", P.ers);
+    kv("Eigentümer", [P.en, P.ea].filter(Boolean).join(", "));
+    kv("Gebäude", [P.ga, P.gl].filter(Boolean).join(", "));
+    kv("Kennwerte", plainInfo());
+    y += 8;
+
+    /* Hinweis auf übernommene Lösungsvorschläge */
+    const appliedPdf = appliedList();
+
+    if (appliedPdf.length) {
+      const bar = (str, o = {}) => {
+        const size = o.size || 9,
+          lead = o.lead || size * 1.45;
+        wrap(str, size, !!o.bold, CW - 20 - (o.ind || 0)).forEach(ln => {
+          ensure(lead);
+          rect(ML, y, CW, lead, { fill: "#fbf5e7" });
+          rect(ML, y, 4, lead, { fill: "#c79a42" });
+          txt(ML + 12 + (o.ind || 0), y + size + (lead - size) / 2 - 1.5, ln, {
+            size,
+            bold: o.bold,
+            color: o.color || "#3a3226"
+          });
+          y += lead;
+        });
+      };
+
+      ensure(80);
+      bar("ERFORDERLICHE MASSNAHMEN", {
+        size: 10.5,
+        bold: true,
+        lead: 20,
+        color: "#7d5b20"
+      });
+      bar(
+        "Das Ergebnis dieser Berechnung wurde mit Lösungsvorschlägen erreicht. Die Schutzziele gelten nur, wenn die folgenden Maßnahmen umgesetzt werden:",
+        { size: 8.8 }
+      );
+      bar(" ", { size: 4, lead: 5 });
+
+      appliedPdf.forEach((a, i) => {
+        if (a.room) bar("Aufstellraum: " + a.room, { size: 8.2, color: "#6c757d" });
+        bar((i + 1) + ".  " + a.title, { size: 9.4, bold: true });
+        appliedOps(a).forEach(o => bar("•  " + o, { size: 8.8, ind: 12 }));
+        bar(" ", { size: 4, lead: 6 });
+      });
+
+      bar("Planungshilfe – die Maßnahmen sind vor der Ausführung fachlich zu prüfen.", {
+        size: 8,
+        color: "#7d5b20"
+      });
+      y += 12;
+    }
+
+    if (!RES.res.length) {
+      callout(
+        "Noch keine Feuerstätte (Gas-/Feststoff-/Ölgerät) in einem Raum erfasst."
+      );
+    }
+
+    RES.res.forEach(x => {
+      const s = x.s1;
+
+      ensure(120);
+
+      rect(ML, y, CW, 21, { fill: "#22272d" });
+      txt(
+        ML + 10,
+        y + 14.5,
+        "Aufstellraum: " + (x.A.n || "Raum") + " (" + x.A.v + " m³)",
+        { size: 10.5, bold: true, color: "#ffffff" }
+      );
+      y += 21 + 8;
+
+      const g1 = {
+        st: s ? (s.ok ? "ok" : "no") : "na",
+        title:
+          "Schutzziel 1 " +
+          (s ? (s.ok ? "– erfüllt" : "– nicht erfüllt") : "– nicht erforderlich"),
+        lines: s
+          ? [
+              "RLV " + f2(s.rlv0) + " (" + s.V0 + " m³ / " + f1(s.kw) + " kW)"
+            ]
+              .concat(
+                s.nb.length
+                  ? [
+                      "mit 2×150 cm² zu " + s.nb.join(", ") + ": " +
+                        f2(s.rlv) + " (" + f1(s.V) + " m³)"
+                    ]
+                  : []
+              )
+              .concat(["gefordert ≥ 1,0 m³/kW"])
+          : ["nur bei Gasgeräten Art B1/B4"]
+      };
+
+      const g2 = {
+        st: k.err ? "na" : x.sz2 ? "ok" : "no",
+        title:
+          "Schutzziel 2 " +
+          (k.err ? "–" : x.sz2 ? "– erfüllt" : "– nicht erfüllt"),
+        lines: [
+          "Bedarf " + f1(x.Bed) + " m³/h",
+          "IST (anrechenbar) " + f1(x.ist) + " m³/h",
+          (x.ist >= x.Bed ? "Überschuss " : "Fehlbetrag ") +
+            f1(Math.abs(x.ist - x.Bed)) + " m³/h"
+        ]
+      };
+
+      goalBoxes(g1, g2);
+
+      table(
+        [
+          { w: 0.31, a: "l", h: "Raum" },
+          { w: 0.13, a: "l", h: "Kurve" },
+          { w: 0.14, a: "r", h: "Infiltr." },
+          { w: 0.12, a: "r", h: "ALD" },
+          { w: 0.12, a: "r", h: "qs" },
+          { w: 0.18, a: "r", h: "anrechenbar" }
+        ],
+        x.rows
+          .map(r => ({
+            cells: [
+              r.n,
+              r.c ? KT[r.c] : "–",
+              f1(r.qi),
+              f1(r.al),
+              f1(r.qs),
+              f1(r.an)
+            ]
+          }))
+          .concat([
+            {
+              bold: true,
+              fill: "#f4f5f6",
+              cells: ["Summe (m³/h)", "", "", "", "", f1(x.ist)]
+            }
+          ])
+      );
+
+      para(
+        "Bedarf = Summe Nennleistung × 1,6 m³/(h·kW) = " + f1(x.Bcb) +
+          " m³/h" +
+          (x.ablS ? " + Abluft " + f1(x.ablS) + " m³/h" : "") +
+          " = " + f1(x.Bed) + " m³/h (Formel 9-2)",
+        { size: 8.4, color: "#6c757d", after: 4 }
+      );
+
+      x.w.forEach(t => callout("Hinweis: " + t));
+
+      /* Lösungsvorschläge */
+      const S = SG[x.A.id];
+
+      if (S && (S.need1 || S.need2 || S.blocked)) {
+        const goals = [
+          S.need2 ? "Schutzziel 2" : "",
+          S.need1 ? "Schutzziel 1" : ""
+        ]
+          .filter(Boolean)
+          .join(" und ");
+
+        ensure(60);
+        y += 4;
+        para("LÖSUNGSVORSCHLÄGE", {
+          size: 8.4,
+          bold: true,
+          color: "#6c757d",
+          after: 3
+        });
+
+        if (S.blocked) {
+          callout(
+            "Schutzziel 2 lässt sich hier nicht über Türen oder ALD lösen (siehe Hinweis oben) – Verbrennungsluftöffnung bzw. -leitung ins Freie erforderlich."
+          );
+        }
+
+        if (S.need1 || S.need2) {
+          para("ALD-Annahme: " + f1(num(D.sq) || 15) + " m³/h je ALD bei 4 Pa", {
+            size: 8.4,
+            color: "#6c757d",
+            after: 3
+          });
+
+          if (!S.list.length) {
+            callout(
+              "Mit den geprüften Maßnahmen (Dichtung, Türblatt kürzen, Öffnungen in Tür/Wand, bis zu 10 ALD im Aufstellraum) wird " +
+                goals +
+                " nicht erreicht – Verbrennungsluftöffnung bzw. -leitung ins Freie erforderlich."
+            );
+          } else {
+            para(
+              "So wird " + goals + " erreicht (sortiert nach geschätztem Aufwand):",
+              { size: 8.8, color: "#555555", after: 4 }
+            );
+
+            const before = new Map(x.rows.map(r => [r.id, r]));
+
+            S.list.forEach((c, idx) => {
+              const yv = c.y;
+              const diff = yv.ist - yv.Bed;
+
+              ensure(70);
+
+              para("Variante " + (idx + 1) + ": " + c.title, {
+                size: 10,
+                bold: true,
+                after: 2
+              });
+
+              if (c.ops.length > 1 && c.ops.length < 7) {
+                c.ops.forEach(o =>
+                  para("•  " + o.txt, { size: 8.8, x: ML + 6, w: CW - 6 })
+                );
+                y += 2;
+              }
+
+              table(
+                [
+                  { w: 0.44, a: "l", h: "Raum" },
+                  { w: 0.24, a: "r", h: "Kurve" },
+                  { w: 0.32, a: "r", h: "anrechenbar (m³/h)" }
+                ],
+                yv.rows
+                  .map(r => {
+                    const b = before.get(r.id);
+                    return {
+                      cells: [
+                        r.n,
+                        (b ? KS(b.c) : "–") + " → " + KS(r.c),
+                        (b ? f1(b.an) : "–") + " → " + f1(r.an)
+                      ]
+                    };
+                  })
+                  .concat([
+                    {
+                      bold: true,
+                      fill: "#f4f5f6",
+                      cells: ["Summe IST", "", f1(x.ist) + " → " + f1(yv.ist)]
+                    }
+                  ])
+              );
+
+              para(
+                "Bedarf " + f1(yv.Bed) + " m³/h · " +
+                  (diff >= 0 ? "Überschuss " : "Fehlbetrag ") +
+                  f1(Math.abs(diff)) + " m³/h · Schutzziel 2 " +
+                  (yv.sz2 ? "erfüllt" : "nicht erfüllt") +
+                  (yv.s1
+                    ? " · Schutzziel 1 " +
+                      (yv.s1.ok ? "erfüllt" : "nicht erfüllt") +
+                      " (RLV " + f2(yv.s1.rlv) + ")"
+                    : ""),
+                { size: 8.8, bold: true, color: yv.sz2 ? "#2e6f45" : "#a73737", after: 8 }
+              );
+            });
+          }
+        }
+      }
+
+      y += 12;
+    });
+
+    para(
+      "Berechnung nach DVGW-TRGI 2018 (G 600) Abschnitt 9.2 und Anhang D sowie 8.3.2.4.2.1. Planungshilfe – ersetzt keine Prüfung durch den Fachbetrieb bzw. den bevollmächtigten Bezirksschornsteinfeger.",
+      { size: 8.2, color: "#6c757d" }
+    );
+
+    if (ops.length) pages.push(ops.join("\n"));
+
+    /* Fußzeile mit Seitenzahl */
+    const total = pages.length;
+    const foot = P.n || "Neues Projekt";
+
+    const streams = pages.map((p, i) =>
+      p + "\n" +
+      [
+        col("#c9ced2") + " RG 0.5 w " +
+          f(ML) + " " + f(H - (H - 38)) + " m " + f(ML + CW) + " " + f(H - (H - 38)) + " l S",
+        tx(ML, H - 26, "Luftverbund-Berechnung · " + foot, {
+          size: 7.8,
+          color: "#6c757d"
+        }),
+        tx(ML + CW, H - 26, "Seite " + (i + 1) + " / " + total, {
+          size: 7.8,
+          color: "#6c757d",
+          align: "right"
+        })
+      ].join("\n")
+    );
+
+    const objs = [
+      "<< /Type /Catalog /Pages 2 0 R >>",
+      "<< /Type /Pages /Kids [" +
+        streams.map((_, i) => 5 + 2 * i + " 0 R").join(" ") +
+        "] /Count " + streams.length + " >>",
+      "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+      "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>"
+    ];
+
+    streams.forEach((st, i) => {
+      objs.push(
+        "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + W + " " + H +
+          "] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents " +
+          (6 + 2 * i) + " 0 R >>"
+      );
+      objs.push("<< /Length " + st.length + " >>\nstream\n" + st + "\nendstream");
+    });
+
+    let pdf = "%PDF-1.4\n%\u00e2\u00e3\u00cf\u00d3\n";
+    const offs = [];
+
+    objs.forEach((o, i) => {
+      offs.push(pdf.length);
+      pdf += i + 1 + " 0 obj\n" + o + "\nendobj\n";
+    });
+
+    const xr = pdf.length;
+
+    pdf +=
+      "xref\n0 " + (objs.length + 1) + "\n0000000000 65535 f \n" +
+      offs.map(o => String(o).padStart(10, "0") + " 00000 n \n").join("") +
+      "trailer\n<< /Size " + (objs.length + 1) +
+      " /Root 1 0 R >>\nstartxref\n" + xr + "\n%%EOF";
+
+    const bytes = new Uint8Array(pdf.length);
+
+    for (let i = 0; i < pdf.length; i++) {
+      bytes[i] = pdf.charCodeAt(i) & 255;
+    }
+
+    return new Blob([bytes], { type: "application/pdf" });
+  }
+
+  async function sharePdf(blob, name) {
+    try {
+      const file = new File([blob], name, { type: "application/pdf" });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: name });
+        return;
+      }
+    } catch (err) {
+      if (err && err.name === "AbortError") return;
+    }
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
+
+  /* ---------- Druck im Browser ---------- */
+
+  let lvPrintGuard = null;
+
+  function lvCleanupPrint() {
+    if (lvPrintGuard) {
+      document.removeEventListener("pointerdown", lvPrintGuard, true);
+      document.removeEventListener("keydown", lvPrintGuard, true);
+      lvPrintGuard = null;
+    }
+
+    document.body.classList.remove("lv-printing");
+
+    const r = document.getElementById("lvPrintRoot");
+    if (r) r.remove();
+
+    const s = document.getElementById("lvPrintStyle");
+    if (s) s.remove();
+  }
+
+  function doPrint() {
+    save();
+
+    /* Home-Bildschirm-App (iPhone/iPad): window.print() ist gesperrt
+       -> PDF erzeugen und über das Teilen-Menü drucken/sichern */
+    if (window.navigator.standalone === true) {
+      try {
+        sharePdf(
+          buildResultPdf(),
+          "Luftverbund_" + fileSafe(D.p && D.p.n) + ".pdf"
+        );
+      } catch (err) {
+        console.error("PDF konnte nicht erstellt werden:", err);
+        alert("Das PDF konnte nicht erstellt werden.");
+      }
+      return;
+    }
+
+    lvCleanupPrint();
+
+    const style = document.createElement("style");
+    style.id = "lvPrintStyle";
+
+    style.textContent = `
+      @page { size: A4 portrait; margin: 12mm; }
+      #lvPrintRoot { display: none; }
+      @media print {
+        html, body {
+          margin: 0 !important;
+          padding: 0 !important;
+          background: #fff !important;
+          height: auto !important;
+          min-height: 0 !important;
+          overflow: visible !important;
+        }
+        body.lv-printing > *:not(#lvPrintRoot) { display: none !important; }
+        #lvPrintRoot {
+          display: block !important;
+          position: static !important;
+          width: auto !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          background: #fff !important;
+          color: #000 !important;
+        }
+        #lvPrintRoot, #lvPrintRoot * {
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+        #lvPrintRoot .form-actions,
+        #lvPrintRoot .lv-project-bar,
+        #lvPrintRoot .lv-tabs { display: none !important; }
+        #lvPrintRoot .card {
+          box-shadow: none !important;
+          border: 1px solid #999 !important;
+          break-inside: avoid;
+          page-break-inside: avoid;
+        }
+        #lvPrintRoot .lv-tw { overflow: visible !important; }
+        #lvPrintRoot tr { break-inside: avoid; page-break-inside: avoid; }
+        #lvPrintRoot h1, #lvPrintRoot h2, #lvPrintRoot h3,
+        #lvPrintRoot h4, #lvPrintRoot p { break-after: avoid; }
+      }
+    `;
+
+    const r = document.createElement("div");
+    r.id = "lvPrintRoot";
+    r.innerHTML = result(true);
+
+    document.head.appendChild(style);
+    document.body.appendChild(r);
+    document.body.classList.add("lv-printing");
+
+    /* Die Druckansicht bleibt bestehen, bis die Seite wieder bedient wird
+       (manche Browser melden „afterprint“ schon bei geöffnetem Dialog). */
+    setTimeout(() => {
+      if (!document.getElementById("lvPrintRoot")) return;
+      lvPrintGuard = () => lvCleanupPrint();
+      document.addEventListener("pointerdown", lvPrintGuard, true);
+      document.addEventListener("keydown", lvPrintGuard, true);
+    }, 1500);
+
+    setTimeout(() => window.print(), 120);
+  }
 
   /* =========================================================
      INPUTS
@@ -2975,7 +3673,8 @@ const f = ein ? 0.7 : 0.8;
         "duplicate-current"
       ) {
         duplicateProject(
-          activeProjectId
+          activeProjectId,
+          true
         );
         return;
       }
@@ -2988,46 +3687,49 @@ const f = ein ? 0.7 : 0.8;
       }
 
       if (a === "sg") {
-  const roomId = +t.dataset.i;
+        const roomId = +t.dataset.i;
 
-  const S =
-    suggest(D, run(D))[roomId];
+        const S = suggest(D, run(D))[roomId];
+        const c = S && S.list[j];
 
-  const c =
-    S && S.list[j];
+        if (!c) return;
 
-  if (!c) return;
+        undoSnap = {
+          pid: activeProjectId,
+          snap: clone(D)
+        };
 
-  undoSnap = {
-    pid: activeProjectId,
-    snap: clone(D)
-  };
+        /* Übernommene Maßnahme merken – erscheint im Ausdruck/PDF,
+           damit der Kunde sieht, was umzusetzen ist. */
+        const list = appliedList();
+        const room =
+          (D.r.find(r => r.id == roomId) || {}).n || "";
 
-  /*
-   * Merken, welcher Lösungsvorschlag
-   * rechnerisch übernommen wurde.
-   */
-  if (!D.sgApplied) {
-    D.sgApplied = {};
-  }
+        list.push({
+          room,
+          title: c.title,
+          ops: c.ops.map(o => o.txt)
+        });
 
-  D.sgApplied[String(roomId)] = {
-    title: c.title,
-    ops: clone(c.ops),
-    appliedAt: new Date().toISOString()
-  };
+        D.sgApplied = list;
 
-  /*
-   * Die eigentliche rechnerische Änderung
-   * wie bisher anwenden.
-   */
-  applyOps(D, c.ops);
+        applyOps(D, c.ops);
 
-  save();
-  render();
+        save();
+        render();
+        return;
+      }
 
-  return;
-}
+      if (a === "sgnote") {
+        const list = appliedList();
+
+        list.splice(i, 1);
+        D.sgApplied = list;
+
+        save();
+        render();
+        return;
+      }
 
       if (a === "sgundo") {
         if (!undoSnap || undoSnap.pid !== activeProjectId) return;
@@ -3465,6 +4167,82 @@ padding: 9px 12px;
 
     .lv-sgres b.ok {
       color: var(--green);
+    }
+
+    .lv-applied {
+      border-left: 6px solid var(--gold) !important;
+      background: #fffaf0;
+    }
+
+    .lv-applied-item {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 0;
+      border-top: 1px dashed var(--border);
+    }
+
+    .lv-applied-item small {
+      display: block;
+      color: var(--muted);
+      font-size: .78rem;
+      margin-bottom: 2px;
+    }
+
+    .lv-applied-item ul {
+      margin: 6px 0 0 18px;
+      padding: 0;
+      font-size: .88rem;
+    }
+
+    .lv-ic {
+      flex: 0 0 auto;
+      vertical-align: -3px;
+    }
+
+    .section-icon .lv-ic {
+      width: 20px;
+      height: 20px;
+    }
+
+    .lv-project-icon .lv-ic {
+      width: 24px;
+      height: 24px;
+    }
+
+    .lv-project-kicker .lv-ic {
+      width: 15px;
+      height: 15px;
+      vertical-align: -2px;
+    }
+
+    .lv-project-actions .btn,
+    .lv-project-bar .btn,
+    .form-actions .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+    }
+
+    .lv-project-actions {
+      gap: 8px;
+    }
+
+    .lv-project-actions .btn {
+      min-height: 42px;
+    }
+
+    .lv-project-actions .btn-light {
+      border: 1px solid #c3c9ce;
+      color: var(--dark);
+    }
+
+    .lv-project-actions .btn-danger {
+      background: #fdecec;
+      border: 1px solid #d99a9a;
+      color: #a02f2f;
     }
 
     @media (max-width: 650px) {
