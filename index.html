@@ -1396,6 +1396,12 @@
     .sp-modal-backdrop[hidden] { display: none; }
     .sp-modal { width: min(720px, 100%); max-height: 92vh; overflow: auto; background: #fff; border-radius: 17px; box-shadow: 0 20px 60px rgba(0,0,0,.25); padding: 20px; }
     .sp-modal h3 { margin-top: 0; }
+    .sp-works-box { margin-top: 12px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: #fbfbfc; }
+    .sp-works-title { margin-bottom: 8px; font-size: .78rem; font-weight: 800; color: #4b535b; }
+    .sp-works { display: flex; flex-wrap: wrap; gap: 8px; }
+    .sp-work { display: inline-flex; align-items: center; gap: 9px; min-height: 44px; padding: 8px 14px; border: 1px solid #c9ced2; border-radius: 10px; background: #fff; font-weight: 700; cursor: pointer; user-select: none; }
+    .sp-work input[type="checkbox"] { width: 22px; height: 22px; flex: 0 0 22px; margin: 0; padding: 0; accent-color: var(--gold); }
+    .sp-work:has(input:checked) { border-color: var(--gold); background: #fbf5e7; }
     .sp-modal-actions { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
     .sp-danger { color: var(--red); }
 
@@ -3193,6 +3199,15 @@
       <div class="field"><label for="spAptZip">PLZ</label><input id="spAptZip" type="text" inputmode="numeric" placeholder="PLZ"></div>
       <div class="field"><label for="spAptCity">Ort</label><input id="spAptCity" type="text" placeholder="Ort"></div>
       <div class="field"><label for="spAptDuration">Dauer</label><select id="spAptDuration"><option value="15">15 Minuten</option><option value="30">30 Minuten</option><option value="45">45 Minuten</option><option value="60">60 Minuten</option></select></div>
+    </div>
+    <div class="sp-works-box">
+      <div class="sp-works-title">Arbeiten (werden im Terminvorschlag angekreuzt)</div>
+      <div class="sp-works">
+        <label class="sp-work"><input type="checkbox" id="spWorkKehrung"><span>Kehrung</span></label>
+        <label class="sp-work"><input type="checkbox" id="spWorkMessung"><span>Messung</span></label>
+        <label class="sp-work"><input type="checkbox" id="spWorkOther"><span>Sonstiges</span></label>
+      </div>
+      <div class="field" id="spWorkOtherWrap" hidden style="margin-top:8px"><input id="spWorkOtherText" type="text" maxlength="40" placeholder="Eigener Text, z. B. Feuerstättenschau" aria-label="Sonstige Arbeit"></div>
     </div>
     <div class="field" style="margin-top:10px"><label for="spAptNotes">Besonderheiten</label><textarea id="spAptNotes" rows="4" placeholder="Zugang, Besonderheiten, Hinweise …"></textarea></div>
     <div class="sp-modal-actions">
@@ -6185,6 +6200,7 @@
     $("spNewAppointment").addEventListener("click", () => openModal(iso(moduleState.date), "09:00"));
     document.querySelectorAll("[data-sp-view]").forEach(b => b.addEventListener("click", () => { moduleState.view = b.dataset.spView; render(); }));
     $("spAptPickCustomer").addEventListener("click", pickCustomerForAppointment);
+    $("spWorkOther").addEventListener("change", () => { syncWorkOther(); if ($("spWorkOther").checked) $("spWorkOtherText").focus(); });
     $("spSaveAppointment").addEventListener("click", saveAppointment);
     $("spCancelAppointment").addEventListener("click", closeModal);
     $("spDeleteAppointment").addEventListener("click", deleteAppointment);
@@ -6309,6 +6325,12 @@
     $("spAptCity").value = a?.city || "";
     $("spAptDuration").value = String(a?.duration || 15);
     $("spAptNotes").value = a?.notes || "";
+    const wk = Array.isArray(a?.works) ? a.works : [];
+    $("spWorkKehrung").checked = wk.includes("kehrung");
+    $("spWorkMessung").checked = wk.includes("messung");
+    $("spWorkOther").checked = wk.includes("other");
+    $("spWorkOtherText").value = a?.workOther || "";
+    syncWorkOther();
     moduleState.aptCustomer = a?.kid ? { id: a.kid, nr: a.knr || "" } : null;
     showAptCustomerInfo();
     $("spDeleteAppointment").hidden = !a;
@@ -6316,6 +6338,19 @@
     $("spAptCustomer").focus();
   }
   function closeModal() { $("spAppointmentModal").hidden=true; moduleState.editingId=null; moduleState.aptCustomer=null; }
+
+  /* Arbeiten: Textfeld für „Sonstiges“ nur bei gesetztem Haken zeigen */
+  function syncWorkOther() {
+    const on = $("spWorkOther").checked;
+    $("spWorkOtherWrap").hidden = !on;
+  }
+  function selectedWorks() {
+    const w = [];
+    if ($("spWorkKehrung").checked) w.push("kehrung");
+    if ($("spWorkMessung").checked) w.push("messung");
+    if ($("spWorkOther").checked) w.push("other");
+    return w;
+  }
 
   /* Kundenverwaltung: Kunde wählen, Name und Adresse übernehmen */
   function showAptCustomerInfo() {
@@ -6343,7 +6378,7 @@
     const holiday=holidayMap(new Date(date).getFullYear()).get(date);
     if (holiday) return alert(`Am ${fmtDate(date)} ist ${holiday}. Termine an Feiertagen sind standardmäßig gesperrt.`);
     if (hourCount(date,time,moduleState.editingId) >= 4) return alert("Für diese Stunde sind bereits 4 Termine eingetragen.");
-    const item={ id:moduleState.editingId || uuid(), date,time, customer:$("spAptCustomer").value.trim(), street:$("spAptStreet").value.trim(), house:$("spAptHouse").value.trim(), zip:$("spAptZip").value.trim(), city:$("spAptCity").value.trim(), duration:Number($("spAptDuration").value)||15, notes:$("spAptNotes").value.trim(), kid:moduleState.aptCustomer?.id||"", knr:moduleState.aptCustomer?.nr||"", updatedAt:new Date().toISOString() };
+    const item={ id:moduleState.editingId || uuid(), date,time, customer:$("spAptCustomer").value.trim(), street:$("spAptStreet").value.trim(), house:$("spAptHouse").value.trim(), zip:$("spAptZip").value.trim(), city:$("spAptCity").value.trim(), duration:Number($("spAptDuration").value)||15, notes:$("spAptNotes").value.trim(), works:selectedWorks(), workOther:$("spWorkOtherText").value.trim(), kid:moduleState.aptCustomer?.id||"", knr:moduleState.aptCustomer?.nr||"", updatedAt:new Date().toISOString() };
     const list=appointments(); const idx=list.findIndex(x=>x.id===item.id); if(idx>=0) list[idx]=item; else list.push(item);
     persist({appointments:list}); moduleState.selectedId=item.id; moduleState.date=fromIso(date); closeModal(); render();
   }
@@ -6389,7 +6424,7 @@
   function exportRange() { const from=$("spExportFrom").value,to=$("spExportTo").value; if(!from||!to||from>to) return alert('Bitte einen gültigen Exportzeitraum auswählen.'); downloadICS(rangeAppointments(from,to),`schornstein-planer-${from}-bis-${to}.ics`); }
 
   const TWOUP_CSS = `
-    #spPrintRoot .page { display: flex; width: 297mm; height: 209.6mm; overflow: hidden; break-after: page; page-break-after: always; }
+    #spPrintRoot .page { display: flex; width: 297mm; height: 205mm; overflow: hidden; break-inside: avoid; page-break-inside: avoid; break-after: page; page-break-after: always; }
     #spPrintRoot .page:last-child { break-after: auto; page-break-after: auto; }
     #spPrintRoot .page .sheet + .sheet { border-left: .2mm dashed #b9bec3; }
   `;
@@ -6419,7 +6454,7 @@
     #spPrintRoot, #spPrintRoot * { box-sizing: border-box; }
     #spPrintRoot { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; color: #22272d; line-height: 1.4; text-align: left; }
     #spPrintRoot p, #spPrintRoot h1, #spPrintRoot div { margin: 0; padding: 0; }
-    #spPrintRoot .sheet { width: 148mm; height: 209mm; padding: 12mm 14mm 10mm; display: flex; flex-direction: column; overflow: hidden; background: #fff; break-after: avoid; page-break-after: avoid; }
+    #spPrintRoot .sheet { width: 148mm; height: 205mm; padding: 11mm 14mm 8mm; display: flex; flex-direction: column; overflow: hidden; background: #fff; break-after: avoid; page-break-after: avoid; }
     #spPrintRoot .head { display: flex; justify-content: space-between; align-items: center; gap: 6mm; padding-bottom: 4mm; border-bottom: .5mm solid #c79a42; }
     #spPrintRoot .biz-name { font-size: 13pt; font-weight: 700; line-height: 1.2; }
     #spPrintRoot .biz-role { margin-top: .8mm; font-size: 8.5pt; color: #6c757d; }
@@ -6429,7 +6464,9 @@
     #spPrintRoot .letter { margin-top: 4.5mm; font-size: 9.5pt; line-height: 1.5; }
     #spPrintRoot .letter p { margin-bottom: 2.2mm; }
     #spPrintRoot .opt { display: inline-flex; align-items: center; gap: 1.4mm; margin: 0 2mm 0 .5mm; font-weight: 700; white-space: nowrap; }
-    #spPrintRoot .box { display: inline-block; width: 3.2mm; height: 3.2mm; border: .35mm solid #22272d; border-radius: .6mm; }
+    #spPrintRoot .box { display: inline-block; width: 3.2mm; height: 3.2mm; flex: 0 0 3.2mm; border: .35mm solid #22272d; border-radius: .6mm; }
+    #spPrintRoot .box svg { display: block; width: 100%; height: 100%; }
+    #spPrintRoot .opt { white-space: normal; }
     #spPrintRoot .appt { margin-top: 3mm; border: .4mm solid #22272d; border-radius: 2mm; overflow: hidden; }
     #spPrintRoot .appt-title { padding: 1.9mm 4mm; background: #22272d; color: #fff; font-size: 10pt; font-weight: 700; }
     #spPrintRoot .appt-body { padding: 3.5mm 4mm 3.5mm; }
@@ -6446,7 +6483,53 @@
     #spPrintRoot .sign { margin-top: auto; padding-top: 3mm; font-size: 9.5pt; line-height: 1.5; }
     #spPrintRoot .sign .name { margin-top: 8mm; font-weight: 700; }
     #spPrintRoot .sign .role { font-size: 8.5pt; color: #555; }
+    #spPrintRoot .sheet > * { flex-shrink: 0; }
+    /* Stufen für viel Inhalt: werden automatisch zugeschaltet, damit alles auf einer Seite bleibt */
+    #spPrintRoot .sheet.t1 .kicker { margin-top: 4mm; }
+    #spPrintRoot .sheet.t1 h1 { font-size: 17pt; }
+    #spPrintRoot .sheet.t1 .letter { margin-top: 3mm; font-size: 9pt; line-height: 1.4; }
+    #spPrintRoot .sheet.t1 .letter p { margin-bottom: 1.6mm; }
+    #spPrintRoot .sheet.t1 .appt-body { padding: 2.6mm 4mm; }
+    #spPrintRoot .sheet.t1 .when { padding-bottom: 2.4mm; }
+    #spPrintRoot .sheet.t1 .v { font-size: 12pt; }
+    #spPrintRoot .sheet.t1 .contact { margin-top: 3mm; font-size: 9pt; }
+    #spPrintRoot .sheet.t1 .sign .name { margin-top: 5mm; }
+    #spPrintRoot .sheet.t2 .head { padding-bottom: 2.5mm; }
+    #spPrintRoot .sheet.t2 .kicker { margin-top: 3mm; }
+    #spPrintRoot .sheet.t2 h1 { font-size: 15pt; }
+    #spPrintRoot .sheet.t2 .letter { margin-top: 2.5mm; font-size: 8.6pt; line-height: 1.32; }
+    #spPrintRoot .sheet.t2 .appt { margin-top: 2mm; }
+    #spPrintRoot .sheet.t2 .appt-body { padding: 2mm 3.4mm; }
+    #spPrintRoot .sheet.t2 .when { padding-bottom: 1.8mm; }
+    #spPrintRoot .sheet.t2 .where { margin-top: 2mm; }
+    #spPrintRoot .sheet.t2 .v { font-size: 11pt; }
+    #spPrintRoot .sheet.t2 .where .v { font-size: 9.6pt; }
+    #spPrintRoot .sheet.t2 .notes { margin-top: 2mm; font-size: 8.4pt; }
+    #spPrintRoot .sheet.t2 .contact { margin-top: 2.4mm; font-size: 8.6pt; line-height: 1.4; }
+    #spPrintRoot .sheet.t2 .phone { margin-top: 1.8mm; padding: 1.6mm 3mm; }
+    #spPrintRoot .sheet.t2 .phone .num { font-size: 13pt; }
+    #spPrintRoot .sheet.t2 .sign { padding-top: 2mm; font-size: 8.8pt; line-height: 1.4; }
+    #spPrintRoot .sheet.t2 .sign .name { margin-top: 3.5mm; }
+    #spPrintRoot .sheet.t3 .notes { max-height: 16mm; overflow: hidden; }
+    #spPrintRoot .sheet.t3 .letter { font-size: 8.2pt; line-height: 1.28; }
+    #spPrintRoot .sheet.t3 .biz-addr { margin-top: 1mm; }
+    #spPrintRoot .sheet.t3 .sign .name { margin-top: 2.5mm; }
   `;
+
+  /* Jedes Blatt so weit verdichten, bis der gesamte Inhalt (bis „Mit freundlichen Grüßen“ und Betriebsname) sicher auf eine Seite passt */
+  function fitSheets(root) {
+    const prev = root.getAttribute("style");
+    root.style.cssText = "display:block;position:fixed;left:-10000px;top:0;visibility:hidden;";
+    root.querySelectorAll(".sheet").forEach(sh => {
+      for (const cls of ["", "t1", "t2", "t3"]) {
+        sh.classList.remove("t1", "t2", "t3");
+        if (cls) sh.classList.add(cls);
+        const limit = sh.getBoundingClientRect().bottom - parseFloat(getComputedStyle(sh).paddingBottom);
+        if (sh.lastElementChild.getBoundingClientRect().bottom <= limit + 1) break;
+      }
+    });
+    if (prev === null) root.removeAttribute("style"); else root.setAttribute("style", prev);
+  }
 
   /* ---------- PDF-Ausgabe für Home-Bildschirm-Apps (iOS kann dort nicht direkt drucken) ---------- */
   function timeWindow(time) {
@@ -6503,70 +6586,93 @@
       tokens.forEach(tk => {
         const bw = size * 0.8, w = tk.box ? bw + 4 + wid(tk.t, tk.b, size) : wid(tk.t, tk.b, size);
         if (cx > x && cx + w > x + maxW) { cx = x; cy += lead; }
-        if (tk.box) { R(cx, cy - bw + 0.5, bw, bw, { stroke: "#22272d", lw: 0.9 }); T(cx + bw + 4, cy, tk.t, { size, bold: tk.b }); }
+        if (tk.box) {
+          R(cx, cy - bw + 0.5, bw, bw, { stroke: "#22272d", lw: 0.9 });
+          if (tk.on) {
+            const x0 = cx, y0 = cy - bw + 0.5;
+            L(x0 + bw * 0.2, y0 + bw * 0.55, x0 + bw * 0.42, y0 + bw * 0.78, "#22272d", 1.5);
+            L(x0 + bw * 0.42, y0 + bw * 0.78, x0 + bw * 0.84, y0 + bw * 0.2, "#22272d", 1.5);
+          }
+          T(cx + bw + 4, cy, tk.t, { size, bold: tk.b });
+        }
         else T(cx, cy, tk.t, { size, bold: tk.b });
         cx += w + sp;
       });
       return cy + lead;
     };
 
-    const drawSheet = d => {
+    /* sp = Abstandsfaktor: bei viel Inhalt wird enger gesetzt, damit alles auf eine Seite passt */
+    const drawSheet = (d, sp = 1) => {
+    const g = v => v * sp;
+    const notesTxt = sp < 0.6 && d.notes.length > 140 ? d.notes.slice(0, 140).trim() + "…" : d.notes;
     let y = 44;
     T(ML, y, d.business, { size: 13, bold: true });
     y += 13; T(ML, y, "Schornsteinfegerbetrieb", { size: 8.5, color: "#6c757d" });
     d.bizAddr.split(/\r?\n/).filter(Boolean).forEach((ln, i) => { y += i ? 11 : 15; T(ML, y, ln, { size: 8.5, color: "#444444" }); });
     y += 10; L(ML, y, ML + CW, y, "#c79a42", 1.4);
 
-    y += 26; T(ML, y, "Terminvorschlag", { size: 9.5, bold: true, color: "#9a7220" });
-    y += 25; T(ML, y, "Ihr Schornsteinfeger kommt …", { size: 19, bold: true });
+    y += g(26); T(ML, y, "Terminvorschlag", { size: 9.5, bold: true, color: "#9a7220" });
+    y += g(25); T(ML, y, "Ihr Schornsteinfeger kommt …", { size: 19, bold: true });
 
     // Brieftext
-    y += 30; T(ML, y, "Sehr geehrte Kundin, sehr geehrter Kunde,");
-    y += 17;
+    y += g(30); T(ML, y, "Sehr geehrte Kundin, sehr geehrter Kunde,");
+    y += g(17);
     const biz = words(d.business, true); biz[biz.length - 1].t += ",";
     y = flow([
       ...words("als Schornsteinfegergeselle im Auftrag von"), ...biz,
       ...words("Schornsteinfegermeister, möchte ich Sie darüber informieren, dass bei Ihnen die nächste"),
-      { box: true, t: "Kehrung", b: true }, { box: true, t: "Messung", b: true }, ...words("ansteht.")
+      ...d.works.map(w => ({ box: true, on: w.on, t: w.t, b: true })), ...words("ansteht.")
     ], ML, y, CW, 9.5, 14) + 3;
     T(ML, y, "Hiermit schlage ich Ihnen folgenden Termin vor:");
 
     // Terminkasten
-    const top = y + 12;
+    const top = y + g(12);
     R(ML, top, CW, 19, { fill: "#22272d" });
     T(ML + 12, top + 13, "Ihr Terminvorschlag", { size: 10, bold: true, color: "#ffffff" });
-    y = top + 19 + 15;
+    y = top + 19 + g(15);
     const xR = ML + CW * 0.63;
     T(ML + 12, y, "Datum", { size: 8, color: "#6c757d" }); T(xR, y, "Uhrzeit", { size: 8, color: "#6c757d" });
     let vs = 13; while (vs > 9 && wid(d.dateStr, true, vs) > xR - ML - 24) vs -= 0.5;
-    y += 17; T(ML + 12, y, d.dateStr, { size: vs, bold: true }); let ts = 13; while (ts > 8 && wid(d.time + " Uhr", true, ts) > ML + CW - 12 - xR) ts -= 0.5;
+    y += g(17); T(ML + 12, y, d.dateStr, { size: vs, bold: true }); let ts = 13; while (ts > 8 && wid(d.time + " Uhr", true, ts) > ML + CW - 12 - xR) ts -= 0.5;
     T(xR, y, d.time + " Uhr", { size: ts, bold: true });
-    y += 11; L(ML + 12, y, ML + CW - 12, y, "#d5d9dd", 0.6);
+    y += g(11); L(ML + 12, y, ML + CW - 12, y, "#d5d9dd", 0.6);
     if (d.customer || d.addrLines.length) {
-      y += 15; T(ML + 12, y, "Terminadresse", { size: 8, color: "#6c757d" });
-      [d.customer, ...d.addrLines].filter(Boolean).forEach(ln => { y += 15; T(ML + 12, y, ln, { size: 10.5, bold: true }); });
+      y += g(15); T(ML + 12, y, "Terminadresse", { size: 8, color: "#6c757d" });
+      [d.customer, ...d.addrLines].filter(Boolean).forEach(ln => wrap(ln, 10.5, true, CW - 24).forEach(w => { y += g(15); T(ML + 12, y, w, { size: 10.5, bold: true }); }));
     }
-    if (d.notes) {
-      y += 16;
-      y = flow([{ t: "Hinweis:", b: true }, ...words(d.notes)], ML + 12, y, CW - 24, 9, 12) - 12;
+    if (notesTxt) {
+      y += g(16);
+      y = flow([{ t: "Hinweis:", b: true }, ...words(notesTxt)], ML + 12, y, CW - 24, 9, 12) - 12;
     }
-    y += 12; R(ML, top, CW, y - top, { stroke: "#22272d", lw: 1.1 });
+    y += g(12); R(ML, top, CW, y - top, { stroke: "#22272d", lw: 1.1 });
 
     // Kontakt
-    y += 22;
+    y += g(22);
     wrap("Sollten Sie an diesem Termin verhindert sein, rufen Sie mich bitte an – wir vereinbaren gerne einen alternativen Termin. Sie erreichen mich unter:", 9.5, false, CW)
       .forEach((ln, i) => { if (i) y += 14; T(ML, y, ln); });
-    y += 12; R(ML, y, CW, 30, { fill: "#fbf5e7", stroke: "#c79a42", lw: 0.9 });
+    y += g(12); R(ML, y, CW, 30, { fill: "#fbf5e7", stroke: "#c79a42", lw: 0.9 });
     T(ML + 14, y + 19, "Telefon", { size: 9, color: "#6c757d" });
     T(ML + CW / 2 + 16, y + 20, d.phone, { size: 15, bold: true, align: "center" });
     y += 30;
 
     // Gruß
-    const sy = Math.max(y + 26, H - 46 - 44);
+    const sy = Math.max(y + g(26), H - 46 - 44);
     T(ML, sy, "Mit freundlichen Grüßen");
-    T(ML, sy + 30, d.employee, { bold: true });
-    T(ML, sy + 42, "Schornsteinfegerbetrieb " + d.business, { size: 8.5, color: "#555555" });
+    T(ML, sy + g(30), d.employee, { bold: true });
+    wrap("Schornsteinfegerbetrieb " + d.business, 8.5, false, CW).slice(0, 2).forEach((w, i) => T(ML, sy + g(30) + 12 + i * 11, w, { size: 8.5, color: "#555555" }));
+    return sy + g(30) + 12 + 11;   // untere Kante des Inhalts
 
+    };
+
+    /* Kleinsten Abstandsfaktor wählen, bei dem noch alles auf die Seite passt */
+    const fitSheet = d => {
+      for (const sp of [1, 0.85, 0.7, 0.55]) {
+        const keep = ops; ops = [];
+        const endY = drawSheet(d, sp);
+        ops = keep;
+        if (endY <= H - 26) return sp;
+      }
+      return 0.55;
     };
 
     const per = twoUp ? 2 : 1, pageW = twoUp ? 841.89 : W;
@@ -6574,7 +6680,7 @@
     for (let i = 0; i < list.length; i += per) {
       ops = [];
       const chunk = list.slice(i, i + per);
-      chunk.forEach((d, k) => { ox = k * (pageW / 2); drawSheet(d); });
+      chunk.forEach((d, k) => { ox = k * (pageW / 2); drawSheet(d, fitSheet(d)); });
       ox = 0;
       if (twoUp && chunk.length > 1) ops.push(`q ${col("#b9bec3")} RG 0.5 w [3 3] 0 d ${f2(pageW / 2)} ${f2(H - 18)} m ${f2(pageW / 2)} 18 l S Q`);
       streams.push(ops.join("\n"));
@@ -6626,9 +6732,23 @@
       time: timeWindow(a.time),
       customer: a.customer || "",
       addrLines: [[a.street, a.house].filter(Boolean).join(" "), [a.zip, a.city].filter(Boolean).join(" ")].filter(Boolean),
-      notes: a.notes || ""
+      notes: a.notes || "",
+      works: proposalWorks(a)
     };
   }
+
+  /* Arbeiten für den Ausdruck: nur die angekreuzten; ohne Auswahl wie bisher
+     „Kehrung“ und „Messung“ als leere Kästchen zum Selbstankreuzen */
+  function proposalWorks(a) {
+    const w = Array.isArray(a.works) ? a.works : [];
+    const out = [];
+    if (w.includes("kehrung")) out.push({ t: "Kehrung", on: true });
+    if (w.includes("messung")) out.push({ t: "Messung", on: true });
+    if (w.includes("other")) out.push({ t: (a.workOther || "").trim() || "Sonstiges", on: true });
+    return out.length ? out : [{ t: "Kehrung", on: false }, { t: "Messung", on: false }];
+  }
+
+  const CHECK_SVG = '<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1.6 5.4 4 7.8 8.5 2.2" fill="none" stroke="#22272d" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
   function sheetHtml(d) {
     const business = esc(d.business), employee = esc(d.employee), phone = esc(d.phone);
@@ -6653,7 +6773,7 @@
 
         <div class="letter">
           <p>Sehr geehrte Kundin, sehr geehrter Kunde,</p>
-          <p>als Schornsteinfegergeselle im Auftrag von <strong>${business}</strong>, Schornsteinfegermeister, möchte ich Sie darüber informieren, dass bei Ihnen die nächste <span class="opt"><i class="box"></i>Kehrung</span> <span class="opt"><i class="box"></i>Messung</span> ansteht.</p>
+          <p>als Schornsteinfegergeselle im Auftrag von <strong>${business}</strong>, Schornsteinfegermeister, möchte ich Sie darüber informieren, dass bei Ihnen die nächste ${d.works.map(w => `<span class="opt"><i class="box${w.on ? " on" : ""}">${w.on ? CHECK_SVG : ""}</i>${esc(w.t)}</span>`).join(" ")} ansteht.</p>
           <p>Hiermit schlage ich Ihnen folgenden Termin vor:</p>
         </div>
 
@@ -6705,6 +6825,7 @@
     document.head.appendChild(style);
     document.body.appendChild(root);
     document.body.classList.add("sp-printing");
+    fitSheets(root);
 
     // Die Druckansicht bleibt bestehen, bis die Seite wieder bedient wird. Manche Browser melden "afterprint"
     // schon, während der Druckdialog noch offen ist – räumt man dann auf, druckt die Vorschau nach einem
