@@ -302,7 +302,7 @@
     ".kv-head p{margin:0;color:var(--muted);font-size:.9rem}" +
     ".kv-tools{display:flex;gap:8px;flex-wrap:wrap}" +
     ".kv-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}" +
-    ".kv-search{flex:1;min-width:180px;padding:12px;border:1px solid #d5dbe0;border-radius:10px;font-size:16px;background:#fff;color:var(--text);outline:none}" +
+    ".kv-search{flex:1 1 230px;min-width:0;padding:12px;border:1px solid #d5dbe0;border-radius:10px;font-size:16px;background:#fff;color:var(--text);outline:none}" +
     ".kv-search:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(199,154,66,.13)}" +
     ".kv-crumbs{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 12px}" +
     ".kv-crumb{border:0;background:#edf0f2;border-radius:999px;padding:8px 13px;font-weight:750;font-size:.86rem;color:var(--dark);cursor:pointer}" +
@@ -331,6 +331,24 @@
     ".kv-hint{margin:4px 0 0;color:var(--muted);font-size:.78rem}" +
     ".kv-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:16px}" +
     ".kv-pickbtn{display:inline-flex;align-items:center;gap:8px}" +
+    ".kv-chk{flex:0 0 24px;width:24px;height:24px;margin-right:12px;border:2px solid #b7bec5;border-radius:7px;background:#fff;position:relative}" +
+    ".kv-chk.on{background:var(--gold);border-color:var(--gold)}" +
+    ".kv-chk.on::after{content:'';position:absolute;left:7px;top:2px;width:6px;height:12px;border:solid #22272d;border-width:0 3px 3px 0;transform:rotate(45deg)}" +
+    ".kv-row.sel{background:#fffaf0;border-color:var(--gold)}" +
+    ".kv-multi-tools{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}" +
+    ".kv-multi-tools .btn{min-height:40px}" +
+    ".kv-item{display:flex;flex-direction:column;gap:4px}" +
+    ".kv-works{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 4px;padding:8px 10px;border:1px dashed var(--gold);border-radius:10px;background:#fffdf7}" +
+    ".kv-works[hidden]{display:none}" +
+    ".kv-chip{min-height:38px;padding:4px 12px;border:1px solid #c9ced2;border-radius:999px;background:#fff;font:inherit;font-size:.82rem;font-weight:700;color:var(--text);cursor:pointer}" +
+    ".kv-chip.on{border-color:var(--gold);background:#fbf5e7}" +
+    ".kv-chip.on::before{content:'✓ '}" +
+    ".kv-wtext{flex:1 1 180px;min-width:0;padding:7px 10px;border:1px solid #c9ced2;border-radius:10px;font-size:16px}" +
+    ".kv-wtext[hidden]{display:none}" +
+    ".kv-quick{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 10px}" +
+    ".kv-quick strong{font-size:.82rem;margin-right:2px}" +
+    ".kv-sheet-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}" +
+    ".kv-sheet-foot strong{font-size:.95rem}" +
     "@media (max-width:600px){.kv-card{padding:14px}.kv-form{grid-template-columns:1fr}.kv-overlay{padding:0;align-items:stretch}.kv-sheet{max-height:100vh;height:100%;border-radius:0}.kv-actions .btn{flex:1}}";
 
   document.head.appendChild(css);
@@ -342,8 +360,45 @@
   var browsers = [];
 
   /* mode: "manage" (Kundenverwaltung) oder "pick" (Auswahl) */
-  function mountBrowser(host, mode, onPick) {
+  function mountBrowser(host, mode, onPick, opts) {
     var st = { q: "", ort: null, str: null };
+    var multi = mode === "multi";
+    var sel = (opts && opts.sel) || new Set();
+
+    function changed() {
+      if (opts && opts.onChange) opts.onChange();
+    }
+
+    /* Tätigkeit direkt bei der Auswahl (nur Mehrfachauswahl mit opts.work) */
+    var wk = multi && opts && opts.work ? opts.work : null;
+
+    function chipsHtml(id) {
+      var w = wk.getWork(id);
+
+      return (
+        wk.types
+          .map(function (t) {
+            return '<button type="button" class="kv-chip' + (w[t.k] ? " on" : "") + '" data-kvw="' + t.k + '">' + E(t.l) + "</button>";
+          })
+          .join("") +
+        '<input class="kv-wtext" type="text" maxlength="40" placeholder="Eigener Text, z. B. Feuerstättenschau" aria-label="Sonstige Arbeit" value="' +
+        E(w.text || "") +
+        '"' +
+        (w.other ? "" : " hidden") +
+        ">"
+      );
+    }
+
+    function item(k, rowHtml) {
+      if (!wk) return rowHtml;
+
+      var on = sel.has(k.id);
+
+      return (
+        '<div class="kv-item" data-id="' + E(k.id) + '">' + rowHtml +
+        '<div class="kv-works"' + (on ? "" : " hidden") + ">" + (on ? chipsHtml(k.id) : "") + "</div></div>"
+      );
+    }
 
     host.innerHTML =
       '<div class="kv-bar">' +
@@ -351,6 +406,24 @@
       'autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Kunden suchen">' +
       '<button type="button" class="btn btn-gold" data-kv="new">+ Neuer Kunde</button>' +
       "</div>" +
+      (multi
+        ? '<div class="kv-multi-tools">' +
+          '<button type="button" class="btn btn-light" data-kv="selall">Alle angezeigten auswählen</button>' +
+          '<button type="button" class="btn btn-light" data-kv="selnone">Auswahl leeren</button>' +
+          "</div>"
+        : "") +
+      (wk
+        ? '<div class="kv-quick"><strong>Tätigkeit für alle Ausgewählten:</strong>' +
+          wk.types
+            .filter(function (t) {
+              return t.k !== "other";
+            })
+            .map(function (t) {
+              return '<button type="button" class="kv-chip" data-kvq="' + t.k + '">' + E(t.l) + "</button>";
+            })
+            .join("") +
+          '<button type="button" class="kv-chip" data-kvq="none">Zurücksetzen</button></div>'
+        : "") +
       '<div class="kv-body"></div>';
 
     var input = host.querySelector(".kv-search");
@@ -385,6 +458,7 @@
 
     function groupRows(list, keyFn, attr) {
       var map = {};
+      var chosen = {};
       var order = [];
 
       list.forEach(function (k) {
@@ -392,10 +466,13 @@
 
         if (!map[key]) {
           map[key] = 0;
+          chosen[key] = 0;
           order.push(key);
         }
 
         map[key]++;
+
+        if (multi && sel.has(k.id)) chosen[key]++;
       });
 
       return order
@@ -408,19 +485,30 @@
             '"><span class="kv-main"><strong>' +
             E(key) +
             '</strong></span><span class="kv-count">' +
-            map[key] +
-            (map[key] === 1 ? " Kunde" : " Kunden") +
+            (multi && chosen[key] ? chosen[key] + " von " + map[key] + " gewählt" : map[key] + (map[key] === 1 ? " Kunde" : " Kunden")) +
             "</span></button>"
           );
         })
         .join("");
     }
 
+    function chk(k) {
+      return multi ? '<span class="kv-chk' + (sel.has(k.id) ? " on" : "") + '"></span>' : "";
+    }
+
     function houseRow(k) {
+      return item(k, houseButton(k));
+    }
+
+    function searchRow(k) {
+      return item(k, searchButton(k));
+    }
+
+    function houseButton(k) {
       return (
-        '<button type="button" class="kv-row" data-kv="cust" data-id="' +
+        '<button type="button" class="kv-row' + (multi && sel.has(k.id) ? " sel" : "") + '" data-kv="cust" data-id="' +
         E(k.id) +
-        '"><span class="kv-main"><strong><span class="kv-hn">' +
+        '">' + chk(k) + '<span class="kv-main"><strong><span class="kv-hn">' +
         E(k.house || "–") +
         "</span>" +
         E(k.name || "(ohne Namen)") +
@@ -432,11 +520,11 @@
       );
     }
 
-    function searchRow(k) {
+    function searchButton(k) {
       return (
-        '<button type="button" class="kv-row" data-kv="cust" data-id="' +
+        '<button type="button" class="kv-row' + (multi && sel.has(k.id) ? " sel" : "") + '" data-kv="cust" data-id="' +
         E(k.id) +
-        '"><span class="kv-main"><strong>' +
+        '">' + chk(k) + '<span class="kv-main"><strong>' +
         E(streetLine(k) || "(ohne Straße)") +
         "</strong> · " +
         E(k.name || "(ohne Namen)") +
@@ -522,6 +610,25 @@
       body.innerHTML = html;
     }
 
+    /* Kunden der aktuellen Ansicht (Suchergebnis, Straße, Ort oder alle) */
+    function visibleList() {
+      var all = kunden.slice().sort(custCmp);
+      var q = st.q.trim();
+
+      if (q) {
+        return all.filter(function (k) {
+          return matches(k, q);
+        });
+      }
+
+      return all.filter(function (k) {
+        return (
+          (st.ort == null || cityOf(k) === st.ort) &&
+          (st.str == null || streetOf(k) === st.str)
+        );
+      });
+    }
+
     input.addEventListener("input", function () {
       st.q = input.value;
       update();
@@ -538,8 +645,24 @@
         openEditor(null, {
           onSaved: function (k) {
             if (mode === "pick" && onPick) onPick(k);
+
+            if (multi) {
+              sel.add(k.id);
+              update();
+              changed();
+            }
           }
         });
+      } else if (a === "selall") {
+        visibleList().forEach(function (k) {
+          sel.add(k.id);
+        });
+        update();
+        changed();
+      } else if (a === "selnone") {
+        sel.clear();
+        update();
+        changed();
       } else if (a === "up0") {
         st.ort = null;
         st.str = null;
@@ -559,13 +682,100 @@
 
         if (!k) return;
 
-        if (mode === "pick") {
+        if (multi) {
+          if (sel.has(k.id)) sel.delete(k.id);
+          else sel.add(k.id);
+
+          t.classList.toggle("sel", sel.has(k.id));
+
+          var box = t.querySelector(".kv-chk");
+
+          if (box) box.classList.toggle("on", sel.has(k.id));
+
+          if (wk) {
+            var itemEl = t.closest(".kv-item");
+            var wEl = itemEl && itemEl.querySelector(".kv-works");
+
+            if (wEl) {
+              if (sel.has(k.id)) {
+                wEl.innerHTML = chipsHtml(k.id);
+                wEl.hidden = false;
+              } else {
+                wEl.hidden = true;
+                wEl.innerHTML = "";
+              }
+            }
+          }
+
+          changed();
+        } else if (mode === "pick") {
           if (onPick) onPick(k);
         } else {
           openEditor(k, {});
         }
       }
     });
+
+    if (wk) {
+      host.addEventListener("click", function (e) {
+        var c = e.target.closest("[data-kvw]");
+
+        if (c) {
+          var itemEl = c.closest(".kv-item");
+          var w = wk.getWork(itemEl.getAttribute("data-id"));
+          var key = c.getAttribute("data-kvw");
+
+          w[key] = !w[key];
+          c.classList.toggle("on", !!w[key]);
+
+          if (key === "other") {
+            var inp = itemEl.querySelector(".kv-wtext");
+
+            inp.hidden = !w.other;
+
+            if (w.other) inp.focus();
+          }
+
+          changed();
+          return;
+        }
+
+        var q = e.target.closest("[data-kvq]");
+
+        if (q) {
+          var kind = q.getAttribute("data-kvq");
+          var scroller = host.closest(".kv-sheet-body");
+          var top = scroller ? scroller.scrollTop : 0;
+
+          sel.forEach(function (id) {
+            var w2 = wk.getWork(id);
+
+            if (kind === "none") {
+              wk.types.forEach(function (t) {
+                w2[t.k] = false;
+              });
+              w2.text = "";
+            } else {
+              w2[kind] = true;
+            }
+          });
+
+          update();
+
+          if (scroller) scroller.scrollTop = top;
+
+          changed();
+        }
+      });
+
+      host.addEventListener("input", function (e) {
+        var inp = e.target.closest(".kv-wtext");
+
+        if (!inp) return;
+
+        wk.getWork(inp.closest(".kv-item").getAttribute("data-id")).text = inp.value;
+      });
+    }
 
     var api = { update: update, host: host };
 
@@ -835,6 +1045,92 @@
     });
   }
 
+  /* Mehrfachauswahl: cb(arrayVonKunden) – sortiert nach Ort, Straße, Hausnummer */
+  function pickMany(cb, preselected, work) {
+    var sel = new Set(preselected || []);
+    var ov = document.createElement("div");
+
+    ov.className = "kv-overlay";
+
+    ov.innerHTML =
+      '<div class="kv-sheet" role="dialog" aria-modal="true">' +
+      '<div class="kv-sheet-head"><h3>Kunden auswählen</h3>' +
+      '<button type="button" class="btn btn-light" data-x="close">Abbrechen</button></div>' +
+      '<div class="kv-sheet-body"><div class="kv-pick-host"></div></div>' +
+      '<div class="kv-sheet-foot"><strong class="kv-selcount"></strong>' +
+      '<button type="button" class="btn btn-primary" data-x="ok">Auswahl übernehmen</button></div></div>';
+
+    document.body.appendChild(ov);
+
+    var cnt = ov.querySelector(".kv-selcount");
+    var okBtn = ov.querySelector('[data-x="ok"]');
+
+    function count() {
+      var txt = sel.size + (sel.size === 1 ? " Kunde" : " Kunden") + " ausgewählt";
+
+      if (work) {
+        var without = 0;
+
+        sel.forEach(function (id) {
+          var w = work.getWork(id);
+
+          if (
+            !work.types.some(function (t) {
+              return w[t.k];
+            })
+          )
+            without++;
+        });
+
+        if (without) txt += " · " + without + " ohne Tätigkeit";
+      }
+
+      cnt.textContent = txt;
+      okBtn.disabled = !sel.size;
+    }
+
+    function close() {
+      document.removeEventListener("keydown", onKey);
+      ov.remove();
+      refreshAll();
+    }
+
+    function onKey(e) {
+      if (e.key === "Escape" && !document.querySelector(".kv-overlay.top")) close();
+    }
+
+    document.addEventListener("keydown", onKey);
+
+    ov.addEventListener("click", function (e) {
+      var t = e.target.closest("[data-x]");
+
+      if (!t) return;
+
+      if (t.getAttribute("data-x") === "close") {
+        close();
+      } else if (t.getAttribute("data-x") === "ok") {
+        var chosen = kunden
+          .slice()
+          .sort(custCmp)
+          .filter(function (k) {
+            return sel.has(k.id);
+          });
+
+        close();
+
+        if (typeof cb === "function") cb(chosen);
+      }
+    });
+
+    mountBrowser(ov.querySelector(".kv-pick-host"), "multi", null, {
+      sel: sel,
+      onChange: count,
+      work: work || null
+    });
+
+    count();
+  }
+
   /* ============================================================
      SICHERUNG DER KUNDENLISTE
      ============================================================ */
@@ -970,6 +1266,7 @@
 
   window.SPKunden = {
     pick: pick,
+    pickMany: pickMany,
     list: function () {
       return kunden.slice().sort(custCmp);
     },
