@@ -1,6 +1,6 @@
 /* Schornstein Planer – Service Worker */
 
-const VERSION = "v33";
+const VERSION = "v34";
 const PREFIX = "schornstein-planer-";
 const CACHE = PREFIX + VERSION;
 
