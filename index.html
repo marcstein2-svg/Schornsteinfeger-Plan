@@ -1402,6 +1402,37 @@
     .sp-work { display: inline-flex; align-items: center; gap: 9px; min-height: 44px; padding: 8px 14px; border: 1px solid #c9ced2; border-radius: 10px; background: #fff; font-weight: 700; cursor: pointer; user-select: none; }
     .sp-work input[type="checkbox"] { width: 22px; height: 22px; flex: 0 0 22px; margin: 0; padding: 0; accent-color: var(--gold); }
     .sp-work:has(input:checked) { border-color: var(--gold); background: #fbf5e7; }
+    .sp-day-print { margin-top: 14px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: #fbfbfc; }
+    .sp-day-print .form-actions { margin-top: 10px; }
+    .sp-auto-preview { margin-top: 12px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: #fbfbfc; font-size: .9rem; }
+    .sp-auto-list { max-height: 42vh; overflow: auto; margin-top: 6px; }
+    .sp-auto-day { margin: 10px 0 3px; font-weight: 800; }
+    .sp-auto-line { display: flex; gap: 10px; padding: 2px 0; }
+    .sp-auto-time { min-width: 3.4em; font-weight: 800; }
+    .sp-auto-who { flex: 1; min-width: 0; }
+    .sp-auto-cust { padding: 6px 0; border-bottom: 1px solid #eceff1; }
+    .sp-auto-works { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 5px; }
+    .sp-chip { min-height: 36px; padding: 4px 12px; border: 1px solid #c9ced2; border-radius: 999px; background: #fff; font: inherit; font-size: .8rem; font-weight: 700; color: var(--text); cursor: pointer; }
+    .sp-chip.on { border-color: var(--gold); background: #fbf5e7; }
+    .sp-chip.on::before { content: "✓ "; }
+    .sp-auto-other { flex: 1 1 160px; min-width: 0; padding: 6px 10px; border: 1px solid #c9ced2; border-radius: 10px; font-size: 16px; }
+    .sp-auto-quick { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 8px 0 2px; }
+    .sp-auto-quick > span { font-weight: 800; font-size: .82rem; }
+    .sp-auto-warn { margin-top: 8px; padding: 8px 10px; border: 1px solid #e9c78d; border-radius: 10px; background: #fff4e0; color: #7a4600; }
+    .sp-linkbtn { border: 0; background: none; padding: 0; font: inherit; font-weight: 800; color: #7d5b20; text-decoration: underline; cursor: pointer; }
+    .sp-hour-body > .sp-add { align-self: start; min-height: 40px; }
+    .sp-appt-wrap { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+    .sp-appt.done { border-left-color: #3f8f5b; background: #f3faf5; }
+    .sp-appt.done .sp-appt-time { color: #2e6f45; }
+    .sp-appt-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+    .sp-act { min-height: 38px; padding: 5px 12px; border: 1px solid #c9ced2; border-radius: 9px; background: #fff; font: inherit; font-size: .8rem; font-weight: 750; color: var(--text); cursor: pointer; }
+    .sp-act:hover { border-color: var(--gold); }
+    .sp-act.done { border-color: #3f8f5b; background: #e7f4ec; color: #2e6f45; }
+    .sp-inv-choices { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+    .sp-inv { min-height: 56px; padding: 10px 14px; border: 2px solid #c9ced2; border-radius: 12px; background: #fff; font: inherit; font-size: 1rem; font-weight: 800; text-align: left; color: var(--text); cursor: pointer; }
+    .sp-inv:hover { border-color: var(--gold); background: #fffaf0; }
+    .sp-inv.on { border-color: #3f8f5b; background: #e7f4ec; }
+    .sp-cash { margin-top: 12px; padding: 12px 14px; border: 1px solid #3f8f5b; border-radius: 12px; background: #f3faf5; }
     .sp-modal-actions { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
     .sp-danger { color: var(--red); }
 
@@ -1795,7 +1826,7 @@
         <div>
           <span class="sp-eyebrow">📅 Terminplanung</span>
           <h2>Kalender</h2>
-          <p>Plane Kundentermine lokal im Browser. Maximal vier Termine pro Stunde.</p>
+          <p>Plane Kundentermine lokal im Browser. Die Dauer richtet sich nach den Tätigkeiten.</p>
         </div>
         <div class="sp-calendar-actions">
           <button class="btn btn-light" type="button" id="spBackupData">💾 Daten sichern</button>
@@ -1824,6 +1855,7 @@
           <button class="btn btn-light sp-view-btn active" type="button" data-sp-view="day">Tag</button>
           <button class="btn btn-light sp-view-btn" type="button" data-sp-view="week">Woche</button>
           <button class="btn btn-light" type="button" id="spToggleEmpty">Freie Stunden zeigen</button>
+          <button class="btn btn-light" type="button" id="spAutoOpen">⚡ Termine automatisch einplanen</button>
           <button class="btn btn-gold" type="button" id="spNewAppointment">+ Termin</button>
         </div>
       </div>
@@ -1853,6 +1885,15 @@
             <div class="field"><label for="spEmployeeName">Mitarbeiter</label><input id="spEmployeeName" type="text" placeholder="Name des Mitarbeiters"></div>
             <div class="field"><label for="spPhone">Telefon</label><input id="spPhone" type="tel" placeholder="Telefonnummer"></div>
             <div class="field"><label for="spBusinessAddress">Betriebsanschrift</label><input id="spBusinessAddress" type="text" placeholder="Straße, PLZ Ort"></div>
+          </div>
+          <div class="sp-day-print">
+            <div class="field"><label for="spDayDate">Tag für Tagesübersicht / Erledigt-Liste</label><input id="spDayDate" type="date"></div>
+            <div class="form-actions">
+              <button class="btn btn-primary" type="button" id="spPrintDay">📋 Tagesübersicht drucken</button>
+              <button class="btn btn-light" type="button" id="spPrintDays">📋 Alle Tage im Zeitraum (je Tag ein Blatt)</button>
+              <button class="btn btn-gold" type="button" id="spPrintDone">✅ Erledigt-Liste drucken (für den Chef)</button>
+              <button class="btn btn-light" type="button" id="spPrintDoneRange">✅ Erledigt-Liste für den Zeitraum</button>
+            </div>
           </div>
           <div class="form-actions">
             <button class="btn btn-primary" type="button" id="spPrintProposal" disabled>🖨 Ausgewählten Termin drucken (A5 auf halber A4-Seite)</button>
@@ -3183,6 +3224,95 @@
 </main>
 
 <!-- TERMINMODAL -->
+<div class="sp-modal-backdrop" id="spDoneModal" hidden>
+  <div class="sp-modal" role="dialog" aria-modal="true" aria-labelledby="spDoneTitle" style="max-width:520px">
+    <h3 id="spDoneTitle">Termin erledigt</h3>
+    <p class="sp-muted" id="spDoneWho" style="margin:-4px 0 12px"></p>
+    <div class="sp-works-title">Wie bekommt der Kunde die Rechnung? (Antippen speichert)</div>
+    <div class="sp-inv-choices">
+      <button type="button" class="sp-inv" data-inv="post">✉ Per Post</button>
+      <button type="button" class="sp-inv" data-inv="hinterlegt">🧾 Rechnung hinterlegt – Kunde überweist</button>
+      <button type="button" class="sp-inv" data-inv="mail">📧 Per E-Mail</button>
+      <button type="button" class="sp-inv" data-inv="bar">💶 Barzahlung</button>
+    </div>
+    <div class="sp-cash" id="spCashBox" hidden>
+      <div class="field"><label for="spCashAmount">Betrag bar kassiert (€)</label><input id="spCashAmount" type="text" inputmode="decimal" autocomplete="off" placeholder="z. B. 85,50"></div>
+      <button class="btn btn-primary" type="button" id="spCashSave" style="margin-top:10px">Barzahlung speichern</button>
+    </div>
+    <div class="sp-modal-actions">
+      <button class="btn btn-light" type="button" id="spDoneCancel">Abbrechen</button>
+      <button class="btn btn-danger" type="button" id="spDoneUndo" hidden>Als nicht erledigt markieren</button>
+    </div>
+  </div>
+</div>
+
+<div class="sp-modal-backdrop" id="spMoveModal" hidden>
+  <div class="sp-modal" role="dialog" aria-modal="true" aria-labelledby="spMoveTitle" style="max-width:520px">
+    <h3 id="spMoveTitle">Termin verschieben</h3>
+    <p class="sp-muted" id="spMoveWho" style="margin:-4px 0 4px;font-weight:800"></p>
+    <p class="sp-muted" id="spMoveFrom" style="margin:0 0 12px"></p>
+    <div class="sp-form-grid">
+      <div class="field"><label for="spMoveDate">Neues Datum</label><input id="spMoveDate" type="date"></div>
+      <div class="field"><label for="spMoveTime">Neue Uhrzeit</label><input id="spMoveTime" type="time" step="60"></div>
+    </div>
+    <div class="sp-work-chips" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+      <button type="button" class="sp-chip" data-mv="next">Nächster Arbeitstag</button>
+      <button type="button" class="sp-chip" data-mv="week">+ 1 Woche</button>
+    </div>
+    <div class="sp-auto-warn" id="spMoveInfo" hidden></div>
+    <div class="sp-modal-actions">
+      <button class="btn btn-light" type="button" id="spMoveCancel">Abbrechen</button>
+      <button class="btn btn-primary" type="button" id="spMoveSave">Verschieben</button>
+    </div>
+  </div>
+</div>
+
+<div class="sp-modal-backdrop" id="spTimesModal" hidden style="z-index:10002">
+  <div class="sp-modal" role="dialog" aria-modal="true" aria-labelledby="spTimesTitle">
+    <h3 id="spTimesTitle">Zeiten je Tätigkeit</h3>
+    <p class="sp-muted" style="margin:-4px 0 12px">So lange dauert die Tätigkeit beim Kunden (in Minuten). Werden mehrere Tätigkeiten gewählt, zählen die Zeiten zusammen – z. B. Kehrung 10 + Messung 20 = 30 Minuten. Gilt für neue Termine und die automatische Terminvergabe.</p>
+    <div class="sp-form-grid">
+      <div class="field"><label for="spTime_kehrung">Kehrung</label><input id="spTime_kehrung" type="number" min="1" max="480" inputmode="numeric"></div>
+      <div class="field"><label for="spTime_messung">Messung</label><input id="spTime_messung" type="number" min="1" max="480" inputmode="numeric"></div>
+      <div class="field"><label for="spTime_feststoff">Feststoffmessung</label><input id="spTime_feststoff" type="number" min="1" max="480" inputmode="numeric"></div>
+      <div class="field"><label for="spTime_schau">Feuerstättenschau</label><input id="spTime_schau" type="number" min="1" max="480" inputmode="numeric"></div>
+      <div class="field"><label for="spTime_other">Sonstiges</label><input id="spTime_other" type="number" min="1" max="480" inputmode="numeric"></div>
+    </div>
+    <div class="sp-modal-actions">
+      <button class="btn btn-light" type="button" id="spTimesReset">Standard</button>
+      <button class="btn btn-light" type="button" id="spTimesCancel">Abbrechen</button>
+      <button class="btn btn-primary" type="button" id="spTimesSave">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<div class="sp-modal-backdrop" id="spAutoModal" hidden>
+  <div class="sp-modal" role="dialog" aria-modal="true" aria-labelledby="spAutoTitle">
+    <h3 id="spAutoTitle">Termine automatisch einplanen</h3>
+    <p class="sp-muted" style="margin:-4px 0 12px">Wähle Kunden aus der Kundenverwaltung. Der Kalender wird im gewählten Zeitraum von Montag bis Freitag der Reihe nach gefüllt (nach Ort, Straße und Hausnummer sortiert). Feiertage werden übersprungen. Die Tätigkeit wählst du unten für jeden Kunden einzeln.</p>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+      <button class="btn btn-gold" type="button" id="spAutoPick">👥 Kunden auswählen</button>
+      <span id="spAutoCount" class="sp-muted" style="font-weight:700"></span>
+    </div>
+    <div class="sp-form-grid">
+      <div class="field"><label for="spAutoFrom">Termine ab (Datum)</label><input id="spAutoFrom" type="date"></div>
+      <div class="field"><label for="spAutoTo">Termine bis (Datum)</label><input id="spAutoTo" type="date"></div>
+      <div class="field"><label for="spAutoStart">Täglich ab (Uhrzeit)</label><input id="spAutoStart" type="time" step="300"></div>
+      <div class="field"><label for="spAutoEnd">Täglich bis (Uhrzeit)</label><input id="spAutoEnd" type="time" step="300"></div>
+      <div class="field"><label for="spAutoMax">Max. Termine pro Tag</label><input id="spAutoMax" type="number" min="1" max="99" inputmode="numeric" placeholder="unbegrenzt"></div>
+      <div class="field"><label for="spAutoDuration">Dauer ohne Tätigkeit</label><select id="spAutoDuration"><option value="10">10 Minuten</option><option value="15">15 Minuten</option><option value="20">20 Minuten</option><option value="30">30 Minuten</option><option value="45">45 Minuten</option><option value="60">60 Minuten</option></select></div>
+    </div>
+    <div class="sp-muted" style="margin-top:10px;font-size:.84rem">Die Dauer je Kunde ergibt sich aus der gewählten Tätigkeit (mehrere = Summe). <button type="button" class="sp-linkbtn" id="spTimesOpenAuto">⏱ Zeiten je Tätigkeit anpassen</button></div>
+    <label class="sp-work" style="margin-top:12px;display:flex"><input type="checkbox" id="spAutoBreak"><span>30 Minuten Pause berücksichtigen<br><small class="sp-muted" style="font-weight:600">Pause 12:30–13:00 Uhr – in dieser Zeit werden keine Termine vergeben (bei 15-Minuten-Terminen sind es zwischen 12 und 13 Uhr dann nur 2 statt 4).</small></span></label>
+    <div class="sp-auto-preview" id="spAutoPreview"></div>
+    <div class="sp-modal-actions">
+      <button class="btn btn-light" type="button" id="spAutoCancel">Abbrechen</button>
+      <button class="btn btn-danger" type="button" id="spAutoUndo" hidden>Letzte Einplanung rückgängig</button>
+      <button class="btn btn-primary" type="button" id="spAutoCreate" disabled>Termine anlegen</button>
+    </div>
+  </div>
+</div>
+
 <div class="sp-modal-backdrop" id="spAppointmentModal" hidden>
   <div class="sp-modal" role="dialog" aria-modal="true" aria-labelledby="spModalTitle">
     <h3 id="spModalTitle">Termin anlegen</h3>
@@ -3192,26 +3322,32 @@
     </div>
     <div class="sp-form-grid">
       <div class="field"><label for="spAptDate">Datum</label><input id="spAptDate" type="date"></div>
-      <div class="field"><label for="spAptTime">Uhrzeit</label><input id="spAptTime" type="time" step="900"></div>
+      <div class="field"><label for="spAptTime">Uhrzeit</label><input id="spAptTime" type="time" step="60"></div>
       <div class="field"><label for="spAptCustomer">Kunde</label><input id="spAptCustomer" type="text" placeholder="Vor- und Nachname"></div>
       <div class="field"><label for="spAptStreet">Straße</label><input id="spAptStreet" type="text" placeholder="Straße"></div>
       <div class="field"><label for="spAptHouse">Hausnummer</label><input id="spAptHouse" type="text" placeholder="Hausnummer"></div>
       <div class="field"><label for="spAptZip">PLZ</label><input id="spAptZip" type="text" inputmode="numeric" placeholder="PLZ"></div>
       <div class="field"><label for="spAptCity">Ort</label><input id="spAptCity" type="text" placeholder="Ort"></div>
-      <div class="field"><label for="spAptDuration">Dauer</label><select id="spAptDuration"><option value="15">15 Minuten</option><option value="30">30 Minuten</option><option value="45">45 Minuten</option><option value="60">60 Minuten</option></select></div>
+      <div class="field"><label for="spAptDuration">Dauer</label><select id="spAptDuration"><option value="10">10 Minuten</option><option value="15">15 Minuten</option><option value="20">20 Minuten</option><option value="30">30 Minuten</option><option value="45">45 Minuten</option><option value="60">60 Minuten</option></select></div>
     </div>
     <div class="sp-works-box">
       <div class="sp-works-title">Arbeiten (werden im Terminvorschlag angekreuzt)</div>
       <div class="sp-works">
         <label class="sp-work"><input type="checkbox" id="spWorkKehrung"><span>Kehrung</span></label>
         <label class="sp-work"><input type="checkbox" id="spWorkMessung"><span>Messung</span></label>
+        <label class="sp-work"><input type="checkbox" id="spWorkFeststoff"><span>Feststoffmessung</span></label>
+        <label class="sp-work"><input type="checkbox" id="spWorkSchau"><span>Feuerstättenschau</span></label>
         <label class="sp-work"><input type="checkbox" id="spWorkOther"><span>Sonstiges</span></label>
       </div>
+      <div id="spWorkFeststoffInfo" class="sp-muted" hidden style="margin-top:8px;font-size:.82rem">Feststoffmessung: Im Terminvorschlag erscheint ein Hinweis für den Kunden (Dauer der Messung, Pelletkessel bzw. Scheitholzkessel vorbereiten).</div>
+      <div class="sp-muted" style="margin-top:8px;font-size:.82rem">Die Dauer des Termins wird aus den Zeiten je Tätigkeit berechnet (mehrere Tätigkeiten = Summe). <button type="button" class="sp-linkbtn" id="spTimesFromApt">⏱ Zeiten anpassen</button></div>
       <div class="field" id="spWorkOtherWrap" hidden style="margin-top:8px"><input id="spWorkOtherText" type="text" maxlength="40" placeholder="Eigener Text, z. B. Feuerstättenschau" aria-label="Sonstige Arbeit"></div>
     </div>
     <div class="field" style="margin-top:10px"><label for="spAptNotes">Besonderheiten</label><textarea id="spAptNotes" rows="4" placeholder="Zugang, Besonderheiten, Hinweise …"></textarea></div>
     <div class="sp-modal-actions">
       <button class="btn btn-light" type="button" id="spCancelAppointment">Abbrechen</button>
+      <button class="btn btn-light" type="button" id="spMoveFromApt" hidden>⇄ Verschieben</button>
+      <button class="btn btn-light" type="button" id="spDoneFromApt" hidden>✔ Erledigt …</button>
       <button class="btn btn-danger" type="button" id="spDeleteAppointment" hidden>Löschen</button>
       <button class="btn btn-primary" type="button" id="spSaveAppointment">Termin speichern</button>
     </div>
@@ -6165,6 +6301,17 @@
     if (typeof window.renderAll === "function") window.renderAll();
   }
   function appointments() { const a = data().appointments; return Array.isArray(a) ? a : []; }
+  /* Zeiten je Tätigkeit (Minuten) – individuell einstellbar, mehrere Tätigkeiten = Summe */
+  const WORK_DEFAULT_MIN = { kehrung: 10, messung: 20, feststoff: 60, schau: 30, other: 15 };
+  const WORK_NAMES = { kehrung: "Kehrung", messung: "Messung", feststoff: "Feststoffmessung", schau: "Feuerstättenschau", other: "Sonstiges" };
+  function workMinutesCfg() {
+    const saved = (data().appointmentSettings || {}).workMinutes || {};
+    const o = {};
+    Object.keys(WORK_DEFAULT_MIN).forEach(k => { const v = Math.round(Number(saved[k])); o[k] = v > 0 ? v : WORK_DEFAULT_MIN[k]; });
+    return o;
+  }
+  function minutesForWorks(list) { const c = workMinutesCfg(); return list.reduce((n, k) => n + (c[k] || 0), 0); }
+  function durText(min) { return min === 60 ? "1 Stunde" : min % 60 === 0 ? (min / 60) + " Stunden" : min + " Minuten"; }
   function settings() { return { businessName:"", employeeName:"", phone:"", businessAddress:"", ...(data().appointmentSettings || {}) }; }
   function currentYear() { return Number($("year")?.value || data().year || new Date().getFullYear()); }
   function currentState() { return $("state")?.value || data().state || "HE"; }
@@ -6200,6 +6347,41 @@
     $("spNewAppointment").addEventListener("click", () => openModal(iso(moduleState.date), "09:00"));
     document.querySelectorAll("[data-sp-view]").forEach(b => b.addEventListener("click", () => { moduleState.view = b.dataset.spView; render(); }));
     $("spAptPickCustomer").addEventListener("click", pickCustomerForAppointment);
+    $("spDoneCancel").addEventListener("click", closeDoneModal);
+    $("spDoneUndo").addEventListener("click", unsetDone);
+    document.querySelectorAll(".sp-inv").forEach(b => b.addEventListener("click", () => chooseInvoice(b.dataset.inv)));
+    $("spCashSave").addEventListener("click", saveCash);
+    $("spCashAmount").addEventListener("keydown", e => { if (e.key === "Enter") saveCash(); });
+    $("spMoveCancel").addEventListener("click", closeMoveModal);
+    $("spMoveSave").addEventListener("click", saveMove);
+    $("spMoveDate").addEventListener("change", () => { suggestMoveTime(); updateMoveInfo(); });
+    $("spMoveTime").addEventListener("input", updateMoveInfo);
+    document.querySelectorAll("[data-mv]").forEach(b => b.addEventListener("click", () => moveQuick(b.dataset.mv)));
+    $("spMoveFromApt").addEventListener("click", () => { const id = moduleState.editingId; closeModal(); openMoveModal(id); });
+    $("spDoneFromApt").addEventListener("click", () => { const id = moduleState.editingId; closeModal(); openDoneModal(id); });
+    $("spPrintDone").addEventListener("click", () => printDone(false));
+    $("spPrintDoneRange").addEventListener("click", () => printDone(true));
+    $("spPrintDay").addEventListener("click", printDay);
+    $("spPrintDays").addEventListener("click", printDayRange);
+    $("spDayDate").addEventListener("change", () => { moduleState.dayManual = true; });
+    $("spAutoOpen").addEventListener("click", openAutoModal);
+    $("spAutoCancel").addEventListener("click", closeAutoModal);
+    $("spAutoCreate").addEventListener("click", createAuto);
+    $("spAutoUndo").addEventListener("click", undoAuto);
+    $("spAutoPick").addEventListener("click", () => {
+      if (!window.SPKunden) return alert("Die Kundenverwaltung ist nicht geladen. Bitte die Seite neu laden.");
+      window.SPKunden.pickMany(list => { autoState.kunden = list; updateAuto(); }, autoState.kunden.map(k => k.id), { types: AUTO_TYPES, getWork: autoWork });
+    });
+    ["spAutoFrom", "spAutoTo", "spAutoStart", "spAutoEnd", "spAutoDuration", "spAutoBreak"].forEach(id => $(id).addEventListener("change", updateAuto));
+    $("spAutoMax").addEventListener("input", updateAuto);
+    $("spAutoPreview").addEventListener("click", autoPreviewClick);
+    $("spAutoPreview").addEventListener("input", autoPreviewInput);
+    ["spWorkKehrung", "spWorkMessung", "spWorkFeststoff", "spWorkSchau", "spWorkOther"].forEach(id => $(id).addEventListener("change", () => { applyWorkDuration(); syncWorkOther(); }));
+    $("spTimesFromApt").addEventListener("click", openTimesModal);
+    $("spTimesOpenAuto").addEventListener("click", openTimesModal);
+    $("spTimesCancel").addEventListener("click", closeTimesModal);
+    $("spTimesSave").addEventListener("click", saveTimes);
+    $("spTimesReset").addEventListener("click", () => { Object.keys(WORK_DEFAULT_MIN).forEach(k => { $("spTime_" + k).value = WORK_DEFAULT_MIN[k]; }); });
     $("spWorkOther").addEventListener("change", () => { syncWorkOther(); if ($("spWorkOther").checked) $("spWorkOtherText").focus(); });
     $("spSaveAppointment").addEventListener("click", saveAppointment);
     $("spCancelAppointment").addEventListener("click", closeModal);
@@ -6214,9 +6396,11 @@
     ["spProposalFrom","spProposalTo"].forEach(id => $(id).addEventListener("change", renderProposalList));
     $("year").addEventListener("change", () => render());
     $("state").addEventListener("change", () => render());
-    document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("spAppointmentModal").hidden) closeModal(); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("spAppointmentModal").hidden) closeModal(); if (e.key === "Escape" && !$("spAutoModal").hidden && !document.querySelector(".kv-overlay")) closeAutoModal(); if (e.key === "Escape" && !$("spDoneModal").hidden) closeDoneModal(); if (e.key === "Escape" && !$("spMoveModal").hidden) closeMoveModal(); });
     document.addEventListener("click", e => {
       const dayBtn = e.target.closest("[data-sp-day]"); if (dayBtn) { moduleState.date = fromIso(dayBtn.dataset.spDay); moduleState.view = "day"; render(); return; }
+      const dn = e.target.closest("[data-sp-done]"); if (dn) { openDoneModal(dn.dataset.spDone); return; }
+      const mv = e.target.closest("[data-sp-move]"); if (mv) { openMoveModal(mv.dataset.spMove); return; }
       const open = e.target.closest("[data-sp-open]"); if (open) openModal(open.dataset.date, open.dataset.time, open.dataset.spOpen);
       const select = e.target.closest("[data-sp-select]"); if (select) { moduleState.selectedId = select.dataset.spSelect; renderProposalList(); updateActionState(); }
       const edit = e.target.closest("[data-sp-edit]"); if (edit) openModal("", "", edit.dataset.spEdit);
@@ -6232,7 +6416,7 @@
     $("spBusinessAddress").value = s.businessAddress;
   }
   function saveSettings() {
-    persist({ appointmentSettings: { businessName:$("spBusinessName").value.trim(), employeeName:$("spEmployeeName").value.trim(), phone:$("spPhone").value.trim(), businessAddress:$("spBusinessAddress").value.trim() } });
+    persist({ appointmentSettings: { ...settings(), businessName:$("spBusinessName").value.trim(), employeeName:$("spEmployeeName").value.trim(), phone:$("spPhone").value.trim(), businessAddress:$("spBusinessAddress").value.trim() } });
   }
 
   function move(delta) {
@@ -6245,10 +6429,23 @@
   function addrLine(a) {
     return [a.street && `${a.street} ${a.house || ""}`.trim(), [a.zip, a.city].filter(Boolean).join(" ")].filter(Boolean).join(", ");
   }
+  const INV_LABEL = { post: "per Post", hinterlegt: "Rechnung hinterlegt – Kunde überweist", mail: "per E-Mail", bar: "Barzahlung" };
+  const INV_SHORT = { post: "Post", hinterlegt: "hinterlegt", mail: "E-Mail", bar: "bar" };
+  const fmtEUR = n => Number(n).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+  /* „85,50“, „85.5“, „1.234,50“ -> Zahl (oder null) */
+  function parseAmount(str) {
+    const t = String(str || "").replace(/[\s€]/g, "");
+    if (!t) return null;
+    const n = t.includes(",") ? Number(t.replace(/\./g, "").replace(",", ".")) : Number(t);
+    return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) / 100 : NaN;
+  }
   function apptCard(a, compact) {
     const addr = addrLine(a);
     const title = (a.customer || "Ohne Kundennamen") + (addr ? " – " + addr : "");
-    return `<button type="button" class="sp-appt${compact ? " compact" : ""}${a.id === moduleState.selectedId ? " selected" : ""}" data-sp-open="${esc(a.id)}" data-date="${esc(a.date)}" data-time="${esc(a.time)}" title="${esc(title)}"><span class="sp-appt-time">${esc(a.time)}</span><span class="sp-appt-main"><strong>${esc(a.customer || "Ohne Kundennamen")}</strong>${compact || !addr ? "" : `<small>${esc(addr)}</small>`}</span></button>`;
+    const btn = `<button type="button" class="sp-appt${compact ? " compact" : ""}${a.id === moduleState.selectedId ? " selected" : ""}${a.done ? " done" : ""}" data-sp-open="${esc(a.id)}" data-date="${esc(a.date)}" data-time="${esc(a.time)}" title="${esc(title)}"><span class="sp-appt-time">${a.done ? "✔ " : ""}${esc(a.time)}</span><span class="sp-appt-main"><strong>${esc(a.customer || "Ohne Kundennamen")}</strong>${compact || !addr ? "" : `<small>${esc(addr)}</small>`}</span></button>`;
+    if (compact) return btn;
+    const inv = a.done && a.invoice ? ` · ${INV_SHORT[a.invoice] || ""}${a.invoice === "bar" && a.amount > 0 ? " " + fmtEUR(a.amount) : ""}` : "";
+    return `<div class="sp-appt-wrap">${btn}<div class="sp-appt-actions"><button type="button" class="sp-act${a.done ? " done" : ""}" data-sp-done="${esc(a.id)}">${a.done ? "✔ Erledigt" + esc(inv) : "☐ Erledigt?"}</button><button type="button" class="sp-act" data-sp-move="${esc(a.id)}">⇄ Verschieben</button></div></div>`;
   }
   function freeTimeIn(day, hour) {
     const used = appointments().filter(a => a.date === day && Number(a.time.slice(0, 2)) === hour).map(a => a.time);
@@ -6256,8 +6453,13 @@
     return `${pad(hour)}:00`;
   }
   function firstFreeSlot(day) {
-    for (let h = 8; h <= 17; h++) if (hourCount(day, `${pad(h)}:00`, null) < 4) return freeTimeIn(day, h);
+    for (let m = 8 * 60; m <= 17 * 60 + 45; m += 5) if (!overlapWith(day, fromMin(m), 15, null)) return fromMin(m);
     return "09:00";
+  }
+  /* Termin, der sich mit [Beginn, Beginn+Dauer) überschneidet (oder null) */
+  function overlapWith(date, time, dur, ignoreId) {
+    const s = toMin(time), e = s + dur;
+    return appointments().find(a => a.id !== ignoreId && a.date === date && s < toMin(a.time) + (Number(a.duration) || 15) && e > toMin(a.time)) || null;
   }
   function addBtn(day, time, label, aria) {
     return `<button type="button" class="sp-add" data-sp-open="" data-date="${esc(day)}" data-time="${esc(time)}" aria-label="${esc(aria || "Termin anlegen")}">${label}</button>`;
@@ -6274,7 +6476,7 @@
     for (let hour = 0; hour <= 23; hour++) {
       const aps = list.filter(a => Number(a.time.slice(0, 2)) === hour);
       if (!aps.length && !(moduleState.showEmpty && hour >= 6 && hour <= 20)) continue;
-      const canAdd = !h && aps.length < 4;
+      const canAdd = !h;
       const add = canAdd ? addBtn(key, freeTimeIn(key, hour), aps.length ? "+" : "+ frei", `Termin um ${pad(hour)} Uhr anlegen`) : "";
       html += `<div class="sp-hour${aps.length ? "" : " empty"}"><div class="sp-hour-time">${pad(hour)}:00</div><div class="sp-hour-body">${aps.map(a => apptCard(a)).join("")}${add}</div></div>`;
     }
@@ -6293,6 +6495,7 @@
 
   function render() {
     if (!$('spCalendar')) return;
+    if ($("spDayDate") && !moduleState.dayManual) $("spDayDate").value = iso(moduleState.date);
     const week = moduleState.view === "week";
     const days = week ? Array.from({ length: 7 }, (_, i) => addDays(weekStart(moduleState.date), i)) : [moduleState.date];
     const holidays = holidayMap(currentYear());
@@ -6323,17 +6526,22 @@
     $("spAptHouse").value = a?.house || "";
     $("spAptZip").value = a?.zip || "";
     $("spAptCity").value = a?.city || "";
+    ensureDurOption(a?.duration || 15);
     $("spAptDuration").value = String(a?.duration || 15);
     $("spAptNotes").value = a?.notes || "";
     const wk = Array.isArray(a?.works) ? a.works : [];
     $("spWorkKehrung").checked = wk.includes("kehrung");
     $("spWorkMessung").checked = wk.includes("messung");
+    $("spWorkFeststoff").checked = wk.includes("feststoff");
+    $("spWorkSchau").checked = wk.includes("schau");
     $("spWorkOther").checked = wk.includes("other");
     $("spWorkOtherText").value = a?.workOther || "";
     syncWorkOther();
     moduleState.aptCustomer = a?.kid ? { id: a.kid, nr: a.knr || "" } : null;
     showAptCustomerInfo();
     $("spDeleteAppointment").hidden = !a;
+    $("spMoveFromApt").hidden = !a;
+    $("spDoneFromApt").hidden = !a;
     $("spAppointmentModal").hidden = false;
     $("spAptCustomer").focus();
   }
@@ -6343,11 +6551,14 @@
   function syncWorkOther() {
     const on = $("spWorkOther").checked;
     $("spWorkOtherWrap").hidden = !on;
+    $("spWorkFeststoffInfo").hidden = !$("spWorkFeststoff").checked;
   }
   function selectedWorks() {
     const w = [];
     if ($("spWorkKehrung").checked) w.push("kehrung");
     if ($("spWorkMessung").checked) w.push("messung");
+    if ($("spWorkFeststoff").checked) w.push("feststoff");
+    if ($("spWorkSchau").checked) w.push("schau");
     if ($("spWorkOther").checked) w.push("other");
     return w;
   }
@@ -6372,14 +6583,675 @@
     });
   }
 
+  /* Dauer-Auswahl: fehlenden Wert (z. B. 25 Minuten) ergänzen */
+  function ensureDurOption(min) {
+    const sel = $("spAptDuration");
+    min = Number(min) || 15;
+    if ([...sel.options].some(o => Number(o.value) === min)) return;
+    const opt = document.createElement("option");
+    opt.value = String(min); opt.textContent = `${min} Minuten`;
+    const after = [...sel.options].find(o => Number(o.value) > min);
+    sel.insertBefore(opt, after || null);
+  }
+  function applyWorkDuration() {
+    const w = selectedWorks();
+    if (!w.length) return;
+    const m = minutesForWorks(w);
+    ensureDurOption(m);
+    $("spAptDuration").value = String(m);
+  }
+
+  /* Dialog „Zeiten je Tätigkeit“ */
+  function openTimesModal() {
+    const c = workMinutesCfg();
+    Object.keys(WORK_DEFAULT_MIN).forEach(k => { $("spTime_" + k).value = c[k]; });
+    $("spTimesModal").hidden = false;
+  }
+  function closeTimesModal() { $("spTimesModal").hidden = true; }
+  function saveTimes() {
+    const wm = {};
+    for (const k of Object.keys(WORK_DEFAULT_MIN)) {
+      const v = Math.round(Number($("spTime_" + k).value));
+      if (!(v >= 1 && v <= 480)) return alert(`Bitte für „${WORK_NAMES[k]}“ eine Zeit zwischen 1 und 480 Minuten eingeben.`);
+      wm[k] = v;
+    }
+    persist({ appointmentSettings: { ...settings(), workMinutes: wm } });
+    closeTimesModal();
+    if (!$("spAutoModal").hidden) updateAuto();
+    if (!$("spAppointmentModal").hidden) applyWorkDuration();
+  }
+
+  /* ================= Termine automatisch einplanen ================= */
+  const AUTO_KEY = "schornstein-planer-auto-v1";
+  const BREAK_FROM = 12 * 60 + 30, BREAK_TO = 13 * 60;   // Pause 12:30–13:00 Uhr
+  const autoState = { kunden: [], works: {} };
+  const toMin = t => { const [h, m] = String(t || "0:0").split(":").map(Number); return (h || 0) * 60 + (m || 0); };
+  const fromMin = n => `${pad(Math.floor(n / 60))}:${pad(n % 60)}`;
+  function autoPrefs() { try { return JSON.parse(localStorage.getItem(AUTO_KEY) || "{}"); } catch { return {}; } }
+  function autoSavePrefs(extra) { try { localStorage.setItem(AUTO_KEY, JSON.stringify({ ...autoPrefs(), ...extra })); } catch {} }
+
+  /* Tätigkeit je Kunde: { kehrung, messung, other, text } */
+  function autoWork(id) { return autoState.works[id] || (autoState.works[id] = { kehrung: false, messung: false, feststoff: false, schau: false, other: false, text: "" }); }
+  function autoWorkList(w) { const l = []; if (w.kehrung) l.push("kehrung"); if (w.messung) l.push("messung"); if (w.feststoff) l.push("feststoff"); if (w.schau) l.push("schau"); if (w.other) l.push("other"); return l; }
+  const AUTO_TYPES = [{ k: "kehrung", l: "Kehrung" }, { k: "messung", l: "Messung" }, { k: "feststoff", l: "Feststoffmessung" }, { k: "schau", l: "Feuerstättenschau" }, { k: "other", l: "Sonstiges" }];
+  const AUTO_LABEL = { kehrung: "Kehrung", messung: "Messung", feststoff: "Feststoffmessung", schau: "Feuerstättenschau", other: "Sonstiges" };
+  function chipsHtml(id) {
+    const w = autoWork(id);
+    return ["kehrung", "messung", "feststoff", "schau", "other"].map(t => `<button type="button" class="sp-chip${w[t] ? " on" : ""}" data-aw="${t}">${AUTO_LABEL[t]}</button>`).join("")
+      + `<input class="sp-auto-other" type="text" maxlength="40" placeholder="Eigener Text, z. B. Feuerstättenschau" aria-label="Sonstige Arbeit" value="${esc(w.text)}"${w.other ? "" : " hidden"}>`;
+  }
+  /* Klicks auf die Auswahl je Kunde / „für alle setzen“ – ohne die Liste neu aufzubauen (Scrollposition bleibt) */
+  function autoPreviewClick(e) {
+    const quick = e.target.closest("[data-aq]");
+    if (quick) {
+      const t = quick.dataset.aq;
+      let replan = false;
+      document.querySelectorAll("#spAutoPreview [data-kid]").forEach(row => {
+        const w = autoWork(row.dataset.kid);
+        if (t === "none") { if (w.feststoff) replan = true; w.kehrung = w.messung = w.feststoff = w.schau = w.other = false; w.text = ""; } else w[t] = true;
+        row.querySelector(".sp-auto-works").innerHTML = chipsHtml(row.dataset.kid);
+      });
+      refreshAuto();
+      return;
+    }
+    const chip = e.target.closest("[data-aw]");
+    if (!chip) return;
+    const row = chip.closest("[data-kid]"), w = autoWork(row.dataset.kid), t = chip.dataset.aw;
+    w[t] = !w[t];
+    chip.classList.toggle("on", w[t]);
+    if (t === "other") {
+      const inp = row.querySelector(".sp-auto-other");
+      inp.hidden = !w.other;
+      if (w.other) inp.focus();
+    }
+    refreshAuto(row.dataset.kid, t === "other" && w.other);   // Dauer ändert sich -> Plan neu berechnen
+  }
+  /* Plan neu berechnen und Scrollpositionen beibehalten */
+  function refreshAuto(kid, focusText) {
+    const modal = document.querySelector("#spAutoModal .sp-modal");
+    const list = document.querySelector("#spAutoPreview .sp-auto-list");
+    const m = modal ? modal.scrollTop : 0, l = list ? list.scrollTop : 0;
+    updateAuto();
+    const list2 = document.querySelector("#spAutoPreview .sp-auto-list");
+    if (modal) modal.scrollTop = m;
+    if (list2) list2.scrollTop = l;
+    if (kid && focusText) { const inp = document.querySelector(`#spAutoPreview [data-kid="${kid}"] .sp-auto-other`); if (inp && !inp.hidden) inp.focus(); }
+  }
+  function autoPreviewInput(e) {
+    const inp = e.target.closest(".sp-auto-other");
+    if (!inp) return;
+    autoWork(inp.closest("[data-kid]").dataset.kid).text = inp.value;
+  }
+
+  function openAutoModal() {
+    const p = autoPrefs();
+    const from = addDays(new Date(), 1);
+    $("spAutoFrom").value = iso(from);
+    $("spAutoTo").value = iso(addDays(from, 13));
+    $("spAutoStart").value = p.start || "08:00";
+    $("spAutoEnd").value = p.end || "16:00";
+    $("spAutoDuration").value = p.duration || "15";
+    $("spAutoMax").value = p.max || "";
+    $("spAutoBreak").checked = p.pause !== false;
+    autoState.kunden = [];
+    autoState.works = {};
+    $("spAutoModal").hidden = false;
+    updateAuto();
+  }
+  function closeAutoModal() { $("spAutoModal").hidden = true; }
+
+  /* Berechnet, welcher Kunde auf welchen Tag/welche Uhrzeit kommt (ohne zu speichern) */
+  function planAuto() {
+    const res = { error: "", placed: [], unplaced: [], skipped: [], candidates: 0, baseDur: 0 };
+    const from = $("spAutoFrom").value, to = $("spAutoTo").value;
+    const dur = Number($("spAutoDuration").value) || 15;
+    const startMin = toMin($("spAutoStart").value), endMin = toMin($("spAutoEnd").value);
+    const pause = $("spAutoBreak").checked;
+    const maxDay = Math.max(0, Math.floor(Number($("spAutoMax").value) || 0));   // 0 = unbegrenzt
+    res.baseDur = dur; res.maxDay = maxDay;
+    if (!autoState.kunden.length) { res.error = "Noch keine Kunden ausgewählt."; return res; }
+    if (!from || !to || from > to) { res.error = "Bitte einen gültigen Zeitraum angeben (ab ≤ bis)."; return res; }
+    if (endMin - startMin < dur) { res.error = "Die tägliche Zeit „ab–bis“ ist zu kurz."; return res; }
+
+    const existing = appointments();
+    const sameKey = a => `${(a.customer || "").toLowerCase()}|${(a.street || "").toLowerCase()}|${(a.house || "").toLowerCase()}`;
+    const cand = [];
+    autoState.kunden.forEach(k => {
+      const kk = `${k.name.toLowerCase()}|${k.street.toLowerCase()}|${k.house.toLowerCase()}`;
+      const has = existing.some(a => a.date >= from && a.date <= to && (a.kid === k.id || sameKey(a) === kk));
+      (has ? res.skipped : cand).push(k);
+    });
+    res.candidates = cand.length;
+
+    const hol = new Map();
+    const holiday = key => { const y = Number(key.slice(0, 4)); if (!hol.has(y)) hol.set(y, holidayMap(y)); return hol.get(y).get(key); };
+    /* Arbeitstage (Mo–Fr ohne Feiertage) */
+    const days = [];
+    for (let d = fromIso(from); iso(d) <= to; d = addDays(d, 1)) {
+      const key = iso(d), wd = d.getDay();
+      if (wd !== 0 && wd !== 6 && !holiday(key)) days.push(key);
+    }
+    const state = {};
+    const dayState = key => state[key] || (state[key] = {
+      busy: existing.filter(a => a.date === key).map(a => ({ s: toMin(a.time), e: toMin(a.time) + (Number(a.duration) || 15) })),
+      count: existing.filter(a => a.date === key).length
+    });
+    /* Dauer je Kunde: Summe der Zeiten seiner Tätigkeiten, ohne Tätigkeit die Standarddauer */
+    const durOf = k => { const l = autoWorkList(autoWork(k.id)); return l.length ? minutesForWorks(l) : dur; };
+    let idx = 0, di = 0, s = startMin;
+    while (idx < cand.length && di < days.length) {
+      const k = cand[idx], d = durOf(k), st = dayState(days[di]);
+      if (maxDay && st.count >= maxDay) { di++; s = startMin; continue; }   // Tageslimit erreicht
+      let placed = false;
+      while (s + d <= endMin) {
+        if (pause && s < BREAK_TO && s + d > BREAK_FROM) { s = BREAK_TO; continue; }   // Pause: danach weiter
+        const clash = st.busy.find(b => s < b.e && s + d > b.s);
+        if (clash) { s = clash.e; continue; }
+        st.busy.push({ s, e: s + d });
+        st.count++;
+        res.placed.push({ k, date: days[di], time: fromMin(s), dur: d });
+        s += d; idx++; placed = true;
+        break;
+      }
+      if (!placed) { di++; s = startMin; }
+    }
+    res.unplaced = cand.slice(idx);
+    return res;
+  }
+
+  function updateAuto() {
+    const n = autoState.kunden.length;
+    $("spAutoCount").textContent = n ? `${n} ${n === 1 ? "Kunde" : "Kunden"} ausgewählt` : "";
+    const plan = planAuto();
+    const box = $("spAutoPreview");
+    $("spAutoCreate").disabled = !plan.placed.length;
+    const batch = autoPrefs().lastBatch;
+    const undoCount = batch ? appointments().filter(a => a.auto === batch).length : 0;
+    $("spAutoUndo").hidden = !undoCount;
+    $("spAutoUndo").textContent = `Letzte Einplanung rückgängig (${undoCount})`;
+    if (plan.error) { box.innerHTML = `<span class="sp-muted">${esc(plan.error)}</span>`; return; }
+    let html = `<strong>${plan.placed.length} von ${plan.candidates} ${plan.candidates === 1 ? "Kunde" : "Kunden"} eingeplant</strong>`;
+    if (plan.maxDay) html += `<span class="sp-muted"> · höchstens ${plan.maxDay} ${plan.maxDay === 1 ? "Termin" : "Termine"} pro Tag</span>`;
+    if (plan.placed.length) {
+      html += `<span class="sp-muted"> · ${shortDate(plan.placed[0].date)} bis ${shortDate(plan.placed[plan.placed.length - 1].date)}</span>`;
+      html += `<div class="sp-auto-quick"><span>Tätigkeit für alle setzen:</span><button type="button" class="sp-chip" data-aq="kehrung">Kehrung</button><button type="button" class="sp-chip" data-aq="messung">Messung</button><button type="button" class="sp-chip" data-aq="none">Zurücksetzen</button></div>`;
+      html += `<div class="sp-auto-list">`;
+      let day = "";
+      plan.placed.forEach(p => {
+        if (p.date !== day) { day = p.date; html += `<div class="sp-auto-day">${esc(fmtDate(day))}</div>`; }
+        html += `<div class="sp-auto-line sp-auto-cust" data-kid="${esc(p.k.id)}"><span class="sp-auto-time">${esc(p.time)}</span><span class="sp-auto-who"><span>${esc(p.k.name)} – ${esc(addrLine(p.k))}<small class="sp-muted"> (${p.dur} Min.)</small></span><span class="sp-auto-works">${chipsHtml(p.k.id)}</span></span></div>`;
+      });
+      html += `</div>`;
+    }
+    if (plan.unplaced.length) html += `<div class="sp-auto-warn">Für ${plan.unplaced.length} Kunden ist im gewählten Zeitraum kein freier Platz mehr (${plan.unplaced.slice(0, 3).map(k => esc(k.name)).join(", ")}${plan.unplaced.length > 3 ? " …" : ""}). Verlängere den Zeitraum oder die tägliche Zeit.</div>`;
+    if (plan.skipped.length) html += `<div class="sp-auto-warn">${plan.skipped.length} ${plan.skipped.length === 1 ? "Kunde hat" : "Kunden haben"} im Zeitraum schon einen Termin und ${plan.skipped.length === 1 ? "wird" : "werden"} übersprungen (${plan.skipped.slice(0, 3).map(k => esc(k.name)).join(", ")}${plan.skipped.length > 3 ? " …" : ""}).</div>`;
+    box.innerHTML = html;
+  }
+
+  function createAuto() {
+    const plan = planAuto();
+    if (!plan.placed.length) return;
+    const dur = Number($("spAutoDuration").value) || 15;
+    const batch = uuid(), now = new Date().toISOString();
+    const items = plan.placed.map(p => {
+      const { k, date, time } = p;
+      const w = autoWork(k.id);
+      return { id: uuid(), date, time, customer: k.name, street: k.street, house: k.house, zip: k.zip, city: k.city, duration: p.dur || dur, notes: k.notes || "", works: autoWorkList(w), workOther: w.other ? w.text.trim() : "", kid: k.id, knr: k.nr, auto: batch, updatedAt: now };
+    });
+    persist({ appointments: appointments().concat(items) });
+    autoSavePrefs({ lastBatch: batch, start: $("spAutoStart").value, end: $("spAutoEnd").value, duration: String(dur), pause: $("spAutoBreak").checked, max: plan.maxDay || "" });
+    moduleState.date = fromIso(items[0].date);
+    moduleState.view = "week";
+    closeAutoModal();
+    render();
+    renderProposalList();
+    alert(`${items.length} ${items.length === 1 ? "Termin wurde" : "Termine wurden"} angelegt (${shortDate(items[0].date)} bis ${shortDate(items[items.length - 1].date)}).` + (plan.unplaced.length ? `\n\nFür ${plan.unplaced.length} Kunden war kein Platz mehr.` : ""));
+  }
+
+  function undoAuto() {
+    const batch = autoPrefs().lastBatch;
+    const list = appointments();
+    const n = list.filter(a => a.auto === batch).length;
+    if (!batch || !n) return;
+    if (!confirm(`Die ${n} Termine der letzten automatischen Einplanung wieder löschen?`)) return;
+    persist({ appointments: list.filter(a => a.auto !== batch) });
+    autoSavePrefs({ lastBatch: "" });
+    if (!appointments().some(a => a.id === moduleState.selectedId)) moduleState.selectedId = null;
+    render();
+    renderProposalList();
+    updateAuto();
+  }
+
+  /* ================= Erledigt abhaken (mit Rechnungsart) ================= */
+  function openDoneModal(id) {
+    const a = appointments().find(x => x.id === id);
+    if (!a) return;
+    moduleState.doneId = id;
+    $("spDoneWho").textContent = `${a.customer || "Ohne Namen"} – ${fmtDate(a.date)}, ${a.time} Uhr`;
+    $("spDoneUndo").hidden = !a.done;
+    document.querySelectorAll(".sp-inv").forEach(b => b.classList.toggle("on", !!a.done && a.invoice === b.dataset.inv));
+    const cash = !!a.done && a.invoice === "bar";
+    $("spCashBox").hidden = !cash;
+    $("spCashAmount").value = cash && a.amount > 0 ? String(a.amount).replace(".", ",") : "";
+    $("spDoneModal").hidden = false;
+    if (cash) $("spCashAmount").focus();
+  }
+  function closeDoneModal() { $("spDoneModal").hidden = true; moduleState.doneId = null; }
+  function setDone(invoice, amount) {
+    const id = moduleState.doneId;
+    persist({ appointments: appointments().map(a => {
+      if (a.id !== id) return a;
+      const n = { ...a, done: true, doneAt: new Date().toISOString(), invoice };
+      if (invoice === "bar" && amount > 0) n.amount = amount; else delete n.amount;
+      return n;
+    }) });
+    closeDoneModal(); render();
+  }
+  function chooseInvoice(inv) {
+    if (inv !== "bar") return setDone(inv);
+    $("spCashBox").hidden = false;
+    document.querySelectorAll(".sp-inv").forEach(b => b.classList.toggle("on", b.dataset.inv === "bar"));
+    $("spCashAmount").focus();
+  }
+  function saveCash() {
+    const n = parseAmount($("spCashAmount").value);
+    if (Number.isNaN(n)) return alert("Bitte einen gültigen Betrag eingeben, z. B. 85,50.");
+    if (n === null && !confirm("Ohne Betrag speichern? Er fehlt dann in der Bar-Summe.")) return;
+    setDone("bar", n);
+  }
+  function unsetDone() {
+    const id = moduleState.doneId;
+    persist({ appointments: appointments().map(a => { if (a.id !== id) return a; const { done, doneAt, invoice, amount, ...rest } = a; return rest; }) });
+    closeDoneModal(); render();
+  }
+
+  /* ================= Termin verschieben ================= */
+  function openMoveModal(id) {
+    const a = appointments().find(x => x.id === id);
+    if (!a) return;
+    moduleState.moveId = id;
+    $("spMoveWho").textContent = `${a.customer || "Ohne Namen"}${addrLine(a) ? " – " + addrLine(a) : ""}`;
+    $("spMoveFrom").textContent = `Bisher: ${fmtDate(a.date)}, ${a.time} Uhr (${Number(a.duration) || 15} Min.)`;
+    $("spMoveDate").value = a.date;
+    $("spMoveTime").value = a.time;
+    $("spMoveModal").hidden = false;
+    updateMoveInfo();
+  }
+  function closeMoveModal() { $("spMoveModal").hidden = true; moduleState.moveId = null; }
+  function moveTarget() {
+    const a = appointments().find(x => x.id === moduleState.moveId);
+    const date = $("spMoveDate").value, time = $("spMoveTime").value;
+    return { a, date, time, dur: Number(a && a.duration) || 15 };
+  }
+  /* Zeitpunkt mit Hinweisen prüfen (Feiertag, Wochenende, Überschneidung) */
+  function updateMoveInfo() {
+    const { a, date, time, dur } = moveTarget();
+    const box = $("spMoveInfo");
+    if (!a || !date || !time) { box.hidden = true; $("spMoveSave").disabled = true; return; }
+    const holiday = holidayMap(fromIso(date).getFullYear()).get(date);
+    const wd = fromIso(date).getDay();
+    const clash = overlapWith(date, time, dur, a.id);
+    const msg = [];
+    if (holiday) msg.push(`Feiertag: ${holiday} – an Feiertagen kann kein Termin liegen.`);
+    else {
+      if (wd === 0 || wd === 6) msg.push("Der gewählte Tag ist ein Wochenende.");
+      if (clash) msg.push(`Überschneidung mit dem Termin um ${clash.time} Uhr (${clash.customer || "ohne Namen"}).`);
+    }
+    box.textContent = msg.join(" ");
+    box.hidden = !msg.length;
+    $("spMoveSave").disabled = !!holiday || (date === a.date && time === a.time);
+  }
+  /* freie Uhrzeit am Zieltag vorschlagen, wenn die bisherige belegt ist */
+  function suggestMoveTime() {
+    const { a, date, time, dur } = moveTarget();
+    if (!a || !date || !time || !overlapWith(date, time, dur, a.id)) return;
+    for (let m = 8 * 60; m + dur <= 18 * 60; m += 5) if (!overlapWith(date, fromMin(m), dur, a.id)) { $("spMoveTime").value = fromMin(m); return; }
+  }
+  function moveQuick(kind) {
+    const cur = fromIso($("spMoveDate").value || iso(new Date()));
+    let d = addDays(cur, kind === "week" ? 7 : 1);
+    if (kind === "next") while (d.getDay() === 0 || d.getDay() === 6 || holidayMap(d.getFullYear()).get(iso(d))) d = addDays(d, 1);
+    $("spMoveDate").value = iso(d);
+    suggestMoveTime(); updateMoveInfo();
+  }
+  function saveMove() {
+    const { a, date, time, dur } = moveTarget();
+    if (!a || !date || !time) return;
+    if (holidayMap(fromIso(date).getFullYear()).get(date)) return alert("An Feiertagen kann kein Termin liegen.");
+    const clash = overlapWith(date, time, dur, a.id);
+    if (clash && !confirm(`Der Termin überschneidet sich mit dem Termin um ${clash.time} Uhr (${clash.customer || "ohne Namen"}). Trotzdem verschieben?`)) return;
+    persist({ appointments: appointments().map(x => x.id === a.id ? { ...x, date, time, updatedAt: new Date().toISOString() } : x) });
+    moduleState.date = fromIso(date);
+    closeMoveModal(); render();
+  }
+
+  /* ================= Tagesübersicht (Zettel zum Abhaken) ================= */
+  const WORK_TEXT = { kehrung: "Kehrung", messung: "Messung", feststoff: "Feststoffmessung", schau: "Feuerstättenschau" };
+  function worksText(a) {
+    const w = Array.isArray(a.works) ? a.works : [];
+    const out = [];
+    ["kehrung", "messung", "feststoff", "schau"].forEach(k => { if (w.includes(k)) out.push(WORK_TEXT[k]); });
+    if (w.includes("other")) out.push((a.workOther || "").trim() || "Sonstiges");
+    return out;
+  }
+  function endTime(a) { return fromMin(toMin(a.time) + (Number(a.duration) || 15)); }
+
+  /* Eigenes PDF: A4 hoch, je Tag ein Blatt (bei vielen Terminen mehrere Seiten) */
+  function buildDayPdf(days, s, mode) {
+    const DONE = mode === "done";
+    const W = 595.28, H = 841.89, ML = 36, MT = 38, MB = 44, CW = W - 2 * ML;
+    const cpMap = { "€": 0x80, "„": 0x84, "…": 0x85, "‘": 0x91, "’": 0x92, "“": 0x93, "”": 0x94, "•": 0x95, "–": 0x96, "—": 0x97 };
+    const tr = { "≥": ">=", "≤": "<=", "→": "->", "←": "<-", "↔": "<->", "✓": "", "✗": "", "−": "-", "\u2009": " ", "\u202f": " ", "\u200b": "" };
+    const nz = str => {
+      let o = "";
+      for (const ch of String(str ?? "")) {
+        const c = ch.codePointAt(0);
+        if (c < 32) o += " ";
+        else if (c < 128 || (c >= 160 && c <= 255)) o += ch;
+        else if (cpMap[ch]) o += ch;
+        else if (tr[ch] !== undefined) o += tr[ch];
+        else { const d = ch.normalize("NFKD").replace(/[^\x20-\x7e]/g, ""); o += d || "?"; }
+      }
+      return o;
+    };
+    const enc = str => { let o = ""; for (const ch of str) o += cpMap[ch] ? String.fromCharCode(cpMap[ch]) : ch; return o.replace(/([\\()])/g, "\\$1"); };
+    const cv = document.createElement("canvas").getContext("2d");
+    const wid = (str, bold, size) => { cv.font = (bold ? "bold " : "") + "100px Helvetica, Arial, sans-serif"; return cv.measureText(nz(str)).width * size / 100 * 1.02; };
+    const col = hex => { const n = parseInt(hex.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(v => (v / 255).toFixed(3)).join(" "); };
+    const f = v => Number(v).toFixed(2);
+    const wrap = (str, size, bold, maxW) => {
+      const out = [];
+      String(str ?? "").split(/\r?\n/).forEach(par => {
+        let ln = "";
+        par.split(/\s+/).filter(Boolean).forEach(w => {
+          const test = ln ? ln + " " + w : w;
+          if (!ln || wid(test, bold, size) <= maxW) ln = test; else { out.push(ln); ln = w; }
+        });
+        out.push(ln);
+      });
+      return out;
+    };
+
+    const pages = [];
+    let ops = [], y = MT, curLabel = "";
+    const T = (x, yy, str, o = {}) => {
+      const size = o.size || 9.5, bold = !!o.bold;
+      let px = x;
+      if (o.align === "right") px = x - wid(str, bold, size);
+      ops.push("BT /" + (bold ? "F2" : "F1") + " " + size + " Tf " + col(o.color || "#22272d") + " rg " + f(px) + " " + f(H - yy) + " Td (" + enc(nz(str)) + ") Tj ET");
+    };
+    const R = (x, yy, w, h, o = {}) => {
+      const fill = o.fill ? col(o.fill) + " rg " : "";
+      const stroke = o.stroke ? col(o.stroke) + " RG " + (o.lw || 0.8) + " w " : "";
+      ops.push(fill + stroke + f(x) + " " + f(H - yy - h) + " " + f(w) + " " + f(h) + " re " + (o.fill && o.stroke ? "B" : o.fill ? "f" : "S"));
+    };
+    const L = (x1, y1, x2, y2, color, lw) => ops.push(col(color) + " RG " + lw + " w " + f(x1) + " " + f(H - y1) + " m " + f(x2) + " " + f(H - y2) + " l S");
+    const endPage = () => { if (ops.length) pages.push({ ops: ops.join("\n"), label: curLabel }); ops = []; };
+
+    const biz = [s.businessName, s.employeeName].filter(Boolean).join(" · ");
+    const cols = [
+      { w: 26, h: "" }, { w: 56, h: "Uhrzeit" }, { w: DONE ? 182 : 196, h: "Kunde / Adresse" }, { w: DONE ? 108 : 118, h: "Tätigkeit" }, { w: CW - 26 - 56 - (DONE ? 182 : 196) - (DONE ? 108 : 118), h: DONE ? "Rechnung" : "Hinweis" }
+    ];
+    const padX = 5, padY = 5;
+
+    const header = (day, cont) => {
+      y = MT;
+      curLabel = fmtDate(day.date);
+      T(ML, y + 8, (DONE ? "ERLEDIGT-LISTE" : "TAGESÜBERSICHT") + (cont ? " – FORTSETZUNG" : ""), { size: 8.5, bold: true, color: "#9a7220" });
+      y += 28;
+      T(ML, y, fmtDate(day.date), { size: 17, bold: true });
+      T(ML + CW, y, day.items.length + (DONE ? " erledigt" : day.items.length === 1 ? " Termin" : " Termine"), { size: 10.5, bold: true, align: "right" });
+      y += 14;
+      if (biz) T(ML, y, biz, { size: 8.8, color: "#6c757d" });
+      y += 8;
+      L(ML, y, ML + CW, y, "#c79a42", 1.4);
+      y += 10;
+      // Tabellenkopf
+      R(ML, y, CW, 18, { fill: "#eef0f2" });
+      let cx = ML;
+      cols.forEach(c => { if (c.h) T(cx + padX, y + 12.5, c.h, { size: 8.4, bold: true, color: "#4f5962" }); cx += c.w; });
+      y += 18;
+    };
+
+    /* Je mehr Termine am Tag, desto kompakter (feine Abstufung) – damit alles auf EINE A4-Seite passt */
+    const levelFor = fs => ({
+      fs,
+      padY: Math.max(1.2, 5 * (fs - 0.6) / 0.4),
+      minH: Math.max(10, 24 * (fs - 0.55) / 0.45),
+      compact: fs < 0.88,
+      notes: fs >= 0.96 ? 99 : fs >= 0.9 ? 3 : fs >= 0.8 ? 2 : fs >= 0.72 ? 1 : 0,
+      kd: fs >= 0.78,
+      extra: fs >= 0.88
+    });
+    const HDR_END = MT + 28 + 14 + 8 + 10 + 18;
+    const lead = l => l.size * 1.28;
+    const line1 = (t, size, bold, color) => ({ size, runs: [{ t, bold, color }] });
+
+    const clip = (lines, n, size, bold) => {
+      if (n >= lines.length) return lines;
+      const out = lines.slice(0, n);
+      if (out.length) {
+        let t = out[out.length - 1];
+        while (t.length > 1 && wid(t + "…", bold, size) > cols[4].w - 2 * padX) t = t.slice(0, -1);
+        out[out.length - 1] = t + "…";
+      }
+      return out;
+    };
+
+    const makeRows = (day, lv) => day.items.map(a => {
+      const k = a.kid && window.SPKunden ? window.SPKunden.get(a.kid) : null;
+      const fs = lv.fs;
+      const wWho = cols[2].w - 2 * padX, wWork = cols[3].w - 2 * padX, wNote = cols[4].w - 2 * padX;
+      const addr = [[a.street, a.house].filter(Boolean).join(" "), [a.zip, a.city].filter(Boolean).join(" ")].filter(Boolean);
+
+      const cTime = [line1(a.time, 10.5 * fs, true)];
+      if (lv.extra) cTime.push(line1("bis " + endTime(a), 8 * fs, false, "#6c757d"));
+      else cTime[0] = line1(a.time + "–" + endTime(a), 8.4 * fs, true);
+
+      const cWho = [];
+      const name = a.customer || "(ohne Namen)";
+      if (lv.compact) {
+        const ad = addr.join(", ");
+        const sz = 9.4 * fs;
+        if (ad && wid(name, true, sz) + wid("  " + ad, false, sz * 0.92) <= wWho) {
+          cWho.push({ size: sz, runs: [{ t: name, bold: true }, { t: "  " + ad, color: "#4f5962", scale: 0.92 }] });
+        } else {
+          wrap(name, sz, true, wWho).forEach(t => cWho.push(line1(t, sz, true)));
+          if (ad) wrap(ad, sz * 0.92, false, wWho).forEach(t => cWho.push(line1(t, sz * 0.92, false, "#4f5962")));
+        }
+      } else {
+        wrap(name, 9.8 * fs, true, wWho).forEach(t => cWho.push(line1(t, 9.8 * fs, true)));
+        if (addr.length) wrap(addr.join(", "), 8.8 * fs, false, wWho).forEach(t => cWho.push(line1(t, 8.8 * fs, false, "#4f5962")));
+      }
+
+      const cWork = [];
+      const wt = worksText(a);
+      if (!wt.length) cWork.push(line1("–", 9 * fs, false, "#8a9199"));
+      else if (lv.compact) wrap(wt.join(", "), 8.8 * fs, false, wWork).forEach(t => cWork.push(line1(t, 8.8 * fs, false)));
+      else wt.forEach(w => wrap(w, 9 * fs, false, wWork).forEach(t => cWork.push(line1(t, 9 * fs, false))));
+
+      let cNote = [];
+      if (DONE) {
+        const lab = a.invoice ? INV_LABEL[a.invoice] : "nicht angegeben";
+        wrap(lab, 9 * fs, !!a.invoice, wNote).forEach(t => cNote.push(line1(t, 9 * fs, !!a.invoice, a.invoice ? undefined : "#a02f2f")));
+        if (a.invoice === "bar") cNote.push(a.amount > 0 ? line1(fmtEUR(a.amount), 9.6 * fs, true) : line1("Betrag fehlt", 8.6 * fs, true, "#a02f2f"));
+        if (lv.kd && a.knr) cNote.push(line1("Kd-Nr " + a.knr, 7.8 * fs, false, "#8a9199"));
+      } else {
+      if (k && k.phone) cNote.push(line1("Tel. " + k.phone, 8.6 * fs, true));
+      if (a.notes) cNote = cNote.concat(wrap(a.notes, 8.4 * fs, false, wNote).map(t => line1(t, 8.4 * fs, false)));
+      if (lv.notes < 99) {
+        // Telefon bleibt, Bemerkung wird gekürzt
+        const ph = cNote.filter(l => l.runs[0].bold);
+        const rest = cNote.filter(l => !l.runs[0].bold);
+        cNote = ph.concat(clip(rest, Math.max(0, lv.notes - (ph.length ? 0 : 0)), 8.4 * fs, false));
+        if (lv.notes === 0) cNote = ph;
+      }
+      if (lv.kd && a.knr) cNote.push(line1("Kd-Nr " + a.knr, 7.8 * fs, false, "#8a9199"));
+      }
+
+      const cells = [[], cTime, cWho, cWork, cNote];
+      const rh = Math.max(lv.minH, ...cells.map(c => c.reduce((n, l) => n + lead(l), 0))) + 2 * lv.padY;
+      return { cells, rh, padY: lv.padY, box: Math.min(11, 11 * Math.max(fs, 0.8)), done: DONE || !!a.done };
+    });
+
+    const drawRow = r => {
+      const bx = r.box;
+      R(ML + 7, y + r.padY, bx, bx, { stroke: "#22272d", lw: 1 });
+      if (r.done) {   // Häkchen im Kästchen
+        const x0 = ML + 7, y0 = y + r.padY;
+        L(x0 + bx * 0.18, y0 + bx * 0.55, x0 + bx * 0.42, y0 + bx * 0.82, "#2e6f45", 1.6);
+        L(x0 + bx * 0.42, y0 + bx * 0.82, x0 + bx * 0.9, y0 + bx * 0.12, "#2e6f45", 1.6);
+      }
+      let cx = ML;
+      r.cells.forEach((c, i) => {
+        let yy = y + r.padY;
+        c.forEach(l => {
+          yy += lead(l);
+          let px = cx + padX;
+          l.runs.forEach(run => {
+            const sz = l.size * (run.scale || 1);
+            T(px, yy - l.size * 0.28, run.t, { size: sz, bold: run.bold, color: run.color });
+            px += wid(run.t, run.bold, sz);
+          });
+        });
+        cx += cols[i].w;
+      });
+      y += r.rh;
+      L(ML, y, ML + CW, y, "#d5d9dd", 0.5);
+    };
+
+    /* Summe der Barzahlungen im gesamten Zeitraum */
+    let grandBar = 0, grandBarMissing = 0;
+    days.forEach(d => d.items.forEach(a => { if (a.invoice === "bar") { if (a.amount > 0) grandBar += a.amount; else grandBarMissing++; } }));
+
+    days.forEach((day, di) => {
+      // kleinste nötige Stufe wählen, bei der der ganze Tag auf eine Seite passt
+      let rows = null;
+      const cnt = { post: 0, hinterlegt: 0, mail: 0, bar: 0, none: 0 };
+      let barSum = 0, barMissing = 0;
+      if (DONE) day.items.forEach(a => {
+        cnt[a.invoice && cnt[a.invoice] !== undefined ? a.invoice : "none"]++;
+        if (a.invoice === "bar") { if (a.amount > 0) barSum += a.amount; else barMissing++; }
+      });
+      const multiLast = days.length > 1 && di === days.length - 1 && grandBar + grandBarMissing > 0;
+      const sumLines = 2 + (cnt.bar ? 1 : 0) + (multiLast ? 1 : 0);
+      const SUM_H = DONE ? sumLines * 15 + 26 : 0;   // Platz für die Zusammenfassung unter der Liste
+      for (let fs = 1; fs >= 0.64; fs = Math.round((fs - 0.02) * 100) / 100) {
+        rows = makeRows(day, levelFor(fs));
+        if (HDR_END + rows.reduce((n, r) => n + r.rh, 0) + SUM_H <= H - MB) break;
+      }
+      header(day, false);
+      rows.forEach(r => {
+        // nur im Extremfall (mehr Termine als auf eine Seite passen) wird eine zweite Seite begonnen
+        if (y + r.rh > H - MB) { endPage(); header(day, true); }
+        drawRow(r);
+      });
+      if (DONE) {
+        if (y + SUM_H > H - MB) { endPage(); header(day, true); }
+        y += 12;
+        const boxH = sumLines * 15 + 14;
+        R(ML, y, CW, boxH, { fill: "#f4f5f6" });
+        let ly = y + 15;
+        T(ML + 10, ly, "Rechnung:  per Post " + cnt.post + "  ·  hinterlegt (Kunde überweist) " + cnt.hinterlegt + "  ·  per E-Mail " + cnt.mail + "  ·  bar " + cnt.bar + (cnt.none ? "  ·  nicht angegeben " + cnt.none : ""), { size: 8.8, bold: true });
+        ly += 15;
+        const open = (day.total || day.items.length) - day.items.length;
+        T(ML + 10, ly, "Erledigt: " + day.items.length + " von " + (day.total || day.items.length) + " Terminen" + (open > 0 ? "   ·   noch offen: " + open : "   ·   alle Termine erledigt"), { size: 9, color: "#4f5962" });
+        if (cnt.bar) {
+          ly += 15;
+          T(ML + 10, ly, "Bar kassiert: " + fmtEUR(barSum) + (barMissing ? "   (bei " + barMissing + " Termin" + (barMissing > 1 ? "en" : "") + " fehlt der Betrag)" : ""), { size: 10.5, bold: true, color: "#2e6f45" });
+        }
+        if (multiLast) {
+          ly += 15;
+          T(ML + 10, ly, "Bar kassiert im gesamten Zeitraum (" + days.length + " Tage): " + fmtEUR(grandBar) + (grandBarMissing ? "   (Betrag fehlt bei " + grandBarMissing + ")" : ""), { size: 10.5, bold: true, color: "#2e6f45" });
+        }
+        y += boxH;
+      }
+      endPage();
+    });
+
+    // Fußzeile mit Seitenzahlen
+    const total = pages.length;
+    const streams = pages.map((p, i) => p.ops + "\n" + [
+      col("#c9ced2") + " RG 0.5 w " + f(ML) + " " + f(H - (H - 34)) + " m " + f(ML + CW) + " " + f(H - (H - 34)) + " l S",
+      "BT /F1 7.8 Tf " + col("#6c757d") + " rg " + f(ML) + " " + f(H - (H - 24)) + " Td (" + enc(nz((DONE ? "Erledigt-Liste · " : "Tagesübersicht · ") + p.label)) + ") Tj ET",
+      "BT /F1 7.8 Tf " + col("#6c757d") + " rg " + f(ML + CW - wid("Seite " + (i + 1) + " / " + total, false, 7.8)) + " " + f(H - (H - 24)) + " Td (Seite " + (i + 1) + " / " + total + ") Tj ET"
+    ].join("\n"));
+
+    const objs = [
+      "<< /Type /Catalog /Pages 2 0 R >>",
+      "<< /Type /Pages /Kids [" + streams.map((_, i) => 5 + 2 * i + " 0 R").join(" ") + "] /Count " + streams.length + " >>",
+      "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+      "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>"
+    ];
+    streams.forEach((st, i) => {
+      objs.push("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + W + " " + H + "] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents " + (6 + 2 * i) + " 0 R >>");
+      objs.push("<< /Length " + st.length + " >>\nstream\n" + st + "\nendstream");
+    });
+    let pdf = "%PDF-1.4\n%\u00e2\u00e3\u00cf\u00d3\n";
+    const offs = [];
+    objs.forEach((o, i) => { offs.push(pdf.length); pdf += i + 1 + " 0 obj\n" + o + "\nendobj\n"; });
+    const xr = pdf.length;
+    pdf += "xref\n0 " + (objs.length + 1) + "\n0000000000 65535 f \n" + offs.map(o => String(o).padStart(10, "0") + " 00000 n \n").join("") +
+      "trailer\n<< /Size " + (objs.length + 1) + " /Root 1 0 R >>\nstartxref\n" + xr + "\n%%EOF";
+    const bytes = new Uint8Array(pdf.length);
+    for (let i = 0; i < pdf.length; i++) bytes[i] = pdf.charCodeAt(i) & 255;
+    return new Blob([bytes], { type: "application/pdf" });
+  }
+
+  function openPdfTab(blob, name) {
+    const url = URL.createObjectURL(blob);
+    const w = window.open(url, "_blank");
+    if (!w) { const a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); }
+    setTimeout(() => URL.revokeObjectURL(url), 10 * 60 * 1000);
+  }
+
+  function printDays(dates, mode) {
+    const all = appointments();
+    const done = mode === "done";
+    const days = dates.map(date => {
+      const dayAll = all.filter(a => a.date === date);
+      return {
+        date,
+        total: dayAll.length,
+        items: dayAll.filter(a => !done || a.done).sort((a, b) => (a.time || "").localeCompare(b.time || "") || (a.customer || "").localeCompare(b.customer || "", "de"))
+      };
+    }).filter(d => d.items.length);
+    if (!days.length) return alert(done
+      ? (dates.length === 1 ? "Für diesen Tag sind keine erledigten Termine eingetragen. Hake die Termine im Kalender mit „☐ Erledigt?“ ab." : "Im gewählten Zeitraum sind keine erledigten Termine eingetragen.")
+      : (dates.length === 1 ? "Für diesen Tag sind keine Termine eingetragen." : "Im gewählten Zeitraum sind keine Termine eingetragen."));
+    const blob = buildDayPdf(days, settings(), mode);
+    const name = (done ? "Erledigt-Liste_" : "Tagesuebersicht_") + days[0].date + (days.length > 1 ? "_bis_" + days[days.length - 1].date : "") + ".pdf";
+    if (window.navigator.standalone === true || isIOSDevice()) sharePdf(blob, name); else openPdfTab(blob, name);
+  }
+  function printDay() {
+    const d = $("spDayDate").value;
+    if (!d) return alert("Bitte einen Tag wählen.");
+    printDays([d]);
+  }
+  function printDayRange() { printDayRangeMode(); }
+  function printDayRangeMode(mode) {
+    const from = $("spProposalFrom").value, to = $("spProposalTo").value;
+    if (!from || !to || from > to) return alert("Bitte oben bei „Von“ und „Bis“ einen gültigen Zeitraum wählen.");
+    const dates = [];
+    for (let d = fromIso(from); iso(d) <= to; d = addDays(d, 1)) dates.push(iso(d));
+    printDays(dates, mode);
+  }
+  function printDone(range) {
+    if (range) return printDayRangeMode("done");
+    const d = $("spDayDate").value;
+    if (!d) return alert("Bitte einen Tag wählen.");
+    printDays([d], "done");
+  }
+
   function saveAppointment() {
     const date=$("spAptDate").value, time=$("spAptTime").value;
     if (!date || !time) return alert("Bitte Datum und Uhrzeit angeben.");
     const holiday=holidayMap(new Date(date).getFullYear()).get(date);
     if (holiday) return alert(`Am ${fmtDate(date)} ist ${holiday}. Termine an Feiertagen sind standardmäßig gesperrt.`);
-    if (hourCount(date,time,moduleState.editingId) >= 4) return alert("Für diese Stunde sind bereits 4 Termine eingetragen.");
+    const clash = overlapWith(date, time, Number($("spAptDuration").value) || 15, moduleState.editingId);
+    if (clash && !confirm(`Der Termin überschneidet sich mit dem Termin um ${clash.time} Uhr (${clash.customer || "ohne Namen"}). Trotzdem speichern?`)) return;
     const item={ id:moduleState.editingId || uuid(), date,time, customer:$("spAptCustomer").value.trim(), street:$("spAptStreet").value.trim(), house:$("spAptHouse").value.trim(), zip:$("spAptZip").value.trim(), city:$("spAptCity").value.trim(), duration:Number($("spAptDuration").value)||15, notes:$("spAptNotes").value.trim(), works:selectedWorks(), workOther:$("spWorkOtherText").value.trim(), kid:moduleState.aptCustomer?.id||"", knr:moduleState.aptCustomer?.nr||"", updatedAt:new Date().toISOString() };
-    const list=appointments(); const idx=list.findIndex(x=>x.id===item.id); if(idx>=0) list[idx]=item; else list.push(item);
+    const list=appointments(); const idx=list.findIndex(x=>x.id===item.id); if(idx>=0) list[idx]={ ...list[idx], ...item }; else list.push(item);
     persist({appointments:list}); moduleState.selectedId=item.id; moduleState.date=fromIso(date); closeModal(); render();
   }
   function deleteAppointment() {
@@ -6484,6 +7356,10 @@
     #spPrintRoot .sign .name { margin-top: 8mm; font-weight: 700; }
     #spPrintRoot .sign .role { font-size: 8.5pt; color: #555; }
     #spPrintRoot .sheet > * { flex-shrink: 0; }
+    #spPrintRoot .hint { margin-top: 3.5mm; padding: 2.2mm 3.4mm; border-left: 1.2mm solid #c79a42; border-radius: 0 1.2mm 1.2mm 0; background: #fbf5e7; font-size: 9pt; line-height: 1.4; }
+    #spPrintRoot .sheet.t1 .hint { margin-top: 2.6mm; padding: 1.8mm 3mm; font-size: 8.8pt; }
+    #spPrintRoot .sheet.t2 .hint { margin-top: 2mm; padding: 1.4mm 2.6mm; font-size: 8.4pt; line-height: 1.32; }
+    #spPrintRoot .sheet.t3 .hint { margin-top: 1.5mm; padding: 1mm 2.4mm; font-size: 8pt; line-height: 1.28; }
     /* Stufen für viel Inhalt: werden automatisch zugeschaltet, damit alles auf einer Seite bleibt */
     #spPrintRoot .sheet.t1 .kicker { margin-top: 4mm; }
     #spPrintRoot .sheet.t1 h1 { font-size: 17pt; }
@@ -6645,6 +7521,18 @@
       y = flow([{ t: "Hinweis:", b: true }, ...words(notesTxt)], ML + 12, y, CW - 24, 9, 12) - 12;
     }
     y += g(12); R(ML, top, CW, y - top, { stroke: "#22272d", lw: 1.1 });
+    if (d.hint) {
+      const toks = [{ t: "Hinweis zur Feststoffmessung:", b: true }, ...words(d.hint)];
+      y += g(14);
+      const keepOps = ops; ops = [];
+      const ey = flow(toks, ML + 12, y + 14, CW - 24, 9, 12);
+      ops = keepOps;
+      const hh = (ey - (y + 14)) + 10;
+      R(ML, y, CW, hh, { fill: "#fbf5e7" });
+      R(ML, y, 3.5, hh, { fill: "#c79a42" });
+      flow(toks, ML + 12, y + 14, CW - 24, 9, 12);
+      y += hh;
+    }
 
     // Kontakt
     y += g(22);
@@ -6659,8 +7547,7 @@
     const sy = Math.max(y + g(26), H - 46 - 44);
     T(ML, sy, "Mit freundlichen Grüßen");
     T(ML, sy + g(30), d.employee, { bold: true });
-    wrap("Schornsteinfegerbetrieb " + d.business, 8.5, false, CW).slice(0, 2).forEach((w, i) => T(ML, sy + g(30) + 12 + i * 11, w, { size: 8.5, color: "#555555" }));
-    return sy + g(30) + 12 + 11;   // untere Kante des Inhalts
+    return sy + g(30) + 4;   // untere Kante des Inhalts
 
     };
 
@@ -6733,7 +7620,8 @@
       customer: a.customer || "",
       addrLines: [[a.street, a.house].filter(Boolean).join(" "), [a.zip, a.city].filter(Boolean).join(" ")].filter(Boolean),
       notes: a.notes || "",
-      works: proposalWorks(a)
+      works: proposalWorks(a),
+      hint: Array.isArray(a.works) && a.works.includes("feststoff") ? "Die Messung dauert ca. " + durText(workMinutesCfg().feststoff) + ". Bitte bereiten Sie Ihren Pelletkessel bzw. Scheitholzkessel für die Messung vor." : ""
     };
   }
 
@@ -6744,6 +7632,8 @@
     const out = [];
     if (w.includes("kehrung")) out.push({ t: "Kehrung", on: true });
     if (w.includes("messung")) out.push({ t: "Messung", on: true });
+    if (w.includes("feststoff")) out.push({ t: "Feststoffmessung", on: true });
+    if (w.includes("schau")) out.push({ t: "Feuerstättenschau", on: true });
     if (w.includes("other")) out.push({ t: (a.workOther || "").trim() || "Sonstiges", on: true });
     return out.length ? out : [{ t: "Kehrung", on: false }, { t: "Messung", on: false }];
   }
@@ -6758,6 +7648,7 @@
       : "";
     const notes = d.notes ? `<div class="notes"><strong>Hinweis:</strong> ${esc(d.notes)}</div>` : "";
     const bizAddr = d.bizAddr ? `<div class="biz-addr">${esc(d.bizAddr)}</div>` : "";
+    const hint = d.hint ? `<div class="hint"><strong>Hinweis zur Feststoffmessung:</strong> ${esc(d.hint)}</div>` : "";
     return `
       <div class="sheet">
         <div class="head">
@@ -6788,6 +7679,7 @@
             ${notes}
           </div>
         </div>
+        ${hint}
 
         <div class="contact">Sollten Sie an diesem Termin verhindert sein, rufen Sie mich bitte an – wir vereinbaren gerne einen alternativen Termin. Sie erreichen mich unter:</div>
         <div class="phone"><span class="lbl">Telefon</span><span class="num">${phone}</span></div>
@@ -6795,9 +7687,12 @@
         <div class="sign">
           Mit freundlichen Grüßen
           <div class="name">${employee}</div>
-          <div class="role">Schornsteinfegerbetrieb ${business}</div>
         </div>
       </div>`;
+  }
+
+  function isIOSDevice() {
+    return /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   }
 
   function printProposals(list, twoUp, fname) {
@@ -6805,8 +7700,9 @@
     cleanupPrint();
     const items = list.map(a => proposalData(a, settings()));
 
-    // Home-Bildschirm-App auf iPhone/iPad: window.print() ist dort gesperrt -> PDF erzeugen und über das Teilen-Menü drucken
-    if (window.navigator.standalone === true) {
+    // iPhone/iPad (Home-Bildschirm-App: window.print() gesperrt; Safari: Seitengröße unzuverlässig)
+    // -> PDF erzeugen und über das Teilen-Menü drucken
+    if (window.navigator.standalone === true || isIOSDevice()) {
       sharePdf(buildProposalPdf(items, twoUp), fname);
       return;
     }
@@ -6897,6 +7793,7 @@
 })();
 </script>
   <script src="kunden.js"></script>
+  <script src="sicherung.js"></script>
   <script src="start-hub.js"></script>
 </body>
 
