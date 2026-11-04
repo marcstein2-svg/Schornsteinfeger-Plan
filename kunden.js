@@ -88,6 +88,7 @@
       phone: String(k.phone || ""),
       ownerAddr: String(k.ownerAddr || ""),
       notes: String(k.notes || ""),
+      bossNote: String(k.bossNote || ""),
       created: k.created || new Date().toISOString(),
       updated: k.updated || new Date().toISOString()
     };
@@ -848,6 +849,8 @@
       '<p class="kv-hint">Leer lassen, wenn der Eigentümer im Haus wohnt.</p></div>' +
       '<div class="field wide"><label for="kvNotes">Besonderheiten</label>' +
       '<textarea id="kvNotes" rows="3" placeholder="Zugang, Hinweise …"></textarea></div>' +
+      '<div class="field wide"><label for="kvBoss">Bemerkung für den Chef (nur im Chef-Ausdruck)</label>' +
+      '<textarea id="kvBoss" rows="2" placeholder="z. B. zahlt immer bar, Rechnung immer per Post …"></textarea></div>' +
       "</div>" +
       '<div class="kv-actions">' +
       '<button type="button" class="btn btn-light" data-x="close">Abbrechen</button>' +
@@ -870,6 +873,7 @@
     f("kvPhone").value = k ? k.phone : "";
     f("kvOwner").value = k ? k.ownerAddr : "";
     f("kvNotes").value = k ? k.notes : "";
+    f("kvBoss").value = k ? k.bossNote || "" : "";
 
     function close() {
       document.removeEventListener("keydown", onKey, true);
@@ -960,6 +964,7 @@
           phone: f("kvPhone").value.trim(),
           ownerAddr: f("kvOwner").value.trim(),
           notes: f("kvNotes").value.trim(),
+          bossNote: f("kvBoss").value.trim(),
           created: k ? k.created : new Date().toISOString(),
           updated: new Date().toISOString()
         };
