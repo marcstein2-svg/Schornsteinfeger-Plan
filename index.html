@@ -1421,6 +1421,11 @@
     .sp-auto-warn { margin-top: 8px; padding: 8px 10px; border: 1px solid #e9c78d; border-radius: 10px; background: #fff4e0; color: #7a4600; }
     .sp-linkbtn { border: 0; background: none; padding: 0; font: inherit; font-weight: 800; color: #7d5b20; text-decoration: underline; cursor: pointer; }
     .sp-hour-body > .sp-add { align-self: start; min-height: 40px; }
+    .sp-exp-box { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--border); }
+    .sp-exp-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid #eceff1; }
+    .sp-exp-row span { flex: 1; min-width: 0; }
+    .sp-exp-row button { border: 0; background: #fdecec; color: #a02f2f; border-radius: 8px; min-height: 34px; min-width: 38px; font-weight: 800; cursor: pointer; }
+    .sp-exp-sum { margin-top: 8px; padding: 8px 10px; border-radius: 10px; background: #f3faf5; border: 1px solid #b9dcc6; font-size: .88rem; }
     .sp-appt.missed { border-left-color: #c9791b; background: #fff7ea; }
     .sp-act.missed { border-color: #c9791b; background: #fff1dc; color: #8a4b00; }
     .sp-badge-line { display: block; width: max-content; margin: 2px 0 1px; }
@@ -1897,6 +1902,11 @@
               <button class="btn btn-light" type="button" id="spPrintDays">📋 Alle Tage im Zeitraum (je Tag ein Blatt)</button>
               <button class="btn btn-gold" type="button" id="spPrintDone">✅ Erledigt-Liste drucken (für den Chef)</button>
               <button class="btn btn-light" type="button" id="spPrintDoneRange">✅ Erledigt-Liste für den Zeitraum</button>
+            </div>
+            <div class="sp-exp-box">
+              <div class="sp-works-title">Ausgaben aus den Bareinnahmen (z. B. Tanken) – werden in der Erledigt-Liste abgezogen</div>
+              <div id="spExpList"></div>
+              <button class="btn btn-light" type="button" id="spExpAdd" style="margin-top:8px">＋ Ausgabe eintragen</button>
             </div>
           </div>
           <div class="form-actions">
@@ -3248,6 +3258,28 @@
       <button class="btn btn-light" type="button" id="spDoneCancel">Abbrechen</button>
       <button class="btn btn-light" type="button" id="spDoneNoteSave">Nur Bemerkung speichern</button>
       <button class="btn btn-danger" type="button" id="spDoneUndo" hidden>Als nicht erledigt markieren</button>
+    </div>
+  </div>
+</div>
+
+<div class="sp-modal-backdrop" id="spExpModal" hidden>
+  <div class="sp-modal" role="dialog" aria-modal="true" aria-labelledby="spExpTitle" style="max-width:520px">
+    <h3 id="spExpTitle">Ausgabe aus den Bareinnahmen</h3>
+    <p class="sp-muted" style="margin:-4px 0 12px">Wurde etwas aus dem bar kassierten Geld bezahlt (z. B. Tanken), wird der Betrag in der Erledigt-Liste von den Bareinnahmen abgezogen.</p>
+    <div class="sp-form-grid">
+      <div class="field"><label for="spExpDate">Datum</label><input id="spExpDate" type="date"></div>
+      <div class="field"><label for="spExpAmount">Betrag (€)</label><input id="spExpAmount" type="text" inputmode="decimal" autocomplete="off" placeholder="z. B. 45,00"></div>
+    </div>
+    <div class="field" style="margin-top:10px"><label for="spExpText">Wofür?</label><input id="spExpText" type="text" maxlength="60" autocomplete="off" placeholder="z. B. Tanken"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+      <button type="button" class="sp-chip" data-exp="Tanken">Tanken</button>
+      <button type="button" class="sp-chip" data-exp="Parkgebühr">Parkgebühr</button>
+      <button type="button" class="sp-chip" data-exp="Material">Material</button>
+      <button type="button" class="sp-chip" data-exp="Verpflegung">Verpflegung</button>
+    </div>
+    <div class="sp-modal-actions">
+      <button class="btn btn-light" type="button" id="spExpCancel">Abbrechen</button>
+      <button class="btn btn-primary" type="button" id="spExpSave">Speichern</button>
     </div>
   </div>
 </div>
@@ -6394,7 +6426,12 @@
     $("spPrintDoneRange").addEventListener("click", () => printDone(true));
     $("spPrintDay").addEventListener("click", printDay);
     $("spPrintDays").addEventListener("click", printDayRange);
-    $("spDayDate").addEventListener("change", () => { moduleState.dayManual = true; });
+    $("spDayDate").addEventListener("change", () => { moduleState.dayManual = true; renderExpenses(); });
+    $("spExpAdd").addEventListener("click", openExpModal);
+    $("spExpCancel").addEventListener("click", closeExpModal);
+    $("spExpSave").addEventListener("click", saveExp);
+    $("spExpAmount").addEventListener("keydown", e => { if (e.key === "Enter") saveExp(); });
+    document.querySelectorAll("[data-exp]").forEach(b => b.addEventListener("click", () => { $("spExpText").value = b.dataset.exp; $("spExpAmount").focus(); }));
     $("spAutoOpen").addEventListener("click", openAutoModal);
     $("spAutoCancel").addEventListener("click", closeAutoModal);
     $("spAutoCreate").addEventListener("click", createAuto);
@@ -6427,10 +6464,11 @@
     ["spProposalFrom","spProposalTo"].forEach(id => $(id).addEventListener("change", renderProposalList));
     $("year").addEventListener("change", () => render());
     $("state").addEventListener("change", () => render());
-    document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("spAppointmentModal").hidden) closeModal(); if (e.key === "Escape" && !$("spAutoModal").hidden && !document.querySelector(".kv-overlay")) closeAutoModal(); if (e.key === "Escape" && !$("spDoneModal").hidden) closeDoneModal(); if (e.key === "Escape" && !$("spMoveModal").hidden) closeMoveModal(); if (e.key === "Escape" && !$("spMissModal").hidden) closeMissModal(); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("spAppointmentModal").hidden) closeModal(); if (e.key === "Escape" && !$("spAutoModal").hidden && !document.querySelector(".kv-overlay")) closeAutoModal(); if (e.key === "Escape" && !$("spDoneModal").hidden) closeDoneModal(); if (e.key === "Escape" && !$("spMoveModal").hidden) closeMoveModal(); if (e.key === "Escape" && !$("spMissModal").hidden) closeMissModal(); if (e.key === "Escape" && !$("spExpModal").hidden) closeExpModal(); });
     document.addEventListener("click", e => {
       const dayBtn = e.target.closest("[data-sp-day]"); if (dayBtn) { moduleState.date = fromIso(dayBtn.dataset.spDay); moduleState.view = "day"; render(); return; }
       const dn = e.target.closest("[data-sp-done]"); if (dn) { openDoneModal(dn.dataset.spDone); return; }
+      const xd = e.target.closest("[data-sp-exp-del]"); if (xd) { deleteExp(xd.dataset.spExpDel); return; }
       const ms = e.target.closest("[data-sp-miss]"); if (ms) { openMissModal(ms.dataset.spMiss); return; }
       const mv = e.target.closest("[data-sp-move]"); if (mv) { openMoveModal(mv.dataset.spMove); return; }
       const open = e.target.closest("[data-sp-open]"); if (open) openModal(open.dataset.date, open.dataset.time, open.dataset.spOpen);
@@ -6537,6 +6575,7 @@
   function render() {
     if (!$('spCalendar')) return;
     if ($("spDayDate") && !moduleState.dayManual) $("spDayDate").value = iso(moduleState.date);
+    renderExpenses();
     const week = moduleState.view === "week";
     const days = week ? Array.from({ length: 7 }, (_, i) => addDays(weekStart(moduleState.date), i)) : [moduleState.date];
     const holidays = holidayMap(currentYear());
@@ -6867,6 +6906,50 @@
     render();
     renderProposalList();
     updateAuto();
+  }
+
+  /* ================= Ausgaben aus den Bareinnahmen ================= */
+  function expenses() { const e = data().cashExpenses; return Array.isArray(e) ? e : []; }
+  function expensesOn(date) { return expenses().filter(x => x.date === date); }
+  function cashOn(date) { return appointments().filter(a => a.date === date && a.done && a.invoice === "bar" && a.amount > 0).reduce((n, a) => n + a.amount, 0); }
+  function renderExpenses() {
+    const box = $("spExpList");
+    if (!box) return;
+    const d = $("spDayDate") ? $("spDayDate").value : "";
+    if (!d) { box.innerHTML = ""; return; }
+    const list = expensesOn(d), cash = cashOn(d), sum = list.reduce((n, x) => n + x.amount, 0);
+    let html = `<div class="sp-muted" style="margin-bottom:4px">${esc(fmtDate(d))}</div>`;
+    html += list.length
+      ? list.map(x => `<div class="sp-exp-row"><span>${esc(x.text)}</span><strong>${esc(fmtEUR(x.amount))}</strong><button type="button" data-sp-exp-del="${esc(x.id)}" aria-label="Ausgabe löschen" title="Löschen">✕</button></div>`).join("")
+      : `<div class="sp-muted">Keine Ausgaben eingetragen.</div>`;
+    if (cash > 0 || list.length) {
+      const net = cash - sum;
+      html += `<div class="sp-exp-sum">Bar kassiert: <strong>${esc(fmtEUR(cash))}</strong>${list.length ? ` · Ausgaben: <strong>${esc(fmtEUR(sum))}</strong> · ${net >= 0 ? "Bar abzuliefern" : "zu erstatten"}: <strong>${esc(fmtEUR(Math.abs(net)))}</strong>` : ""}</div>`;
+    }
+    box.innerHTML = html;
+  }
+  function openExpModal() {
+    $("spExpDate").value = $("spDayDate").value || iso(new Date());
+    $("spExpAmount").value = ""; $("spExpText").value = "";
+    $("spExpModal").hidden = false;
+    $("spExpText").focus();
+  }
+  function closeExpModal() { $("spExpModal").hidden = true; }
+  function saveExp() {
+    const date = $("spExpDate").value, text = $("spExpText").value.trim(), amount = parseAmount($("spExpAmount").value);
+    if (!date) return alert("Bitte ein Datum wählen.");
+    if (!text) return alert("Bitte eintragen, wofür das Geld ausgegeben wurde (z. B. Tanken).");
+    if (amount === null || Number.isNaN(amount) || !(amount > 0)) return alert("Bitte einen gültigen Betrag eingeben, z. B. 45,00.");
+    persist({ cashExpenses: expenses().concat([{ id: uuid(), date, text, amount, createdAt: new Date().toISOString() }]) });
+    closeExpModal();
+    if ($("spDayDate").value !== date) { $("spDayDate").value = date; moduleState.dayManual = true; }
+    renderExpenses();
+  }
+  function deleteExp(id) {
+    const e = expenses().find(x => x.id === id);
+    if (!e || !confirm(`Ausgabe „${e.text}“ (${fmtEUR(e.amount)}) löschen?`)) return;
+    persist({ cashExpenses: expenses().filter(x => x.id !== id) });
+    renderExpenses();
   }
 
   /* ================= Erledigt abhaken (mit Rechnungsart) ================= */
@@ -7261,8 +7344,9 @@
       L(ML, y, ML + CW, y, "#d5d9dd", 0.5);
     };
 
-    /* Summe der Barzahlungen im gesamten Zeitraum */
-    let grandBar = 0, grandBarMissing = 0;
+    /* Summe der Barzahlungen und Ausgaben im gesamten Zeitraum */
+    let grandBar = 0, grandBarMissing = 0, grandExp = 0;
+    days.forEach(d => (d.expenses || []).forEach(x => { grandExp += x.amount; }));
     days.forEach(d => d.items.forEach(a => { if (a.invoice === "bar") { if (a.amount > 0) grandBar += a.amount; else grandBarMissing++; } }));
 
     days.forEach((day, di) => {
@@ -7274,8 +7358,11 @@
         cnt[a.invoice && cnt[a.invoice] !== undefined ? a.invoice : "none"]++;
         if (a.invoice === "bar") { if (a.amount > 0) barSum += a.amount; else barMissing++; }
       });
-      const multiLast = days.length > 1 && di === days.length - 1 && grandBar + grandBarMissing > 0;
-      const sumLines = 2 + (cnt.bar ? 1 : 0) + (multiLast ? 1 : 0);
+      const exps = DONE ? (day.expenses || []) : [];
+      const expSum = exps.reduce((n, x) => n + x.amount, 0);
+      const showCash = cnt.bar > 0 || exps.length > 0;
+      const multiLast = days.length > 1 && di === days.length - 1 && (grandBar + grandBarMissing > 0 || grandExp > 0);
+      const sumLines = 2 + (showCash ? 1 : 0) + exps.length + (exps.length ? 1 : 0) + (multiLast ? 1 : 0);
       const SUM_H = DONE ? sumLines * 15 + 26 : 0;   // Platz für die Zusammenfassung unter der Liste
       let rowsMiss = [];
       for (let fs = 1; fs >= 0.64; fs = Math.round((fs - 0.02) * 100) / 100) {
@@ -7310,13 +7397,23 @@
         ly += 15;
         const open = (day.total || day.items.length) - day.items.length;
         T(ML + 10, ly, "Erledigt: " + day.items.length + " von " + (day.total || day.items.length) + " Terminen" + (open > 0 ? "   ·   noch offen: " + open + (day.missed ? " (davon nicht angetroffen: " + day.missed + ")" : "") : "   ·   alle Termine erledigt"), { size: 9, color: "#4f5962" });
-        if (cnt.bar) {
+        if (showCash) {
           ly += 15;
           T(ML + 10, ly, "Bar kassiert: " + fmtEUR(barSum) + (barMissing ? "   (bei " + barMissing + " Termin" + (barMissing > 1 ? "en" : "") + " fehlt der Betrag)" : ""), { size: 10.5, bold: true, color: "#2e6f45" });
         }
+        exps.forEach(x => {
+          ly += 15;
+          T(ML + 10, ly, "– Ausgabe aus Bareinnahmen: " + x.text + "  −" + fmtEUR(x.amount), { size: 9.2 });
+        });
+        if (exps.length) {
+          ly += 15;
+          const net = barSum - expSum;
+          T(ML + 10, ly, net >= 0 ? "Bar abzuliefern (kassiert − Ausgaben): " + fmtEUR(net) : "Ausgaben übersteigen die Bareinnahmen – zu erstatten: " + fmtEUR(-net), { size: 10.5, bold: true, color: net >= 0 ? "#2e6f45" : "#a02f2f" });
+        }
         if (multiLast) {
           ly += 15;
-          T(ML + 10, ly, "Bar kassiert im gesamten Zeitraum (" + days.length + " Tage): " + fmtEUR(grandBar) + (grandBarMissing ? "   (Betrag fehlt bei " + grandBarMissing + ")" : ""), { size: 10.5, bold: true, color: "#2e6f45" });
+          const gnet = grandBar - grandExp;
+          T(ML + 10, ly, "Zeitraum gesamt (" + days.length + " Tage): bar kassiert " + fmtEUR(grandBar) + (grandExp ? "  −  Ausgaben " + fmtEUR(grandExp) + "  =  " + (gnet >= 0 ? "abzuliefern " + fmtEUR(gnet) : "zu erstatten " + fmtEUR(-gnet)) : "") + (grandBarMissing ? "   (Betrag fehlt bei " + grandBarMissing + ")" : ""), { size: 10, bold: true, color: "#2e6f45" });
         }
         y += boxH;
       }
@@ -7367,11 +7464,12 @@
       return {
         date,
         total: dayAll.length,
+        expenses: done ? expensesOn(date) : [],
         missed: dayAll.filter(a => a.missed).length,
         missedItems: done ? dayAll.filter(a => a.missed).sort((a, b) => (a.time || "").localeCompare(b.time || "")) : [],
         items: dayAll.filter(a => !done || a.done).sort((a, b) => (a.time || "").localeCompare(b.time || "") || (a.customer || "").localeCompare(b.customer || "", "de"))
       };
-    }).filter(d => d.items.length || (d.missedItems && d.missedItems.length));
+    }).filter(d => d.items.length || (d.missedItems && d.missedItems.length) || (d.expenses && d.expenses.length));
     if (!days.length) return alert(done
       ? (dates.length === 1 ? "Für diesen Tag sind keine erledigten Termine eingetragen. Hake die Termine im Kalender mit „☐ Erledigt?“ ab." : "Im gewählten Zeitraum sind keine erledigten Termine eingetragen.")
       : (dates.length === 1 ? "Für diesen Tag sind keine Termine eingetragen." : "Im gewählten Zeitraum sind keine Termine eingetragen."));
