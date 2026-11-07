@@ -1426,8 +1426,14 @@
     .sp-exp-row span { flex: 1; min-width: 0; }
     .sp-exp-row button { border: 0; background: #fdecec; color: #a02f2f; border-radius: 8px; min-height: 34px; min-width: 38px; font-weight: 800; cursor: pointer; }
     .sp-exp-sum { margin-top: 8px; padding: 8px 10px; border-radius: 10px; background: #f3faf5; border: 1px solid #b9dcc6; font-size: .88rem; }
+    .sp-code { flex: 0 0 auto; align-self: center; padding: 2px 8px; border-radius: 8px; background: #22272d; color: #fff; font-size: .72rem; font-weight: 850; letter-spacing: .03em; white-space: nowrap; }
+    .sp-appt.compact .sp-code { padding: 1px 6px; font-size: .66rem; margin-left: 4px; vertical-align: 1px; }
+    .sp-legend { margin: 0 0 10px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 10px; background: #fbfbfc; font-size: .78rem; color: #4f5962; line-height: 1.7; }
+    .sp-legend span { display: inline-block; margin-right: 10px; white-space: nowrap; }
+    .sp-legend span b { display: inline-block; min-width: 1.6em; padding: 0 6px; margin-right: 3px; border-radius: 6px; background: #22272d; color: #fff; text-align: center; }
     .sp-appt.missed { border-left-color: #c9791b; background: #fff7ea; }
     .sp-act.missed { border-color: #c9791b; background: #fff1dc; color: #8a4b00; }
+    .sp-badge-warn { background: #fde0e0; color: #a02f2f; }
     .sp-badge-line { display: block; width: max-content; margin: 2px 0 1px; }
     .sp-badge { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: #fbe3c2; color: #7a4600; font-size: .7rem; font-weight: 800; white-space: nowrap; }
     .sp-appt-wrap { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
@@ -1869,6 +1875,7 @@
         </div>
       </div>
 
+      <div class="sp-legend" id="spLegend"><b>Kürzel:</b> <span><b>K</b> Kehren</span> <span><b>M</b> Messen</span> <span><b>MK</b> Messen + Kehren</span> <span><b>FSS</b> Feuerstättenschau</span> <span><b>MK+FSS</b> Messen, Kehren + Feuerstättenschau</span> <span><b>FSM</b> Feststoffmessung</span> <span><b>S</b> Sonderarbeit</span></div>
       <div class="sp-calendar-notice" id="spCalendarNotice" hidden></div>
       <div class="sp-calendar" id="spCalendar"></div>
 
@@ -3313,6 +3320,7 @@
     <div class="sp-work-chips" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
       <button type="button" class="sp-chip" data-mv="next">Nächster Arbeitstag</button>
       <button type="button" class="sp-chip" data-mv="week">+ 1 Woche</button>
+      <button type="button" class="sp-chip" data-mv="free">Nächste freie Zeit</button>
     </div>
     <div class="sp-auto-warn" id="spMoveInfo" hidden></div>
     <div class="sp-modal-actions">
@@ -6417,7 +6425,7 @@
     $("spMissFromApt").addEventListener("click", () => { const id = moduleState.editingId; closeModal(); openMissModal(id); });
     $("spMoveCancel").addEventListener("click", closeMoveModal);
     $("spMoveSave").addEventListener("click", saveMove);
-    $("spMoveDate").addEventListener("change", () => { suggestMoveTime(); updateMoveInfo(); });
+    $("spMoveDate").addEventListener("change", updateMoveInfo);
     $("spMoveTime").addEventListener("input", updateMoveInfo);
     document.querySelectorAll("[data-mv]").forEach(b => b.addEventListener("click", () => moveQuick(b.dataset.mv)));
     $("spMoveFromApt").addEventListener("click", () => { const id = moduleState.editingId; closeModal(); openMoveModal(id); });
@@ -6501,6 +6509,12 @@
   }
   const INV_LABEL = { post: "per Post", hinterlegt: "Rechnung hinterlegt – Kunde überweist", mail: "per E-Mail", bar: "Barzahlung" };
   const INV_SHORT = { post: "Post", hinterlegt: "hinterlegt", mail: "E-Mail", bar: "bar" };
+  /* Kürzel der Tätigkeiten: K, M, MK, FSS, MK+FSS, FSM, S (weitere Kombinationen mit „+“) */
+  function workCode(a) {
+    const w = Array.isArray(a.works) ? a.works : [];
+    const base = (w.includes("messung") ? "M" : "") + (w.includes("kehrung") ? "K" : "");
+    return [base, w.includes("schau") ? "FSS" : "", w.includes("feststoff") ? "FSM" : "", w.includes("other") ? "S" : ""].filter(Boolean).join("+");
+  }
   const attemptOf = a => (Number(a.attempt) > 1 ? Number(a.attempt) : 1);
   const attemptLabel = n => (n === 3 ? "3. und letzte Anmeldung" : `${n}. Anmeldung`);
   const followUpOf = a => appointments().find(x => x.prevId === a.id) || null;
@@ -6515,11 +6529,14 @@
   function apptCard(a, compact) {
     const addr = addrLine(a);
     const att = attemptOf(a);
-    const title = (a.customer || "Ohne Kundennamen") + (addr ? " – " + addr : "") + (att > 1 ? ` (${attemptLabel(att)})` : "") + (a.missed ? " – nicht angetroffen" : "");
+    const title = (a.customer || "Ohne Kundennamen") + (addr ? " – " + addr : "") + (att > 1 ? ` (${attemptLabel(att)})` : "") + (a.missed ? " – nicht angetroffen" : "") + (slipStale(a) ? " – Anmeldezettel neu drucken" : "");
     const badgeTime = att > 1 && compact ? ` <span class="sp-badge">${att}.</span>` : "";
-    const badgeLine = att > 1 && !compact ? `<span class="sp-badge sp-badge-line">${attemptLabel(att)}</span>` : "";
-    const mark = a.done ? "✔ " : a.missed ? "🚪 " : "";
-    const btn = `<button type="button" class="sp-appt${compact ? " compact" : ""}${a.id === moduleState.selectedId ? " selected" : ""}${a.done ? " done" : ""}${a.missed ? " missed" : ""}" data-sp-open="${esc(a.id)}" data-date="${esc(a.date)}" data-time="${esc(a.time)}" title="${esc(title)}"><span class="sp-appt-time">${mark}${esc(a.time)}${badgeTime}</span><span class="sp-appt-main"><strong>${esc(a.customer || "Ohne Kundennamen")}</strong>${badgeLine}${compact || !addr ? "" : `<small>${esc(addr)}</small>`}</span></button>`;
+    const stale = slipStale(a);
+    const code = workCode(a);
+    const codeHtml = code ? `<span class="sp-code" title="${esc(worksText(a).join(", "))}">${esc(code)}</span>` : "";
+    const badgeLine = (att > 1 && !compact ? `<span class="sp-badge sp-badge-line">${attemptLabel(att)}</span>` : "") + (stale && !compact ? `<span class="sp-badge sp-badge-line sp-badge-warn">⚠ Zettel neu drucken</span>` : "");
+    const mark = (a.done ? "✔ " : a.missed ? "🚪 " : "") + (stale && compact ? "⚠ " : "");
+    const btn = `<button type="button" class="sp-appt${compact ? " compact" : ""}${a.id === moduleState.selectedId ? " selected" : ""}${a.done ? " done" : ""}${a.missed ? " missed" : ""}" data-sp-open="${esc(a.id)}" data-date="${esc(a.date)}" data-time="${esc(a.time)}" title="${esc(title)}"><span class="sp-appt-time">${mark}${esc(a.time)}${badgeTime}${compact ? codeHtml : ""}</span>${compact ? "" : codeHtml}<span class="sp-appt-main"><strong>${esc(a.customer || "Ohne Kundennamen")}</strong>${badgeLine}${compact || !addr ? "" : `<small>${esc(addr)}</small>`}</span></button>`;
     if (compact) return btn;
     const inv = a.done && a.invoice ? ` · ${INV_SHORT[a.invoice] || ""}${a.invoice === "bar" && a.amount > 0 ? " " + fmtEUR(a.amount) : ""}` : "";
     const fu = a.missed ? followUpOf(a) : null;
@@ -7076,6 +7093,19 @@
     return attemptOf(m) + 1 > 3 ? { exhausted: true } : { attempt: attemptOf(m) + 1, prevId: m.id };
   }
 
+  /* ================= Anmeldezettel-Abgleich ================= */
+  /* Beim Drucken des Anmeldezettels wird Datum und Uhrzeit-Fenster notiert. Ändert sich der Termin später,
+     erscheint ein Hinweis, damit Kalender und Zettel übereinstimmen. */
+  function slipStale(a) { return !!(a.slip && (a.slip.date !== a.date || a.slip.win !== timeWindow(a.time))); }
+  function markSlipPrinted(list) {
+    const ids = new Set(list.map(a => a.id));
+    persist({ appointments: appointments().map(a => ids.has(a.id) ? { ...a, slip: { date: a.date, win: timeWindow(a.time) } } : a) });
+  }
+  function warnStale(id) {
+    const a = appointments().find(x => x.id === id);
+    if (a && slipStale(a)) alert(`Achtung: Für diesen Termin wurde schon ein Anmeldezettel gedruckt (${shortDate(a.slip.date)}, ${a.slip.win} Uhr).\n\nIm Kalender steht er jetzt am ${shortDate(a.date)}, ${timeWindow(a.time)} Uhr.\n\nBitte den Anmeldezettel neu drucken, damit Zettel und Kalender übereinstimmen.`);
+  }
+
   /* ================= Termin verschieben ================= */
   function openMoveModal(id) {
     const a = appointments().find(x => x.id === id);
@@ -7106,34 +7136,38 @@
     if (holiday) msg.push(`Feiertag: ${holiday} – an Feiertagen kann kein Termin liegen.`);
     else {
       if (wd === 0 || wd === 6) msg.push("Der gewählte Tag ist ein Wochenende.");
-      if (clash) msg.push(`Überschneidung mit dem Termin um ${clash.time} Uhr (${clash.customer || "ohne Namen"}).`);
+      if (clash) msg.push(`Überschneidung mit dem Termin um ${clash.time} Uhr (${clash.customer || "ohne Namen"}). Die anderen Termine bleiben unverändert, auch deine Uhrzeit.`);
     }
     box.textContent = msg.join(" ");
     box.hidden = !msg.length;
     $("spMoveSave").disabled = !!holiday || (date === a.date && time === a.time);
   }
-  /* freie Uhrzeit am Zieltag vorschlagen, wenn die bisherige belegt ist */
+  /* nur auf ausdrücklichen Wunsch („Nächste freie Zeit“): frühestes freies Zeitfenster ab der gewählten Uhrzeit */
   function suggestMoveTime() {
     const { a, date, time, dur } = moveTarget();
-    if (!a || !date || !time || !overlapWith(date, time, dur, a.id)) return;
-    for (let m = 8 * 60; m + dur <= 18 * 60; m += 5) if (!overlapWith(date, fromMin(m), dur, a.id)) { $("spMoveTime").value = fromMin(m); return; }
+    if (!a || !date || !time) return;
+    const from = toMin(time);
+    for (let m = from; m + dur <= 18 * 60; m += 5) if (!overlapWith(date, fromMin(m), dur, a.id)) { $("spMoveTime").value = fromMin(m); return; }
+    for (let m = 7 * 60; m < from && m + dur <= 18 * 60; m += 5) if (!overlapWith(date, fromMin(m), dur, a.id)) { $("spMoveTime").value = fromMin(m); return; }
   }
   function moveQuick(kind) {
+    if (kind === "free") { suggestMoveTime(); updateMoveInfo(); return; }
     const cur = fromIso($("spMoveDate").value || iso(new Date()));
     let d = addDays(cur, kind === "week" ? 7 : 1);
     if (kind === "next") while (d.getDay() === 0 || d.getDay() === 6 || holidayMap(d.getFullYear()).get(iso(d))) d = addDays(d, 1);
     $("spMoveDate").value = iso(d);
-    suggestMoveTime(); updateMoveInfo();
+    updateMoveInfo();   // Uhrzeit bleibt, wie sie ist
   }
   function saveMove() {
     const { a, date, time, dur } = moveTarget();
     if (!a || !date || !time) return;
     if (holidayMap(fromIso(date).getFullYear()).get(date)) return alert("An Feiertagen kann kein Termin liegen.");
     const clash = overlapWith(date, time, dur, a.id);
-    if (clash && !confirm(`Der Termin überschneidet sich mit dem Termin um ${clash.time} Uhr (${clash.customer || "ohne Namen"}). Trotzdem verschieben?`)) return;
+    if (clash && !confirm(`Der Termin überschneidet sich mit dem Termin um ${clash.time} Uhr (${clash.customer || "ohne Namen"}). Trotzdem zu dieser Uhrzeit verschieben? Alle anderen Termine bleiben unverändert.`)) return;
     persist({ appointments: appointments().map(x => x.id === a.id ? { ...x, date, time, updatedAt: new Date().toISOString() } : x) });
     moduleState.date = fromIso(date);
     closeMoveModal(); render();
+    warnStale(a.id);
   }
 
   /* ================= Tagesübersicht (Zettel zum Abhaken) ================= */
@@ -7506,7 +7540,7 @@
     if (clash && !confirm(`Der Termin überschneidet sich mit dem Termin um ${clash.time} Uhr (${clash.customer || "ohne Namen"}). Trotzdem speichern?`)) return;
     const item={ id:moduleState.editingId || uuid(), date,time, customer:$("spAptCustomer").value.trim(), street:$("spAptStreet").value.trim(), house:$("spAptHouse").value.trim(), zip:$("spAptZip").value.trim(), city:$("spAptCity").value.trim(), duration:Number($("spAptDuration").value)||15, notes:$("spAptNotes").value.trim(), bossNote:$("spAptBossNote").value.trim(), works:selectedWorks(), workOther:$("spWorkOtherText").value.trim(), kid:moduleState.aptCustomer?.id||"", knr:moduleState.aptCustomer?.nr||"", ...(moduleState.pendingRetry && !moduleState.editingId ? { attempt: moduleState.pendingRetry.attempt, prevId: moduleState.pendingRetry.prevId } : {}), updatedAt:new Date().toISOString() };
     const list=appointments(); const idx=list.findIndex(x=>x.id===item.id); if(idx>=0) list[idx]={ ...list[idx], ...item }; else list.push(item);
-    persist({appointments:list}); moduleState.selectedId=item.id; moduleState.date=fromIso(date); closeModal(); render();
+    persist({appointments:list}); moduleState.selectedId=item.id; moduleState.date=fromIso(date); closeModal(); render(); warnStale(item.id);
   }
   function deleteAppointment() {
     if (!moduleState.editingId) return;
@@ -7954,6 +7988,7 @@
     if (!list.length) return;
     cleanupPrint();
     const items = list.map(a => proposalData(a, settings()));
+    setTimeout(() => markSlipPrinted(list), 400);   // gedruckten Stand merken (für den Abgleich Kalender ↔ Zettel)
 
     // iPhone/iPad (Home-Bildschirm-App: window.print() gesperrt; Safari: Seitengröße unzuverlässig)
     // -> PDF erzeugen und über das Teilen-Menü drucken
