@@ -70,6 +70,13 @@
      SPEICHER
      ============================================================ */
 
+  /* Koordinate (Zahl innerhalb der Grenzen) oder null */
+  function coord(v, max) {
+    var n = typeof v === "string" ? parseFloat(v.replace(",", ".")) : v;
+
+    return typeof n === "number" && isFinite(n) && Math.abs(n) <= max ? n : null;
+  }
+
   function clean(k) {
     if (!k || typeof k !== "object") return null;
 
@@ -89,6 +96,10 @@
       ownerAddr: String(k.ownerAddr || ""),
       notes: String(k.notes || ""),
       bossNote: String(k.bossNote || ""),
+      lat: coord(k.lat, 90),
+      lon: coord(k.lon, 180),
+      travelBefore: Math.max(0, Math.min(240, Math.round(Number(k.travelBefore) || 0))),
+      travelAfter: Math.max(0, Math.min(240, Math.round(Number(k.travelAfter) || 0))),
       created: k.created || new Date().toISOString(),
       updated: k.updated || new Date().toISOString()
     };
@@ -348,6 +359,8 @@
     ".kv-wtext[hidden]{display:none}" +
     ".kv-quick{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 10px}" +
     ".kv-quick strong{font-size:.82rem;margin-right:2px}" +
+    ".kv-travel{display:inline-flex;align-items:center;gap:4px;flex-wrap:wrap;font-size:.8rem;font-weight:700;color:#4f5962}" +
+    ".kv-travel input{width:58px;padding:6px;border:1px solid #c9ced2;border-radius:8px;font-size:16px;text-align:center}" +
     ".kv-sheet-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}" +
     ".kv-sheet-foot strong{font-size:.95rem}" +
     "@media (max-width:600px){.kv-card{padding:14px}.kv-form{grid-template-columns:1fr}.kv-overlay{padding:0;align-items:stretch}.kv-sheet{max-height:100vh;height:100%;border-radius:0}.kv-actions .btn{flex:1}}";
@@ -386,7 +399,14 @@
         E(w.text || "") +
         '"' +
         (w.other ? "" : " hidden") +
-        ">"
+        ">" +
+        (wk.travel
+          ? '<span class="kv-travel">🚗 Fahrt <input class="kv-tb" type="number" min="0" max="240" step="5" inputmode="numeric" placeholder="0" value="' +
+            (w.tb || "") +
+            '" aria-label="Fahrtzeit vorher in Minuten"> vor · <input class="kv-ta" type="number" min="0" max="240" step="5" inputmode="numeric" placeholder="0" value="' +
+            (w.ta || "") +
+            '" aria-label="Fahrtzeit nachher in Minuten"> nach (Min.)</span>'
+          : "")
       );
     }
 
@@ -776,6 +796,16 @@
 
         wk.getWork(inp.closest(".kv-item").getAttribute("data-id")).text = inp.value;
       });
+
+      host.addEventListener("input", function (e) {
+        var tin = e.target.closest(".kv-tb, .kv-ta");
+
+        if (!tin) return;
+
+        var w3 = wk.getWork(tin.closest(".kv-item").getAttribute("data-id"));
+
+        w3[tin.classList.contains("kv-tb") ? "tb" : "ta"] = Math.max(0, Math.min(240, Math.round(Number(tin.value) || 0)));
+      });
     }
 
     var api = { update: update, host: host };
@@ -849,6 +879,16 @@
       '<p class="kv-hint">Leer lassen, wenn der Eigentümer im Haus wohnt.</p></div>' +
       '<div class="field wide"><label for="kvNotes">Besonderheiten</label>' +
       '<textarea id="kvNotes" rows="3" placeholder="Zugang, Hinweise …"></textarea></div>' +
+      '<div class="field wide"><label>Standort (für die Routenplanung)</label>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+      '<input id="kvLat" type="text" inputmode="decimal" placeholder="Breite, z. B. 50.5870" autocomplete="off" style="flex:1 1 140px">' +
+      '<input id="kvLon" type="text" inputmode="decimal" placeholder="Länge, z. B. 8.6781" autocomplete="off" style="flex:1 1 140px"></div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">' +
+      '<button type="button" class="btn btn-light" data-x="gps">📍 Aktuellen Standort übernehmen</button>' +
+      '<button type="button" class="btn btn-light" data-x="geo">🔎 Adresse online suchen</button></div>' +
+      '<p class="kv-hint" id="kvLocInfo">Aktuellen Standort übernehmen, wenn du vor dem Haus stehst – oder die Adresse über OpenStreetMap suchen (Internet nötig, die Adresse wird dabei an OpenStreetMap gesendet).</p></div>' +
+      '<div class="field"><label for="kvTb">Standard-Fahrtzeit vorher (Min.)</label><input id="kvTb" type="number" min="0" max="240" step="5" inputmode="numeric" placeholder="0"></div>' +
+      '<div class="field"><label for="kvTa">Standard-Fahrtzeit nachher (Min.)</label><input id="kvTa" type="number" min="0" max="240" step="5" inputmode="numeric" placeholder="0"></div>' +
       '<div class="field wide"><label for="kvBoss">Bemerkung für den Chef (nur im Chef-Ausdruck)</label>' +
       '<textarea id="kvBoss" rows="2" placeholder="z. B. zahlt immer bar, Rechnung immer per Post …"></textarea></div>' +
       "</div>" +
@@ -874,6 +914,10 @@
     f("kvOwner").value = k ? k.ownerAddr : "";
     f("kvNotes").value = k ? k.notes : "";
     f("kvBoss").value = k ? k.bossNote || "" : "";
+    f("kvLat").value = k && k.lat !== null && k.lat !== undefined ? k.lat : "";
+    f("kvLon").value = k && k.lon !== null && k.lon !== undefined ? k.lon : "";
+    f("kvTb").value = k && k.travelBefore ? k.travelBefore : "";
+    f("kvTa").value = k && k.travelAfter ? k.travelAfter : "";
 
     function close() {
       document.removeEventListener("keydown", onKey, true);
@@ -916,6 +960,43 @@
 
       if (a === "close") {
         close();
+      } else if (a === "gps") {
+        var info = f("kvLocInfo");
+
+        getGps().then(
+          function (p) {
+            f("kvLat").value = p.lat.toFixed(6);
+            f("kvLon").value = p.lon.toFixed(6);
+            info.textContent = "Standort übernommen (Genauigkeit ca. " + Math.round(p.acc) + " m). Mit „Speichern“ sichern.";
+          },
+          function (err) {
+            info.textContent = "Standort nicht verfügbar: " + err;
+          }
+        );
+      } else if (a === "geo") {
+        var info2 = f("kvLocInfo");
+
+        info2.textContent = "Suche läuft …";
+        geocodeAddress({
+          street: f("kvStreet").value.trim(),
+          house: f("kvHouse").value.trim(),
+          zip: f("kvZip").value.trim(),
+          city: f("kvCity").value.trim()
+        }).then(
+          function (p) {
+            if (!p) {
+              info2.textContent = "Adresse nicht gefunden. Bitte Angaben prüfen oder den Standort per GPS übernehmen.";
+              return;
+            }
+
+            f("kvLat").value = p.lat.toFixed(6);
+            f("kvLon").value = p.lon.toFixed(6);
+            info2.textContent = "Standort gefunden. Mit „Speichern“ sichern.";
+          },
+          function () {
+            info2.textContent = "Suche nicht möglich (keine Internetverbindung?).";
+          }
+        );
       } else if (a === "del") {
         if (
           !confirm(
@@ -965,6 +1046,10 @@
           ownerAddr: f("kvOwner").value.trim(),
           notes: f("kvNotes").value.trim(),
           bossNote: f("kvBoss").value.trim(),
+          lat: coord(f("kvLat").value, 90),
+          lon: coord(f("kvLon").value, 180),
+          travelBefore: Math.max(0, Math.min(240, Math.round(Number(f("kvTb").value) || 0))),
+          travelAfter: Math.max(0, Math.min(240, Math.round(Number(f("kvTa").value) || 0))),
           created: k ? k.created : new Date().toISOString(),
           updated: new Date().toISOString()
         };
@@ -1137,6 +1222,108 @@
   }
 
   /* ============================================================
+     STANDORT (GPS / OpenStreetMap)
+     ============================================================ */
+
+  function getGps() {
+    return new Promise(function (resolve, reject) {
+      if (!navigator.geolocation) return reject("Dieses Gerät unterstützt keine Standortbestimmung.");
+
+      navigator.geolocation.getCurrentPosition(
+        function (pos) {
+          resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude, acc: pos.coords.accuracy || 0 });
+        },
+        function (err) {
+          reject(err && err.code === 1 ? "Standortzugriff wurde nicht erlaubt." : "Standort konnte nicht bestimmt werden.");
+        },
+        { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+      );
+    });
+  }
+
+  /* Adresse -> { lat, lon } über OpenStreetMap (Nominatim); null = nicht gefunden */
+  async function nominatim(params) {
+    params.set("format", "json");
+    params.set("limit", "1");
+    params.set("countrycodes", "de,at,ch,lu");
+
+    var r = await fetch("https://nominatim.openstreetmap.org/search?" + params.toString(), {
+      headers: { "Accept-Language": "de" }
+    });
+
+    if (!r.ok) throw new Error("HTTP " + r.status);
+
+    var j = await r.json();
+
+    return j && j[0] ? { lat: parseFloat(j[0].lat), lon: parseFloat(j[0].lon) } : null;
+  }
+
+  async function geocodeAddress(a) {
+    var p = new URLSearchParams();
+
+    if (a.street) p.set("street", [a.house, a.street].filter(Boolean).join(" "));
+    if (a.zip) p.set("postalcode", a.zip);
+    if (a.city) p.set("city", a.city);
+
+    var hit = a.street || a.city || a.zip ? await nominatim(p) : null;
+
+    if (hit) return hit;
+
+    /* Fallback: Freitextsuche */
+    var q = [streetLine(a), cityLine(a)].filter(Boolean).join(", ");
+
+    return q ? nominatim(new URLSearchParams({ q: q })) : null;
+  }
+
+  async function geocodeText(q) {
+    return q ? nominatim(new URLSearchParams({ q: q })) : null;
+  }
+
+  function setLocation(id, lat, lon) {
+    var c = byId(id);
+
+    if (!c) return;
+
+    kunden = kunden.map(function (x) {
+      return x.id === id ? Object.assign({}, x, { lat: lat, lon: lon, updated: new Date().toISOString() }) : x;
+    });
+    persist();
+    refreshAll();
+  }
+
+  /* Fehlende Standorte nacheinander suchen (höchstens eine Anfrage pro Sekunde, wie von OpenStreetMap verlangt) */
+  async function geocodeMissing(list, onProgress) {
+    var todo = list.filter(function (c) {
+      return c.lat === null || c.lat === undefined || c.lon === null || c.lon === undefined;
+    });
+    var found = 0;
+    var failed = 0;
+
+    for (var i = 0; i < todo.length; i++) {
+      if (onProgress) onProgress(i, todo.length);
+
+      try {
+        var p = await geocodeAddress(todo[i]);
+
+        if (p) {
+          setLocation(todo[i].id, p.lat, p.lon);
+          found++;
+        } else {
+          failed++;
+        }
+      } catch (e) {
+        failed++;
+      }
+
+      if (i < todo.length - 1) await new Promise(function (r) { setTimeout(r, 1100); });
+    }
+
+    if (onProgress) onProgress(todo.length, todo.length);
+
+    return { total: todo.length, found: found, failed: failed };
+  }
+
+  /* ============================================================
      SICHERUNG DER KUNDENLISTE
      ============================================================ */
 
@@ -1283,6 +1470,11 @@
     importData: importData,
     nextNumber: nextMainNr,
     nextInsertNumber: nextInsertNr,
-    parseNr: parseNr
+    parseNr: parseNr,
+    getGps: getGps,
+    geocodeAddress: geocodeAddress,
+    geocodeText: geocodeText,
+    geocodeMissing: geocodeMissing,
+    setLocation: setLocation
   };
 })();
