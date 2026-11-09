@@ -1414,6 +1414,8 @@
     .sp-auto-works { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 5px; }
     .sp-chip { min-height: 36px; padding: 4px 12px; border: 1px solid #c9ced2; border-radius: 999px; background: #fff; font: inherit; font-size: .8rem; font-weight: 700; color: var(--text); cursor: pointer; }
     .sp-chip.on { border-color: var(--gold); background: #fbf5e7; }
+    .sp-travel { display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-left: 4px; font-size: .78rem; font-weight: 700; color: #4f5962; }
+    .sp-travel input { width: 58px; padding: 5px 6px; border: 1px solid #c9ced2; border-radius: 8px; font-size: 16px; text-align: center; }
     .sp-chip.on::before { content: "✓ "; }
     .sp-auto-other { flex: 1 1 160px; min-width: 0; padding: 6px 10px; border: 1px solid #c9ced2; border-radius: 10px; font-size: 16px; }
     .sp-auto-quick { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 8px 0 2px; }
@@ -1431,6 +1433,8 @@
     .sp-legend { margin: 0 0 10px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 10px; background: #fbfbfc; font-size: .78rem; color: #4f5962; line-height: 1.7; }
     .sp-legend span { display: inline-block; margin-right: 10px; white-space: nowrap; }
     .sp-legend span b { display: inline-block; min-width: 1.6em; padding: 0 6px; margin-right: 3px; border-radius: 6px; background: #22272d; color: #fff; text-align: center; }
+    .sp-route-box { margin-top: 12px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: #fbfbfc; }
+    .sp-route-sum { margin: 8px 0 2px; padding: 8px 10px; border-radius: 10px; background: #eaf3fb; border: 1px solid #b7d3ec; color: #1d4a73; font-size: .86rem; }
     .sp-appt.missed { border-left-color: #c9791b; background: #fff7ea; }
     .sp-act.missed { border-color: #c9791b; background: #fff1dc; color: #8a4b00; }
     .sp-badge-warn { background: #fde0e0; color: #a02f2f; }
@@ -1870,6 +1874,7 @@
           <button class="btn btn-light sp-view-btn active" type="button" data-sp-view="day">Tag</button>
           <button class="btn btn-light sp-view-btn" type="button" data-sp-view="week">Woche</button>
           <button class="btn btn-light" type="button" id="spToggleEmpty">Freie Stunden zeigen</button>
+          <button class="btn btn-light" type="button" id="spMapRoute">🗺 Route des Tages</button>
           <button class="btn btn-light" type="button" id="spAutoOpen">⚡ Termine automatisch einplanen</button>
           <button class="btn btn-gold" type="button" id="spNewAppointment">+ Termin</button>
         </div>
@@ -3367,6 +3372,18 @@
     </div>
     <div class="sp-muted" style="margin-top:10px;font-size:.84rem">Die Dauer je Kunde ergibt sich aus der gewählten Tätigkeit (mehrere = Summe). <button type="button" class="sp-linkbtn" id="spTimesOpenAuto">⏱ Zeiten je Tätigkeit anpassen</button></div>
     <label class="sp-work" style="margin-top:12px;display:flex"><input type="checkbox" id="spAutoBreak"><span>30 Minuten Pause berücksichtigen<br><small class="sp-muted" style="font-weight:600">Pause 12:30–13:00 Uhr – in dieser Zeit werden keine Termine vergeben (bei 15-Minuten-Terminen sind es zwischen 12 und 13 Uhr dann nur 2 statt 4).</small></span></label>
+    <div class="sp-route-box">
+      <label class="sp-work" style="display:flex"><input type="checkbox" id="spAutoRoute"><span>Kürzeste Fahrroute berücksichtigen<br><small class="sp-muted" style="font-weight:600">Die Kunden werden nach ihrem Standort so geordnet, dass möglichst wenig gefahren wird. Kunden ohne Standort werden nach Ort und Straße einsortiert.</small></span></label>
+      <label class="sp-work" style="display:flex;margin-top:8px"><input type="checkbox" id="spAutoDrive"><span>Fahrtzeit zwischen den Kunden aus der Entfernung berechnen<br><small class="sp-muted" style="font-weight:600">Wird als „Fahrtzeit vorher“ eingeplant (Luftlinie × 1,3, auf 5 Minuten aufgerundet). Eine größere eingetragene Fahrtzeit gilt weiterhin.</small></span></label>
+      <div class="sp-form-grid" style="margin-top:8px"><div class="field"><label for="spAutoSpeed">Ø Geschwindigkeit (km/h)</label><input id="spAutoSpeed" type="number" min="10" max="130" inputmode="numeric"></div></div>
+      <div class="sp-muted" style="margin-top:8px;font-size:.84rem"><strong>Startpunkt (Betrieb/Zuhause):</strong> <span id="spRouteStartInfo"></span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+        <button type="button" class="btn btn-light" id="spRouteStartGps">📍 Aktuellen Standort verwenden</button>
+        <button type="button" class="btn btn-light" id="spRouteStartGeo">🔎 Betriebsadresse suchen</button>
+      </div>
+      <div class="sp-muted" style="margin-top:8px;font-size:.84rem" id="spRouteMissing"></div>
+      <button type="button" class="btn btn-light" id="spRouteGeoMissing" style="margin-top:6px" hidden>🔎 Fehlende Standorte online suchen</button>
+    </div>
     <div class="sp-auto-preview" id="spAutoPreview"></div>
     <div class="sp-modal-actions">
       <button class="btn btn-light" type="button" id="spAutoCancel">Abbrechen</button>
@@ -3392,6 +3409,8 @@
       <div class="field"><label for="spAptZip">PLZ</label><input id="spAptZip" type="text" inputmode="numeric" placeholder="PLZ"></div>
       <div class="field"><label for="spAptCity">Ort</label><input id="spAptCity" type="text" placeholder="Ort"></div>
       <div class="field"><label for="spAptDuration">Dauer</label><select id="spAptDuration"><option value="10">10 Minuten</option><option value="15">15 Minuten</option><option value="20">20 Minuten</option><option value="30">30 Minuten</option><option value="45">45 Minuten</option><option value="60">60 Minuten</option></select></div>
+      <div class="field"><label for="spAptTravelB">Fahrtzeit vorher (Min.)</label><input id="spAptTravelB" type="number" min="0" max="240" step="5" inputmode="numeric" placeholder="0"></div>
+      <div class="field"><label for="spAptTravelA">Fahrtzeit nachher (Min.)</label><input id="spAptTravelA" type="number" min="0" max="240" step="5" inputmode="numeric" placeholder="0"></div>
     </div>
     <div class="sp-works-box">
       <div class="sp-works-title">Arbeiten (werden im Terminvorschlag angekreuzt)</div>
@@ -6446,12 +6465,19 @@
     $("spAutoUndo").addEventListener("click", undoAuto);
     $("spAutoPick").addEventListener("click", () => {
       if (!window.SPKunden) return alert("Die Kundenverwaltung ist nicht geladen. Bitte die Seite neu laden.");
-      window.SPKunden.pickMany(list => { autoState.kunden = list; updateAuto(); }, autoState.kunden.map(k => k.id), { types: AUTO_TYPES, getWork: autoWork });
+      window.SPKunden.pickMany(list => { autoState.kunden = list; updateAuto(); }, autoState.kunden.map(k => k.id), { types: AUTO_TYPES, getWork: autoWork, travel: true });
     });
     ["spAutoFrom", "spAutoTo", "spAutoStart", "spAutoEnd", "spAutoDuration", "spAutoBreak"].forEach(id => $(id).addEventListener("change", updateAuto));
     $("spAutoMax").addEventListener("input", updateAuto);
+    ["spAutoRoute", "spAutoDrive"].forEach(id => $(id).addEventListener("change", updateAuto));
+    $("spAutoSpeed").addEventListener("input", updateAuto);
+    $("spRouteStartGps").addEventListener("click", routeStartFromGps);
+    $("spRouteStartGeo").addEventListener("click", routeStartFromAddress);
+    $("spRouteGeoMissing").addEventListener("click", geocodeSelected);
+    $("spMapRoute").addEventListener("click", openDayRoute);
     $("spAutoPreview").addEventListener("click", autoPreviewClick);
     $("spAutoPreview").addEventListener("input", autoPreviewInput);
+    $("spAutoPreview").addEventListener("change", autoPreviewChange);
     ["spWorkKehrung", "spWorkMessung", "spWorkFeststoff", "spWorkSchau", "spWorkOther"].forEach(id => $(id).addEventListener("change", () => { applyWorkDuration(); syncWorkOther(); }));
     $("spTimesFromApt").addEventListener("click", openTimesModal);
     $("spTimesOpenAuto").addEventListener("click", openTimesModal);
@@ -6515,6 +6541,8 @@
     const base = (w.includes("messung") ? "M" : "") + (w.includes("kehrung") ? "K" : "");
     return [base, w.includes("schau") ? "FSS" : "", w.includes("feststoff") ? "FSM" : "", w.includes("other") ? "S" : ""].filter(Boolean).join("+");
   }
+  /* Fahrtzeit (Minuten) vor/nach dem Termin: blockiert Zeit im Kalender und bei der automatischen Einplanung */
+  const clampTravel = v => Math.max(0, Math.min(240, Math.round(Number(v) || 0)));
   const attemptOf = a => (Number(a.attempt) > 1 ? Number(a.attempt) : 1);
   const attemptLabel = n => (n === 3 ? "3. und letzte Anmeldung" : `${n}. Anmeldung`);
   const followUpOf = a => appointments().find(x => x.prevId === a.id) || null;
@@ -6532,11 +6560,12 @@
     const title = (a.customer || "Ohne Kundennamen") + (addr ? " – " + addr : "") + (att > 1 ? ` (${attemptLabel(att)})` : "") + (a.missed ? " – nicht angetroffen" : "") + (slipStale(a) ? " – Anmeldezettel neu drucken" : "");
     const badgeTime = att > 1 && compact ? ` <span class="sp-badge">${att}.</span>` : "";
     const stale = slipStale(a);
+    const tbm = clampTravel(a.travelBefore), tam = clampTravel(a.travelAfter);
     const code = workCode(a);
     const codeHtml = code ? `<span class="sp-code" title="${esc(worksText(a).join(", "))}">${esc(code)}</span>` : "";
     const badgeLine = (att > 1 && !compact ? `<span class="sp-badge sp-badge-line">${attemptLabel(att)}</span>` : "") + (stale && !compact ? `<span class="sp-badge sp-badge-line sp-badge-warn">⚠ Zettel neu drucken</span>` : "");
-    const mark = (a.done ? "✔ " : a.missed ? "🚪 " : "") + (stale && compact ? "⚠ " : "");
-    const btn = `<button type="button" class="sp-appt${compact ? " compact" : ""}${a.id === moduleState.selectedId ? " selected" : ""}${a.done ? " done" : ""}${a.missed ? " missed" : ""}" data-sp-open="${esc(a.id)}" data-date="${esc(a.date)}" data-time="${esc(a.time)}" title="${esc(title)}"><span class="sp-appt-time">${mark}${esc(a.time)}${badgeTime}${compact ? codeHtml : ""}</span>${compact ? "" : codeHtml}<span class="sp-appt-main"><strong>${esc(a.customer || "Ohne Kundennamen")}</strong>${badgeLine}${compact || !addr ? "" : `<small>${esc(addr)}</small>`}</span></button>`;
+    const mark = (a.done ? "✔ " : a.missed ? "🚪 " : "") + (stale && compact ? "⚠ " : "") + ((tbm || tam) && compact ? "🚗 " : "");
+    const btn = `<button type="button" class="sp-appt${compact ? " compact" : ""}${a.id === moduleState.selectedId ? " selected" : ""}${a.done ? " done" : ""}${a.missed ? " missed" : ""}" data-sp-open="${esc(a.id)}" data-date="${esc(a.date)}" data-time="${esc(a.time)}" title="${esc(title)}"><span class="sp-appt-time">${mark}${esc(a.time)}${badgeTime}${compact ? codeHtml : ""}</span>${compact ? "" : codeHtml}<span class="sp-appt-main"><strong>${esc(a.customer || "Ohne Kundennamen")}</strong>${badgeLine}${compact || !addr ? "" : `<small>${esc(addr)}</small>`}${compact || !(tbm || tam) ? "" : `<small>🚗 ${tbm} Min. vorher · ${tam} Min. nachher</small>`}</span></button>`;
     if (compact) return btn;
     const inv = a.done && a.invoice ? ` · ${INV_SHORT[a.invoice] || ""}${a.invoice === "bar" && a.amount > 0 ? " " + fmtEUR(a.amount) : ""}` : "";
     const fu = a.missed ? followUpOf(a) : null;
@@ -6553,9 +6582,11 @@
     return "09:00";
   }
   /* Termin, der sich mit [Beginn, Beginn+Dauer) überschneidet (oder null) */
-  function overlapWith(date, time, dur, ignoreId) {
-    const s = toMin(time), e = s + dur;
-    return appointments().find(a => a.id !== ignoreId && a.date === date && s < toMin(a.time) + (Number(a.duration) || 15) && e > toMin(a.time)) || null;
+  function overlapWith(date, time, dur, ignoreId, tb = 0, ta = 0) {
+    const s = toMin(time) - tb, e = toMin(time) + dur + ta;
+    return appointments().find(a => a.id !== ignoreId && a.date === date
+      && s < toMin(a.time) + (Number(a.duration) || 15) + clampTravel(a.travelAfter)
+      && e > toMin(a.time) - clampTravel(a.travelBefore)) || null;
   }
   function addBtn(day, time, label, aria) {
     return `<button type="button" class="sp-add" data-sp-open="" data-date="${esc(day)}" data-time="${esc(time)}" aria-label="${esc(aria || "Termin anlegen")}">${label}</button>`;
@@ -6627,6 +6658,8 @@
     $("spAptDuration").value = String(a?.duration || 15);
     $("spAptNotes").value = a?.notes || "";
     $("spAptBossNote").value = a?.bossNote || "";
+    $("spAptTravelB").value = a?.travelBefore || "";
+    $("spAptTravelA").value = a?.travelAfter || "";
     const wk = Array.isArray(a?.works) ? a.works : [];
     $("spWorkKehrung").checked = wk.includes("kehrung");
     $("spWorkMessung").checked = wk.includes("messung");
@@ -6678,6 +6711,8 @@
       $("spAptCity").value = k.city || "";
       if (k.notes && !$("spAptNotes").value.trim()) $("spAptNotes").value = k.notes;
       if (k.bossNote && !$("spAptBossNote").value.trim()) $("spAptBossNote").value = k.bossNote;
+      if (k.travelBefore && !$("spAptTravelB").value) $("spAptTravelB").value = k.travelBefore;
+      if (k.travelAfter && !$("spAptTravelA").value) $("spAptTravelA").value = k.travelAfter;
       moduleState.aptCustomer = { id: k.id, nr: k.nr };
       showAptCustomerInfo();
     });
@@ -6731,14 +6766,19 @@
   function autoSavePrefs(extra) { try { localStorage.setItem(AUTO_KEY, JSON.stringify({ ...autoPrefs(), ...extra })); } catch {} }
 
   /* Tätigkeit je Kunde: { kehrung, messung, other, text } */
-  function autoWork(id) { return autoState.works[id] || (autoState.works[id] = { kehrung: false, messung: false, feststoff: false, schau: false, other: false, text: "" }); }
+  function autoWork(id) {
+    if (autoState.works[id]) return autoState.works[id];
+    const kr = window.SPKunden ? window.SPKunden.get(id) : null;
+    return (autoState.works[id] = { kehrung: false, messung: false, feststoff: false, schau: false, other: false, text: "", tb: kr ? clampTravel(kr.travelBefore) : 0, ta: kr ? clampTravel(kr.travelAfter) : 0 });
+  }
   function autoWorkList(w) { const l = []; if (w.kehrung) l.push("kehrung"); if (w.messung) l.push("messung"); if (w.feststoff) l.push("feststoff"); if (w.schau) l.push("schau"); if (w.other) l.push("other"); return l; }
   const AUTO_TYPES = [{ k: "kehrung", l: "Kehrung" }, { k: "messung", l: "Messung" }, { k: "feststoff", l: "Feststoffmessung" }, { k: "schau", l: "Feuerstättenschau" }, { k: "other", l: "Sonstiges" }];
   const AUTO_LABEL = { kehrung: "Kehrung", messung: "Messung", feststoff: "Feststoffmessung", schau: "Feuerstättenschau", other: "Sonstiges" };
   function chipsHtml(id) {
     const w = autoWork(id);
     return ["kehrung", "messung", "feststoff", "schau", "other"].map(t => `<button type="button" class="sp-chip${w[t] ? " on" : ""}" data-aw="${t}">${AUTO_LABEL[t]}</button>`).join("")
-      + `<input class="sp-auto-other" type="text" maxlength="40" placeholder="Eigener Text, z. B. Feuerstättenschau" aria-label="Sonstige Arbeit" value="${esc(w.text)}"${w.other ? "" : " hidden"}>`;
+      + `<input class="sp-auto-other" type="text" maxlength="40" placeholder="Eigener Text, z. B. Feuerstättenschau" aria-label="Sonstige Arbeit" value="${esc(w.text)}"${w.other ? "" : " hidden"}>`
+      + `<span class="sp-travel">🚗 Fahrt <input class="sp-tb" type="number" min="0" max="240" step="5" inputmode="numeric" placeholder="0" value="${w.tb || ""}" aria-label="Fahrtzeit vorher in Minuten"> vor · <input class="sp-ta" type="number" min="0" max="240" step="5" inputmode="numeric" placeholder="0" value="${w.ta || ""}" aria-label="Fahrtzeit nachher in Minuten"> nach (Min.)</span>`;
   }
   /* Klicks auf die Auswahl je Kunde / „für alle setzen“ – ohne die Liste neu aufzubauen (Scrollposition bleibt) */
   function autoPreviewClick(e) {
@@ -6777,6 +6817,13 @@
     if (list2) list2.scrollTop = l;
     if (kid && focusText) { const inp = document.querySelector(`#spAutoPreview [data-kid="${kid}"] .sp-auto-other`); if (inp && !inp.hidden) inp.focus(); }
   }
+  function autoPreviewChange(e) {
+    const inp = e.target.closest(".sp-tb, .sp-ta");
+    if (!inp) return;
+    const row = inp.closest("[data-kid]"), w = autoWork(row.dataset.kid);
+    w[inp.classList.contains("sp-tb") ? "tb" : "ta"] = clampTravel(inp.value);
+    refreshAuto();   // Fahrtzeit ändert die Einplanung -> neu berechnen
+  }
   function autoPreviewInput(e) {
     const inp = e.target.closest(".sp-auto-other");
     if (!inp) return;
@@ -6793,12 +6840,119 @@
     $("spAutoDuration").value = p.duration || "15";
     $("spAutoMax").value = p.max || "";
     $("spAutoBreak").checked = p.pause !== false;
+    $("spAutoRoute").checked = p.route !== false;
+    $("spAutoDrive").checked = p.drive !== false;
+    $("spAutoSpeed").value = p.speed || 40;
     autoState.kunden = [];
     autoState.works = {};
     $("spAutoModal").hidden = false;
     updateAuto();
   }
   function closeAutoModal() { $("spAutoModal").hidden = true; }
+
+  /* ================= Fahrroute ================= */
+  const hasLoc = c => !!c && Number.isFinite(c.lat) && Number.isFinite(c.lon);
+  function distKm(a, b) {                       // Luftlinie (Haversine)
+    const R = 6371, r = x => x * Math.PI / 180;
+    const dLat = r(b.lat - a.lat), dLon = r(b.lon - a.lon);
+    const h = Math.sin(dLat / 2) ** 2 + Math.cos(r(a.lat)) * Math.cos(r(b.lat)) * Math.sin(dLon / 2) ** 2;
+    return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+  }
+  function routeStart() {
+    const st = (data().appointmentSettings || {}).routeStart;
+    return st && Number.isFinite(st.lat) && Number.isFinite(st.lon) ? st : null;
+  }
+  function tourLen(order, start) {
+    let t = 0, p = start && hasLoc(start) ? start : null;
+    order.forEach(c => { if (p) t += distKm(p, c); p = c; });
+    return t;
+  }
+  /* Reihenfolge mit möglichst wenig Fahrstrecke: Nächster-Nachbar + 2-Opt (offene Tour ab Startpunkt) */
+  function optimizeRoute(list, start) {
+    const loc = list.filter(hasLoc), noLoc = list.filter(c => !hasLoc(c));
+    if (loc.length < 2) return { order: list.slice(), before: 0, after: 0, optimized: false, noLoc: noLoc.length };
+    const st = start && hasLoc(start) ? start : null;
+    const before = tourLen(loc, st);
+    const rest = loc.slice(), order = [];
+    let cur = st;
+    if (!cur) { cur = rest.shift(); order.push(cur); }
+    while (rest.length) {
+      let bi = 0, bd = Infinity;
+      rest.forEach((c, i) => { const d = distKm(cur, c); if (d < bd) { bd = d; bi = i; } });
+      cur = rest.splice(bi, 1)[0]; order.push(cur);
+    }
+    const n = order.length;
+    const D = (a, b) => (a && b ? distKm(a, b) : 0);
+    for (let guard = 0, improved = true; improved && guard < 200; guard++) {
+      improved = false;
+      for (let i = 0; i < n - 1; i++) {
+        for (let j = i + 1; j < n; j++) {
+          const prev = i > 0 ? order[i - 1] : st, a = order[i], b = order[j], next = j < n - 1 ? order[j + 1] : null;
+          const delta = D(prev, b) + D(a, next) - D(prev, a) - D(b, next);
+          if (delta < -1e-9) { order.splice(i, j - i + 1, ...order.slice(i, j + 1).reverse()); improved = true; }
+        }
+      }
+    }
+    // Kunden ohne Standort hinter den letzten Kunden desselben Ortes einsortieren (sonst ans Ende)
+    const merged = order.slice();
+    noLoc.forEach(c => {
+      let at = -1;
+      merged.forEach((m, i) => { if ((m.city || "").toLowerCase() === (c.city || "").toLowerCase()) at = i; });
+      merged.splice(at >= 0 ? at + 1 : merged.length, 0, c);
+    });
+    return { order: merged, before, after: tourLen(order, st), optimized: true, noLoc: noLoc.length };
+  }
+  function renderRouteInfo() {
+    const st = routeStart(), n = autoState.kunden.length, miss = autoState.kunden.filter(k => !hasLoc(k)).length;
+    $("spRouteStartInfo").textContent = st ? `${st.label || "festgelegt"} (${st.lat.toFixed(4)}, ${st.lon.toFixed(4)})` : "nicht festgelegt – die Route beginnt beim ersten Kunden";
+    $("spRouteMissing").textContent = n ? (miss ? `${miss} von ${n} ausgewählten Kunden haben noch keinen Standort.` : `Alle ${n} ausgewählten Kunden haben einen Standort.`) : "";
+    $("spRouteGeoMissing").hidden = !miss;
+  }
+  function saveRouteStart(pt) {
+    persist({ appointmentSettings: { ...settings(), routeStart: pt } });
+    renderRouteInfo(); updateAuto();
+  }
+  async function routeStartFromGps() {
+    if (!window.SPKunden) return;
+    try { const p = await window.SPKunden.getGps(); saveRouteStart({ lat: p.lat, lon: p.lon, label: "Aktueller Standort" }); }
+    catch (e) { alert(String(e)); }
+  }
+  async function routeStartFromAddress() {
+    const adr = (settings().businessAddress || "").trim();
+    if (!adr) return alert("Bitte zuerst im Bereich „Terminvorschlag drucken“ die Anschrift des Betriebs eintragen.");
+    try {
+      const p = await window.SPKunden.geocodeText(adr);
+      if (!p) return alert("Die Betriebsadresse wurde nicht gefunden. Bitte prüfen oder den aktuellen Standort verwenden.");
+      saveRouteStart({ lat: p.lat, lon: p.lon, label: adr });
+    } catch (e) { alert("Suche nicht möglich (keine Internetverbindung?)."); }
+  }
+  async function geocodeSelected() {
+    if (!window.SPKunden) return;
+    const btn = $("spRouteGeoMissing"); btn.disabled = true;
+    const r = await window.SPKunden.geocodeMissing(autoState.kunden, (i, n) => { $("spRouteMissing").textContent = `Suche Standorte … ${i} von ${n}`; });
+    autoState.kunden = autoState.kunden.map(k => window.SPKunden.get(k.id) || k);
+    btn.disabled = false; renderRouteInfo(); updateAuto();
+    alert(`${r.found} von ${r.total} Standorten gefunden.` + (r.failed ? `\n${r.failed} Adressen wurden nicht gefunden – bitte in der Kundenverwaltung prüfen oder per GPS ergänzen.` : ""));
+  }
+
+  /* Karten-App: Route des angezeigten Tages (Adressen in Terminreihenfolge, bis 10 Stopps je Link) */
+  function openDayRoute() {
+    const day = iso(moduleState.date);
+    const stops = appointments().filter(a => a.date === day && !a.missed)
+      .sort((a, b) => (a.time || "").localeCompare(b.time || ""))
+      .map(a => [[a.street, a.house].filter(Boolean).join(" "), [a.zip, a.city].filter(Boolean).join(" ")].filter(Boolean).join(", "))
+      .filter(Boolean);
+    if (!stops.length) return alert("Für diesen Tag sind keine Termine mit Adresse eingetragen.");
+    const per = 10, parts = Math.ceil(stops.length / per), part = (moduleState.mapPart || 0) % parts;
+    const seg = stops.slice(part * per, part * per + per);
+    const enc = encodeURIComponent;
+    let url = "https://www.google.com/maps/dir/?api=1&travelmode=driving&destination=" + enc(seg[seg.length - 1]);
+    if (seg.length > 1) url += "&waypoints=" + seg.slice(0, -1).map(enc).join("%7C");
+    if (part > 0) url += "&origin=" + enc(stops[part * per - 1]);
+    moduleState.mapPart = part + 1;
+    window.open(url, "_blank");
+    if (parts > 1) alert(`Route Teil ${part + 1} von ${parts} geöffnet (${stops.length} Stopps, höchstens ${per} je Karte). Nochmal tippen für den nächsten Teil.`);
+  }
 
   /* Berechnet, welcher Kunde auf welchen Tag/welche Uhrzeit kommt (ohne zu speichern) */
   function planAuto() {
@@ -6825,6 +6979,17 @@
     });
     res.candidates = cand.length;
 
+    /* Fahrroute: Reihenfolge nach Standort, Fahrtzeit aus der Entfernung */
+    const useRoute = $("spAutoRoute").checked, driveOn = $("spAutoDrive").checked;
+    const speed = Math.max(10, Math.min(130, Number($("spAutoSpeed").value) || 40));
+    const startPt = routeStart();
+    res.route = null;
+    if (useRoute && cand.length > 1) {
+      const r = optimizeRoute(cand, startPt);
+      cand.splice(0, cand.length, ...r.order);
+      res.route = r;
+    }
+
     const hol = new Map();
     const holiday = key => { const y = Number(key.slice(0, 4)); if (!hol.has(y)) hol.set(y, holidayMap(y)); return hol.get(y).get(key); };
     /* Arbeitstage (Mo–Fr ohne Feiertage) */
@@ -6835,27 +7000,34 @@
     }
     const state = {};
     const dayState = key => state[key] || (state[key] = {
-      busy: existing.filter(a => a.date === key).map(a => ({ s: toMin(a.time), e: toMin(a.time) + (Number(a.duration) || 15) })),
+      busy: existing.filter(a => a.date === key).map(a => ({ s: toMin(a.time) - clampTravel(a.travelBefore), e: toMin(a.time) + (Number(a.duration) || 15) + clampTravel(a.travelAfter) })),
       count: existing.filter(a => a.date === key).length
     });
     /* Dauer je Kunde: Summe der Zeiten seiner Tätigkeiten, ohne Tätigkeit die Standarddauer */
     const durOf = k => { const l = autoWorkList(autoWork(k.id)); return l.length ? minutesForWorks(l) : dur; };
-    let idx = 0, di = 0, s = startMin;
+    /* Fahrtzeit je Kunde (vorher/nachher) gehört zur belegten Zeit */
+    const tbOf = k => clampTravel(autoWork(k.id).tb), taOf = k => clampTravel(autoWork(k.id).ta);
+    let idx = 0, di = 0, o = startMin, prevK = null;   // o = Beginn der belegten Zeit (Fahrt vorher + Termin + Fahrt nachher)
     while (idx < cand.length && di < days.length) {
-      const k = cand[idx], d = durOf(k), st = dayState(days[di]);
-      if (maxDay && st.count >= maxDay) { di++; s = startMin; continue; }   // Tageslimit erreicht
+      const k = cand[idx], d = durOf(k), ta = taOf(k), st = dayState(days[di]);
+      /* Anfahrt: vom vorherigen Kunden des Tages, beim ersten Kunden vom Startpunkt */
+      const from = prevK || startPt;
+      const km = from && hasLoc(from) && hasLoc(k) ? distKm(from, k) : 0;
+      const driveMinutes = driveOn && km > 0.05 ? Math.ceil(km * 1.3 / speed * 12) * 5 : 0;
+      const tb = Math.max(tbOf(k), driveMinutes), total = tb + d + ta;
+      if (maxDay && st.count >= maxDay) { di++; o = startMin; prevK = null; continue; }   // Tageslimit erreicht
       let placed = false;
-      while (s + d <= endMin) {
-        if (pause && s < BREAK_TO && s + d > BREAK_FROM) { s = BREAK_TO; continue; }   // Pause: danach weiter
-        const clash = st.busy.find(b => s < b.e && s + d > b.s);
-        if (clash) { s = clash.e; continue; }
-        st.busy.push({ s, e: s + d });
+      while (o + total <= endMin) {
+        if (pause && o < BREAK_TO && o + total > BREAK_FROM) { o = BREAK_TO; continue; }   // Pause: danach weiter
+        const clash = st.busy.find(b => o < b.e && o + total > b.s);
+        if (clash) { o = clash.e; continue; }
+        st.busy.push({ s: o, e: o + total });
         st.count++;
-        res.placed.push({ k, date: days[di], time: fromMin(s), dur: d, retry: retryInfo(k) });
-        s += d; idx++; placed = true;
+        res.placed.push({ k, date: days[di], time: fromMin(o + tb), dur: d, tb, ta, km: Math.round(km * 10) / 10, retry: retryInfo(k) });
+        o += total; idx++; placed = true; prevK = k;
         break;
       }
-      if (!placed) { di++; s = startMin; }
+      if (!placed) { di++; o = startMin; prevK = null; }
     }
     res.unplaced = cand.slice(idx);
     return res;
@@ -6864,6 +7036,7 @@
   function updateAuto() {
     const n = autoState.kunden.length;
     $("spAutoCount").textContent = n ? `${n} ${n === 1 ? "Kunde" : "Kunden"} ausgewählt` : "";
+    renderRouteInfo();
     const plan = planAuto();
     const box = $("spAutoPreview");
     $("spAutoCreate").disabled = !plan.placed.length;
@@ -6873,6 +7046,15 @@
     $("spAutoUndo").textContent = `Letzte Einplanung rückgängig (${undoCount})`;
     if (plan.error) { box.innerHTML = `<span class="sp-muted">${esc(plan.error)}</span>`; return; }
     let html = `<strong>${plan.placed.length} von ${plan.candidates} ${plan.candidates === 1 ? "Kunde" : "Kunden"} eingeplant</strong>`;
+    if (plan.route) {
+      const r = plan.route;
+      if (r.optimized) {
+        const saved = Math.round((r.before - r.after) * 10) / 10;
+        html += `<div class="sp-route-sum">🧭 Route nach Standort geordnet: ca. ${Math.round(r.after)} km${saved > 0.5 ? ` statt ${Math.round(r.before)} km (${String(saved).replace(".", ",")} km weniger)` : ""} – Luftlinie ohne Straßenverlauf.${r.noLoc ? ` ${r.noLoc} Kunden ohne Standort sind nach Ort einsortiert.` : ""}</div>`;
+      } else {
+        html += `<div class="sp-route-sum">🧭 Für die Routenplanung fehlen Standorte (mindestens 2 Kunden mit Standort nötig). Es gilt die Reihenfolge nach Ort und Straße.</div>`;
+      }
+    }
     if (plan.maxDay) html += `<span class="sp-muted"> · höchstens ${plan.maxDay} ${plan.maxDay === 1 ? "Termin" : "Termine"} pro Tag</span>`;
     if (plan.placed.length) {
       html += `<span class="sp-muted"> · ${shortDate(plan.placed[0].date)} bis ${shortDate(plan.placed[plan.placed.length - 1].date)}</span>`;
@@ -6881,7 +7063,7 @@
       let day = "";
       plan.placed.forEach(p => {
         if (p.date !== day) { day = p.date; html += `<div class="sp-auto-day">${esc(fmtDate(day))}</div>`; }
-        html += `<div class="sp-auto-line sp-auto-cust" data-kid="${esc(p.k.id)}"><span class="sp-auto-time">${esc(p.time)}</span><span class="sp-auto-who"><span>${esc(p.k.name)} – ${esc(addrLine(p.k))}<small class="sp-muted"> (${p.dur} Min.)</small>${p.retry ? `<span class="sp-badge">${attemptLabel(p.retry.attempt)}</span>` : ""}</span><span class="sp-auto-works">${chipsHtml(p.k.id)}</span></span></div>`;
+        html += `<div class="sp-auto-line sp-auto-cust" data-kid="${esc(p.k.id)}"><span class="sp-auto-time">${esc(p.time)}</span><span class="sp-auto-who"><span>${esc(p.k.name)} – ${esc(addrLine(p.k))}<small class="sp-muted"> (${p.dur} Min.${p.tb || p.ta ? ` · 🚗 ${p.tb}/${p.ta}` : ""}${p.km ? ` · ${String(p.km).replace(".", ",")} km` : ""})</small>${p.retry ? `<span class="sp-badge">${attemptLabel(p.retry.attempt)}</span>` : ""}</span><span class="sp-auto-works">${chipsHtml(p.k.id)}</span></span></div>`;
       });
       html += `</div>`;
     }
@@ -6899,10 +7081,10 @@
     const items = plan.placed.map(p => {
       const { k, date, time } = p;
       const w = autoWork(k.id);
-      return { id: uuid(), date, time, customer: k.name, street: k.street, house: k.house, zip: k.zip, city: k.city, duration: p.dur || dur, notes: k.notes || "", works: autoWorkList(w), workOther: w.other ? w.text.trim() : "", kid: k.id, knr: k.nr, ...(k.bossNote ? { bossNote: k.bossNote } : {}), ...(p.retry ? { attempt: p.retry.attempt, prevId: p.retry.prevId } : {}), auto: batch, updatedAt: now };
+      return { id: uuid(), date, time, customer: k.name, street: k.street, house: k.house, zip: k.zip, city: k.city, duration: p.dur || dur, notes: k.notes || "", works: autoWorkList(w), workOther: w.other ? w.text.trim() : "", kid: k.id, knr: k.nr, ...(k.bossNote ? { bossNote: k.bossNote } : {}), ...(p.tb ? { travelBefore: p.tb } : {}), ...(p.ta ? { travelAfter: p.ta } : {}), ...(p.retry ? { attempt: p.retry.attempt, prevId: p.retry.prevId } : {}), auto: batch, updatedAt: now };
     });
     persist({ appointments: appointments().concat(items) });
-    autoSavePrefs({ lastBatch: batch, start: $("spAutoStart").value, end: $("spAutoEnd").value, duration: String(dur), pause: $("spAutoBreak").checked, max: plan.maxDay || "" });
+    autoSavePrefs({ lastBatch: batch, start: $("spAutoStart").value, end: $("spAutoEnd").value, duration: String(dur), pause: $("spAutoBreak").checked, max: plan.maxDay || "", route: $("spAutoRoute").checked, drive: $("spAutoDrive").checked, speed: Number($("spAutoSpeed").value) || 40 });
     moduleState.date = fromIso(items[0].date);
     moduleState.view = "week";
     closeAutoModal();
@@ -7077,6 +7259,8 @@
     moduleState.aptCustomer = old.kid ? { id: old.kid, nr: old.knr || "" } : null;
     const kRec = old.kid && window.SPKunden ? window.SPKunden.get(old.kid) : null;
     $("spAptBossNote").value = kRec && kRec.bossNote ? kRec.bossNote : "";
+    $("spAptTravelB").value = old.travelBefore || (kRec && kRec.travelBefore) || "";
+    $("spAptTravelA").value = old.travelAfter || (kRec && kRec.travelAfter) || "";
     moduleState.pendingRetry = { attempt: att, prevId: old.id };
     syncWorkOther(); showAptCustomerInfo();
     $("spModalTitle").textContent = `Termin anlegen – ${attemptLabel(att)}`;
@@ -7122,16 +7306,16 @@
   function moveTarget() {
     const a = appointments().find(x => x.id === moduleState.moveId);
     const date = $("spMoveDate").value, time = $("spMoveTime").value;
-    return { a, date, time, dur: Number(a && a.duration) || 15 };
+    return { a, date, time, dur: Number(a && a.duration) || 15, tb: clampTravel(a && a.travelBefore), ta: clampTravel(a && a.travelAfter) };
   }
   /* Zeitpunkt mit Hinweisen prüfen (Feiertag, Wochenende, Überschneidung) */
   function updateMoveInfo() {
-    const { a, date, time, dur } = moveTarget();
+    const { a, date, time, dur, tb, ta } = moveTarget();
     const box = $("spMoveInfo");
     if (!a || !date || !time) { box.hidden = true; $("spMoveSave").disabled = true; return; }
     const holiday = holidayMap(fromIso(date).getFullYear()).get(date);
     const wd = fromIso(date).getDay();
-    const clash = overlapWith(date, time, dur, a.id);
+    const clash = overlapWith(date, time, dur, a.id, tb, ta);
     const msg = [];
     if (holiday) msg.push(`Feiertag: ${holiday} – an Feiertagen kann kein Termin liegen.`);
     else {
@@ -7144,11 +7328,11 @@
   }
   /* nur auf ausdrücklichen Wunsch („Nächste freie Zeit“): frühestes freies Zeitfenster ab der gewählten Uhrzeit */
   function suggestMoveTime() {
-    const { a, date, time, dur } = moveTarget();
+    const { a, date, time, dur, tb, ta } = moveTarget();
     if (!a || !date || !time) return;
     const from = toMin(time);
-    for (let m = from; m + dur <= 18 * 60; m += 5) if (!overlapWith(date, fromMin(m), dur, a.id)) { $("spMoveTime").value = fromMin(m); return; }
-    for (let m = 7 * 60; m < from && m + dur <= 18 * 60; m += 5) if (!overlapWith(date, fromMin(m), dur, a.id)) { $("spMoveTime").value = fromMin(m); return; }
+    for (let m = from; m + dur + ta <= 18 * 60; m += 5) if (!overlapWith(date, fromMin(m), dur, a.id, tb, ta)) { $("spMoveTime").value = fromMin(m); return; }
+    for (let m = 7 * 60 + tb; m < from && m + dur + ta <= 18 * 60; m += 5) if (!overlapWith(date, fromMin(m), dur, a.id, tb, ta)) { $("spMoveTime").value = fromMin(m); return; }
   }
   function moveQuick(kind) {
     if (kind === "free") { suggestMoveTime(); updateMoveInfo(); return; }
@@ -7159,10 +7343,10 @@
     updateMoveInfo();   // Uhrzeit bleibt, wie sie ist
   }
   function saveMove() {
-    const { a, date, time, dur } = moveTarget();
+    const { a, date, time, dur, tb, ta } = moveTarget();
     if (!a || !date || !time) return;
     if (holidayMap(fromIso(date).getFullYear()).get(date)) return alert("An Feiertagen kann kein Termin liegen.");
-    const clash = overlapWith(date, time, dur, a.id);
+    const clash = overlapWith(date, time, dur, a.id, tb, ta);
     if (clash && !confirm(`Der Termin überschneidet sich mit dem Termin um ${clash.time} Uhr (${clash.customer || "ohne Namen"}). Trotzdem zu dieser Uhrzeit verschieben? Alle anderen Termine bleiben unverändert.`)) return;
     persist({ appointments: appointments().map(x => x.id === a.id ? { ...x, date, time, updatedAt: new Date().toISOString() } : x) });
     moduleState.date = fromIso(date);
@@ -7328,6 +7512,7 @@
         if (lv.kd && a.knr) cNote.push(line1("Kd-Nr " + a.knr, 7.8 * fs, false, "#8a9199"));
       } else {
       if (k && k.phone) cNote.push(line1("Tel. " + k.phone, 8.6 * fs, true));
+      if (clampTravel(a.travelBefore) || clampTravel(a.travelAfter)) cNote.push(line1("Fahrt: " + clampTravel(a.travelBefore) + " Min. vorher · " + clampTravel(a.travelAfter) + " Min. nachher", 8.2 * fs, false, "#4f5962"));
       if (a.notes) cNote = cNote.concat(wrap(a.notes, 8.4 * fs, false, wNote).map(t => line1(t, 8.4 * fs, false)));
       if (lv.notes < 99) {
         // Telefon bleibt, Bemerkung wird gekürzt
@@ -7536,9 +7721,9 @@
     if (!date || !time) return alert("Bitte Datum und Uhrzeit angeben.");
     const holiday=holidayMap(new Date(date).getFullYear()).get(date);
     if (holiday) return alert(`Am ${fmtDate(date)} ist ${holiday}. Termine an Feiertagen sind standardmäßig gesperrt.`);
-    const clash = overlapWith(date, time, Number($("spAptDuration").value) || 15, moduleState.editingId);
+    const clash = overlapWith(date, time, Number($("spAptDuration").value) || 15, moduleState.editingId, clampTravel($("spAptTravelB").value), clampTravel($("spAptTravelA").value));
     if (clash && !confirm(`Der Termin überschneidet sich mit dem Termin um ${clash.time} Uhr (${clash.customer || "ohne Namen"}). Trotzdem speichern?`)) return;
-    const item={ id:moduleState.editingId || uuid(), date,time, customer:$("spAptCustomer").value.trim(), street:$("spAptStreet").value.trim(), house:$("spAptHouse").value.trim(), zip:$("spAptZip").value.trim(), city:$("spAptCity").value.trim(), duration:Number($("spAptDuration").value)||15, notes:$("spAptNotes").value.trim(), bossNote:$("spAptBossNote").value.trim(), works:selectedWorks(), workOther:$("spWorkOtherText").value.trim(), kid:moduleState.aptCustomer?.id||"", knr:moduleState.aptCustomer?.nr||"", ...(moduleState.pendingRetry && !moduleState.editingId ? { attempt: moduleState.pendingRetry.attempt, prevId: moduleState.pendingRetry.prevId } : {}), updatedAt:new Date().toISOString() };
+    const item={ id:moduleState.editingId || uuid(), date,time, customer:$("spAptCustomer").value.trim(), street:$("spAptStreet").value.trim(), house:$("spAptHouse").value.trim(), zip:$("spAptZip").value.trim(), city:$("spAptCity").value.trim(), duration:Number($("spAptDuration").value)||15, notes:$("spAptNotes").value.trim(), bossNote:$("spAptBossNote").value.trim(), travelBefore:clampTravel($("spAptTravelB").value), travelAfter:clampTravel($("spAptTravelA").value), works:selectedWorks(), workOther:$("spWorkOtherText").value.trim(), kid:moduleState.aptCustomer?.id||"", knr:moduleState.aptCustomer?.nr||"", ...(moduleState.pendingRetry && !moduleState.editingId ? { attempt: moduleState.pendingRetry.attempt, prevId: moduleState.pendingRetry.prevId } : {}), updatedAt:new Date().toISOString() };
     const list=appointments(); const idx=list.findIndex(x=>x.id===item.id); if(idx>=0) list[idx]={ ...list[idx], ...item }; else list.push(item);
     persist({appointments:list}); moduleState.selectedId=item.id; moduleState.date=fromIso(date); closeModal(); render(); warnStale(item.id);
   }
