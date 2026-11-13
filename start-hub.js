@@ -38,6 +38,14 @@
       script: "luftverbund.js"
     },
     {
+      id: "vdi",
+      icon: "\u{1F4D0}",
+      title: "Schornsteinhöhe (VDI 3781)",
+      text: "Mündungshöhe und Rezirkulationszone nach VDI 3781 Blatt 4 berechnen – mit Skizze und PDF.",
+      show: ["#vdiView"],
+      script: "vdi3781.js"
+    },
+    {
       id: "kunden",
       icon: "\u{1F465}",
       title: "Kundenverwaltung",
@@ -128,7 +136,7 @@
        * Falls der Nutzer bereits #luftverbund geöffnet hat,
        * nach dem Laden direkt dorthin wechseln.
        */
-      if (location.hash === "#luftverbund") {
+      if (location.hash === "#" + f.id) {
         setTimeout(function () {
           fromHash();
         }, 0);
@@ -148,7 +156,7 @@
       if (target) {
         target.innerHTML =
           '<div class="card">' +
-          "<h2>Luftverbund-Rechner konnte nicht geladen werden.</h2>" +
+          "<h2>" + f.title + " konnte nicht geladen werden.</h2>" +
           "<p>Bitte Seite neu laden.</p>" +
           "</div>";
       }
