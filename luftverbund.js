@@ -1367,38 +1367,6 @@ const f = ein ? 0.7 : 0.8;
             )}
           </div>
         `
-      ) +
-      card(
-        IC.save,
-        "Datensicherung",
-        "„Projekt“ sichert nur dieses Luftverbund-Projekt als Datei.",
-        `
-          <div
-            class="form-actions"
-            style="justify-content:flex-start"
-          >
-            <button
-              class="btn btn-light"
-              data-a="pe"
-            >
-              ${IC.save} Projekt als Datei sichern
-            </button>
-
-            <label
-              class="btn btn-light"
-              for="lvImport"
-            >
-              ${IC.open} Projekt aus Datei laden
-            </label>
-
-            <input
-              id="lvImport"
-              type="file"
-              accept=".json,application/json"
-              hidden
-            >
-          </div>
-        `
       )
     );
   }
@@ -3518,7 +3486,11 @@ const f = ein ? 0.7 : 0.8;
     if (blob) {
       const name = "Luftverbund_" + fileSafe(D.p && D.p.n) + ".pdf";
 
-      if (window.navigator.standalone === true) {
+      const ios =
+        /iP(hone|ad|od)/.test(navigator.userAgent) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+      if (window.navigator.standalone === true || ios) {
         sharePdf(blob, name);
       } else {
         openPdf(blob, name);
@@ -3968,23 +3940,6 @@ const f = ein ? 0.7 : 0.8;
 
       if (a === "pr") {
         doPrint();
-        return;
-      }
-
-      if (a === "gb") {
-        const b =
-          document.getElementById(
-            "spBackupData"
-          );
-
-        if (b) {
-          b.click();
-        } else {
-          alert(
-            "Die Gesamtsicherung steht im Bereich „Planung & Termine“."
-          );
-        }
-
         return;
       }
 
