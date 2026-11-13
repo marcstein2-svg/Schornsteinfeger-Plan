@@ -1410,6 +1410,24 @@
     .sp-legend-d > summary::-webkit-details-marker { display: none; }
     .sp-legend-d[open] > summary { margin-bottom: 6px; }
     .sp-secondary-stack { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+    .sp-rc-list { border: 1px solid var(--border); border-radius: 12px; background: #fff; max-height: 460px; overflow: auto; }
+    .sp-rc-item { display: flex; gap: 12px; justify-content: space-between; align-items: center; padding: 10px 12px; border-bottom: 1px solid #eceef0; cursor: pointer; }
+    .sp-rc-item:last-child { border-bottom: 0; }
+    .sp-rc-item:hover { background: #fbf6ea; }
+    .sp-rc-main { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .sp-rc-main span { color: #4f5962; font-size: .86rem; overflow-wrap: anywhere; }
+    .sp-rc-side { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex-shrink: 0; }
+    .sp-rc-side b { font-size: 1.05rem; }
+    .sp-rc-side small { color: var(--muted); }
+    .sp-rcv-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; margin-bottom: 12px; }
+    .sp-rcv-amount { font-size: 1.5rem; font-weight: 800; white-space: nowrap; }
+    .sp-rcv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 12px; font-size: .92rem; line-height: 1.5; }
+    .sp-rcv-grid h5 { margin: 0 0 4px; font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: #9a7220; }
+    .sp-rcv-box { border: 1px solid var(--border); border-radius: 12px; background: #fbfbfc; padding: 4px 12px; }
+    .sp-rcv-row { display: flex; justify-content: space-between; gap: 14px; padding: 8px 0; border-bottom: 1px solid #eceef0; font-size: .92rem; }
+    .sp-rcv-row:last-child { border-bottom: 0; }
+    .sp-rcv-row b { text-align: right; overflow-wrap: anywhere; }
+    @media (max-width: 560px) { .sp-rcv-grid { grid-template-columns: 1fr; } .sp-rc-item { align-items: flex-start; } }
     .sp-block { margin-top: 12px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: #fbfbfc; }
     .sp-block:first-child { margin-top: 0; }
     .sp-block h4 { margin: 0 0 10px; font-size: .98rem; }
@@ -1949,6 +1967,21 @@
       </details>
 
       <div class="sp-secondary-stack">
+        <details class="sp-collapse sp-collapse-inner" data-sp-collapse="receipts">
+          <summary>
+            <span aria-hidden="true">🧾</span>
+            <span>Quittungen</span>
+            <span class="sp-collapse-hint" id="spRcCount">noch keine</span>
+            <span class="sp-chevron" aria-hidden="true"></span>
+          </summary>
+          <div class="sp-collapse-body">
+            <p class="sp-muted">Alle ausgestellten Quittungen – mit Datum, Kunde, Leistung und Betrag. Die Kopien bleiben gespeichert, auch wenn der Termin später gelöscht oder geändert wird. Sie sind in der Gesamtsicherung (Menü „Datensicherung“) enthalten.</p>
+            <div class="sp-search-row"><input id="spRcSearch" type="search" autocomplete="off" placeholder="🔍 Quittung suchen – Name, Adresse, Kundennummer, Nummer, Betrag, Datum" aria-label="Quittung suchen"></div>
+            <p class="sp-muted" id="spRcSummary" style="margin:8px 0"></p>
+            <div class="sp-rc-list" id="spRcList"></div>
+          </div>
+        </details>
+
         <details class="sp-collapse sp-collapse-inner" data-sp-collapse="print">
           <summary>
             <span aria-hidden="true">🖨</span>
@@ -2957,8 +2990,9 @@
         <li>Angaben zur Erledigung von Terminen, z. B. Rechnungsart, bar kassierte
           Beträge, Ausgaben aus Bareinnahmen und Bemerkungen für den Arbeitgeber</li>
         <li>Angaben für Quittungen, z. B. Name und Anschrift des Betriebs,
-          Steuernummer, USt-IdNr., Umsatzsteuersatz, Quittungsnummern und die
-          E-Mail-Adresse eines Empfängers für die Erledigt-Liste</li>
+          Steuernummer, USt-IdNr., Umsatzsteuersatz, Kopien der ausgestellten
+          Quittungen (mit Kundenname, Anschrift, Kundennummer, Leistung und Betrag)
+          und die E-Mail-Adresse eines Empfängers für die Erledigt-Liste</li>
         <li>Rechenwerte und Eingaben des Luftverbund-Rechners</li>
       </ul>
 
@@ -3542,6 +3576,17 @@
     <div class="sp-modal-actions">
       <button class="btn btn-light" type="button" id="spRcCancel">Abbrechen</button>
       <button class="btn btn-primary" type="button" id="spRcCreate">🧾 Quittung als PDF erstellen</button>
+    </div>
+  </div>
+</div>
+
+<div class="sp-modal-backdrop" id="spReceiptView" hidden>
+  <div class="sp-modal" role="dialog" aria-modal="true" aria-label="Quittung ansehen" style="max-width:600px">
+    <div id="spRcvBody"></div>
+    <div class="sp-modal-actions">
+      <button class="btn btn-light" type="button" id="spRcvClose">Schließen</button>
+      <button class="btn btn-light" type="button" id="spRcvToApt">📅 Zum Termin</button>
+      <button class="btn btn-primary" type="button" id="spRcvPdf">🖨 Als PDF öffnen / drucken</button>
     </div>
   </div>
 </div>
@@ -6869,6 +6914,7 @@
     $("spNextPeriod").addEventListener("click", () => move(1));
     $("spToday").addEventListener("click", () => { moduleState.date = new Date(); render(); });
     initSearch();
+    initReceipts();
     $("spToggleEmpty").addEventListener("click", () => { moduleState.showEmpty = !moduleState.showEmpty; render(); });
     $("spNewAppointment").addEventListener("click", () => openModal(iso(moduleState.date), "09:00"));
     document.querySelectorAll("[data-sp-view]").forEach(b => b.addEventListener("click", () => { moduleState.view = b.dataset.spView; render(); }));
@@ -7148,6 +7194,7 @@
   function render() {
     if (!$('spCalendar')) return;
     renderSearch();
+    renderReceipts();
     if ($("spDayDate") && !moduleState.dayManual) $("spDayDate").value = iso(moduleState.date);
     renderExpenses();
     const week = moduleState.view === "week";
@@ -8330,19 +8377,115 @@
       counter[year] = (Number(counter[year]) || 0) + 1;
       no = "Q-" + year + "-" + String(counter[year]).padStart(4, "0");
     }
-    persist({
-      appointmentSettings: { ...cur, taxNo: $("spRcTaxNo").value.trim(), vatId: $("spRcVatId").value.trim(), vatMode: vat, receiptCopy: copy, receiptCounter: counter },
-      appointments: appointments().map(x => x.id === id ? { ...x, amount, receiptNo: no, receiptDate: date, receiptWork: work, receiptVat: vat } : x)
-    });
+    const newSettings = { ...cur, taxNo: $("spRcTaxNo").value.trim(), vatId: $("spRcVatId").value.trim(), vatMode: vat, receiptCopy: copy, receiptCounter: counter };
     const cust = a.kid && window.SPKunden ? window.SPKunden.get(a.kid) : null;
-    const blob = buildReceiptPdf({
-      no, date, serviceDate: sDate, work, amount, vat, copy,
-      customer: a.customer || "", street: [a.street, a.house].filter(Boolean).join(" "), city: [a.zip, a.city].filter(Boolean).join(" "),
-      knr: String(a.knr || (cust && cust.nr) || "").trim()
-    }, settings());
+    const old = receiptRecords().find(x => x.no === no);
+    const now = new Date().toISOString();
+    const rec = {
+      no, date, serviceDate: sDate, work, amount, vat,
+      /* Kundendaten bleiben so, wie sie bei der ersten Ausstellung waren */
+      customer: old ? old.customer : (a.customer || ""),
+      street: old ? old.street : [a.street, a.house].filter(Boolean).join(" "),
+      city: old ? old.city : [a.zip, a.city].filter(Boolean).join(" "),
+      knr: old ? old.knr : String(a.knr || (cust && cust.nr) || "").trim(),
+      aptId: id,
+      issuer: issuerOf(newSettings),
+      createdAt: old ? old.createdAt : now,
+      ...(old ? { changedAt: now } : {})
+    };
+    persist({
+      appointmentSettings: newSettings,
+      appointments: appointments().map(x => x.id === id ? { ...x, amount, receiptNo: no, receiptDate: date, receiptWork: work, receiptVat: vat } : x),
+      receipts: receiptRecords().filter(x => x.no !== no).concat(rec)
+    });
+    const blob = buildReceiptPdf({ ...rec, copy }, rec.issuer);
     const name = "Quittung_" + no + ".pdf";
     closeReceiptModal(); render();
     if (window.navigator.standalone === true || isIOSDevice()) sharePdf(blob, name); else openPdfTab(blob, name);
+  }
+
+
+  /* ================= Quittungen: Kopien, Übersicht, Ansehen ================= */
+  const issuerOf = st => ({ businessName: st.businessName || "", employeeName: st.employeeName || "", phone: st.phone || "", businessAddress: st.businessAddress || "", taxNo: st.taxNo || "", vatId: st.vatId || "" });
+  function receiptRecords() { const r = data().receipts; return Array.isArray(r) ? r : []; }
+  /* Quittungen aus früheren Versionen (nur am Termin gespeichert) als Kopie nachtragen */
+  function ensureReceiptRecords() {
+    const have = new Set(receiptRecords().map(r => r.no));
+    const missing = appointments().filter(a => a.receiptNo && !have.has(a.receiptNo));
+    if (!missing.length) return;
+    const st = settings();
+    const add = missing.map(a => ({
+      no: a.receiptNo, date: a.receiptDate || a.date, serviceDate: a.date, work: a.receiptWork || "Schornsteinfegerarbeiten",
+      amount: Number(a.amount) || 0, vat: a.receiptVat || st.vatMode || "19", customer: a.customer || "",
+      street: [a.street, a.house].filter(Boolean).join(" "), city: [a.zip, a.city].filter(Boolean).join(" "),
+      knr: String(a.knr || "").trim(), aptId: a.id, issuer: issuerOf(st), createdAt: a.doneAt || a.receiptDate || new Date().toISOString()
+    }));
+    const next = receiptRecords().concat(add);
+    const cur = data(); cur.receipts = next; localStorage.setItem(KEY, JSON.stringify(cur));
+  }
+  function receiptAmounts(r) {
+    const rate = r.vat === "7" ? 0.07 : r.vat === "19" ? 0.19 : 0;
+    const gross = Math.round(Number(r.amount) * 100) / 100;
+    const net = rate ? Math.round(gross / (1 + rate) * 100) / 100 : gross;
+    return { rate, gross, net, tax: Math.round((gross - net) * 100) / 100 };
+  }
+  const vatText = r => r.vat === "0" ? "ohne USt (§ 19 UStG)" : r.vat + " % USt";
+  function receiptHay(r) {
+    const raw = [r.no, r.customer, r.street, r.city, r.knr, r.work, r.date && shortDate(r.date), r.serviceDate && shortDate(r.serviceDate), r.date, r.serviceDate,
+      fmtEUR(r.amount), String(r.amount).replace(".", ","), String(r.amount)].filter(Boolean).join(" | ");
+    return foldA(raw) + " | " + foldB(raw);
+  }
+  function filteredReceipts() {
+    const q = ($("spRcSearch") ? $("spRcSearch").value : "").trim();
+    const tokens = q.split(/\s+/).filter(Boolean);
+    return receiptRecords().filter(r => { if (!tokens.length) return true; const h = receiptHay(r); return tokens.every(t => h.includes(foldA(t)) || h.includes(foldB(t))); })
+      .sort((x, y) => (y.date || "").localeCompare(x.date || "") || (y.no || "").localeCompare(x.no || ""));
+  }
+  function renderReceipts() {
+    const box = $("spRcList"); if (!box) return;
+    const all = receiptRecords(), list = filteredReceipts();
+    const hint = $("spRcCount"); if (hint) hint.textContent = all.length ? all.length + (all.length === 1 ? " Quittung" : " Quittungen") : "noch keine";
+    const sum = list.reduce((n, r) => n + (Number(r.amount) || 0), 0);
+    $("spRcSummary").textContent = !all.length ? "" : (list.length === all.length ? `${list.length} Quittungen · Summe ${fmtEUR(sum)}` : `${list.length} von ${all.length} Quittungen · Summe ${fmtEUR(sum)}`);
+    if (!all.length) { box.innerHTML = '<div class="sp-search-empty">Noch keine Quittung erstellt. Eine Quittung erstellst du beim Abhaken eines Termins mit „Barzahlung“.</div>'; return; }
+    if (!list.length) { box.innerHTML = '<div class="sp-search-empty">Keine Quittung gefunden.</div>'; return; }
+    box.innerHTML = list.slice(0, 100).map(r => `<div class="sp-rc-item" data-sp-rcview="${esc(r.no)}" role="button" tabindex="0"><div class="sp-rc-main"><strong>${esc(r.no)} · ${esc(shortDate(r.date))}</strong><span>${esc(r.customer || "Ohne Namen")}${r.knr ? " · Kd-Nr " + esc(r.knr) : ""}${r.street || r.city ? " – " + esc([r.street, r.city].filter(Boolean).join(", ")) : ""}</span><span>${esc(r.work)} · Leistung am ${esc(shortDate(r.serviceDate))}</span></div><div class="sp-rc-side"><b>${esc(fmtEUR(r.amount))}</b><small>bar bezahlt</small><button class="btn btn-light" type="button" data-sp-rcview="${esc(r.no)}">Ansehen</button></div></div>`).join("")
+      + (list.length > 100 ? '<div class="sp-search-empty">Es werden die neuesten 100 gezeigt – bitte genauer suchen.</div>' : "");
+  }
+  function openReceiptView(no) {
+    const r = receiptRecords().find(x => x.no === no); if (!r) return;
+    moduleState.rcViewNo = no;
+    const m = receiptAmounts(r), iss = r.issuer || {}, biz = iss.businessName || iss.employeeName || "";
+    const line = (k, v) => v ? `<div class="sp-rcv-row"><span>${esc(k)}</span><b>${esc(v)}</b></div>` : "";
+    $("spRcvBody").innerHTML =
+      `<div class="sp-rcv-head"><div><b style="font-size:1.15rem">Quittung ${esc(r.no)}</b><div class="sp-muted">ausgestellt am ${esc(shortDate(r.date))}${r.changedAt ? " · geändert am " + esc(shortDate(r.changedAt.slice(0, 10))) : ""}</div></div><div class="sp-rcv-amount">${esc(fmtEUR(m.gross))}</div></div>` +
+      `<div class="sp-rcv-grid"><div><h5>Kunde</h5>${esc(r.customer || "Ohne Namen")}${r.street ? "<br>" + esc(r.street) : ""}${r.city ? "<br>" + esc(r.city) : ""}${r.knr ? "<br>Kundennummer: <b>" + esc(r.knr) + "</b>" : ""}</div>` +
+      `<div><h5>Aussteller</h5>${esc(biz || "–")}${iss.businessName && iss.employeeName ? "<br>" + esc(iss.employeeName) : ""}${iss.businessAddress ? "<br>" + esc(iss.businessAddress) : ""}${iss.phone ? "<br>Tel. " + esc(iss.phone) : ""}${iss.taxNo ? "<br>Steuernummer: " + esc(iss.taxNo) : ""}${iss.vatId ? "<br>USt-IdNr.: " + esc(iss.vatId) : ""}</div></div>` +
+      `<div class="sp-rcv-box">${line("Leistung", r.work)}${line("Leistungsdatum", shortDate(r.serviceDate))}` +
+      (m.rate ? line("Nettobetrag", fmtEUR(m.net)) + line("zzgl. " + r.vat + " % Umsatzsteuer", fmtEUR(m.tax)) : line("Umsatzsteuer", "keine (§ 19 UStG)")) +
+      `${line("Gesamtbetrag (bar bezahlt)", fmtEUR(m.gross))}${line("in Worten", eurInWords(m.gross))}</div>`;
+    const apt = appointments().find(a => a.id === r.aptId);
+    $("spRcvToApt").hidden = !apt;
+    $("spReceiptView").hidden = false;
+  }
+  function closeReceiptView() { $("spReceiptView").hidden = true; moduleState.rcViewNo = null; }
+  function openReceiptPdf(no) {
+    const r = receiptRecords().find(x => x.no === no); if (!r) return;
+    const blob = buildReceiptPdf({ ...r, copy: settings().receiptCopy !== false }, r.issuer || {});
+    const name = "Quittung_" + r.no + ".pdf";
+    if (window.navigator.standalone === true || isIOSDevice()) sharePdf(blob, name); else openPdfTab(blob, name);
+  }
+  function initReceipts() {
+    ensureReceiptRecords();
+    const inp = $("spRcSearch"); if (!inp) return;
+    let t = null;
+    inp.addEventListener("input", () => { clearTimeout(t); t = setTimeout(renderReceipts, 120); });
+    $("spRcList").addEventListener("click", e => { const v = e.target.closest("[data-sp-rcview]"); if (v) openReceiptView(v.dataset.spRcview); });
+    $("spRcList").addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.matches("[data-sp-rcview]")) { e.preventDefault(); openReceiptView(e.target.dataset.spRcview); } });
+    $("spRcvClose").addEventListener("click", closeReceiptView);
+    $("spRcvPdf").addEventListener("click", () => openReceiptPdf(moduleState.rcViewNo));
+    $("spRcvToApt").addEventListener("click", () => { const r = receiptRecords().find(x => x.no === moduleState.rcViewNo); closeReceiptView(); if (r) gotoAppointment(r.aptId); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("spReceiptView").hidden) closeReceiptView(); });
   }
 
   function buildReceiptPdf(r, s) {
