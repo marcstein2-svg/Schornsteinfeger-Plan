@@ -77,6 +77,81 @@
     return typeof n === "number" && isFinite(n) && Math.abs(n) <= max ? n : null;
   }
 
+  /* Wunschzeiten: [{ days:[0-6], from:"HH:MM", to:"HH:MM" }] – 0 = Sonntag … 6 = Samstag */
+  function cleanWishes(w) {
+    if (!Array.isArray(w)) return [];
+
+    return w
+      .map(function (r) {
+        var days = (Array.isArray(r && r.days) ? r.days : [])
+          .map(Number)
+          .filter(function (d, i, a) {
+            return d >= 0 && d <= 6 && a.indexOf(d) === i;
+          });
+
+        return {
+          days: days,
+          from: r && /^\d{2}:\d{2}$/.test(r.from) ? r.from : "00:00",
+          to: r && /^\d{2}:\d{2}$/.test(r.to) ? r.to : "23:59"
+        };
+      })
+      .filter(function (r) {
+        return r.days.length;
+      });
+  }
+
+  var WD_ORDER = [1, 2, 3, 4, 5, 6, 0];
+  var WD_NAME = { 1: "Mo", 2: "Di", 3: "Mi", 4: "Do", 5: "Fr", 6: "Sa", 0: "So" };
+
+  function toMinutes(t) {
+    var p = String(t || "0:0").split(":");
+
+    return (parseInt(p[0], 10) || 0) * 60 + (parseInt(p[1], 10) || 0);
+  }
+
+  /* Wunschzeiten als Text, z. B. "Fr ab 14:00 Uhr; Mo–Mi 08:00–12:00 Uhr" */
+  function wishText(c) {
+    return cleanWishes(c && c.wishes)
+      .map(function (r) {
+        var idx = WD_ORDER.filter(function (d) {
+          return r.days.indexOf(d) >= 0;
+        });
+        var parts = [];
+        var i = 0;
+
+        while (i < idx.length) {
+          var j = i;
+
+          while (j + 1 < idx.length && WD_ORDER.indexOf(idx[j + 1]) === WD_ORDER.indexOf(idx[j]) + 1) j++;
+
+          parts.push(j - i >= 2 ? WD_NAME[idx[i]] + "–" + WD_NAME[idx[j]] : idx.slice(i, j + 1).map(function (d) { return WD_NAME[d]; }).join(", "));
+          i = j + 1;
+        }
+
+        var open = r.from === "00:00";
+        var end = r.to === "23:59";
+        var t = open && end ? "ganztags" : open ? "bis " + r.to + " Uhr" : end ? "ab " + r.from + " Uhr" : r.from + "–" + r.to + " Uhr";
+
+        return parts.join(", ") + " " + t;
+      })
+      .join("; ");
+  }
+
+  /* Zeitfenster des Kunden an einem Wochentag (Minuten) – null = keine Wünsche, jederzeit möglich */
+  function wishWindows(c, weekday) {
+    var w = cleanWishes(c && c.wishes);
+
+    if (!w.length) return null;
+
+    return w
+      .filter(function (r) {
+        return r.days.indexOf(weekday) >= 0;
+      })
+      .map(function (r) {
+        return [toMinutes(r.from), toMinutes(r.to)];
+      });
+  }
+
   function clean(k) {
     if (!k || typeof k !== "object") return null;
 
@@ -96,6 +171,7 @@
       ownerAddr: String(k.ownerAddr || ""),
       notes: String(k.notes || ""),
       bossNote: String(k.bossNote || ""),
+      wishes: cleanWishes(k.wishes),
       lat: coord(k.lat, 90),
       lon: coord(k.lon, 180),
       travelBefore: Math.max(0, Math.min(240, Math.round(Number(k.travelBefore) || 0))),
@@ -361,6 +437,14 @@
     ".kv-quick strong{font-size:.82rem;margin-right:2px}" +
     ".kv-travel{display:inline-flex;align-items:center;gap:4px;flex-wrap:wrap;font-size:.8rem;font-weight:700;color:#4f5962}" +
     ".kv-travel input{width:58px;padding:6px;border:1px solid #c9ced2;border-radius:8px;font-size:16px;text-align:center}" +
+    ".kv-wish{border:1px solid var(--border);border-radius:10px;padding:8px;margin-bottom:8px;background:#fbfbfc}" +
+    ".kv-wd{display:flex;gap:4px;flex-wrap:wrap}" +
+    ".kv-wdb{min-width:42px;min-height:40px;border:1px solid #c9ced2;border-radius:8px;background:#fff;font:inherit;font-weight:800;cursor:pointer}" +
+    ".kv-wdb.on{background:var(--gold);border-color:var(--gold);color:#22272d}" +
+    ".kv-wt{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px}" +
+    ".kv-wt label{display:flex;align-items:center;gap:6px;font-size:.85rem;font-weight:700}" +
+    ".kv-wt input{padding:6px 8px;border:1px solid #c9ced2;border-radius:8px;font-size:16px}" +
+    ".kv-wrm{margin-left:auto;min-width:40px;min-height:38px;border:0;border-radius:8px;background:#fdecec;color:#a02f2f;font-weight:800;cursor:pointer}" +
     ".kv-sheet-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}" +
     ".kv-sheet-foot strong{font-size:.95rem}" +
     "@media (max-width:600px){.kv-card{padding:14px}.kv-form{grid-template-columns:1fr}.kv-overlay{padding:0;align-items:stretch}.kv-sheet{max-height:100vh;height:100%;border-radius:0}.kv-actions .btn{flex:1}}";
@@ -879,6 +963,10 @@
       '<p class="kv-hint">Leer lassen, wenn der Eigentümer im Haus wohnt.</p></div>' +
       '<div class="field wide"><label for="kvNotes">Besonderheiten</label>' +
       '<textarea id="kvNotes" rows="3" placeholder="Zugang, Hinweise …"></textarea></div>' +
+      '<div class="field wide"><label>Wunschzeiten (wann ist der Kunde am besten erreichbar?)</label>' +
+      '<div id="kvWishes"></div>' +
+      '<button type="button" class="btn btn-light" data-x="wish" style="margin-top:6px">＋ Wunschzeit hinzufügen</button>' +
+      '<p class="kv-hint">z. B. Freitag ab 14:00 Uhr. Bei der automatischen Terminvergabe wird der Kunde nur dann eingeplant.</p></div>' +
       '<div class="field wide"><label>Standort (für die Routenplanung)</label>' +
       '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
       '<input id="kvLat" type="text" inputmode="decimal" placeholder="Breite, z. B. 50.5870" autocomplete="off" style="flex:1 1 140px">' +
@@ -914,6 +1002,62 @@
     f("kvOwner").value = k ? k.ownerAddr : "";
     f("kvNotes").value = k ? k.notes : "";
     f("kvBoss").value = k ? k.bossNote || "" : "";
+    /* Wunschzeiten: im Editor "" statt 00:00 / 23:59 anzeigen (offen) */
+    var wishes = cleanWishes(k && k.wishes).map(function (r) {
+      return { days: r.days.slice(), from: r.from === "00:00" ? "" : r.from, to: r.to === "23:59" ? "" : r.to };
+    });
+
+    function renderWishes() {
+      f("kvWishes").innerHTML = wishes
+        .map(function (r, i) {
+          return (
+            '<div class="kv-wish" data-i="' + i + '"><div class="kv-wd">' +
+            WD_ORDER.map(function (d) {
+              return '<button type="button" class="kv-wdb' + (r.days.indexOf(d) >= 0 ? " on" : "") + '" data-wd="' + d + '">' + WD_NAME[d] + "</button>";
+            }).join("") +
+            '</div><div class="kv-wt"><label>ab <input type="time" class="kv-wf" value="' + E(r.from) + '"></label>' +
+            '<label>bis <input type="time" class="kv-wto" value="' + E(r.to) + '"></label>' +
+            '<button type="button" class="kv-wrm" data-wrm="1" aria-label="Wunschzeit entfernen">✕</button></div></div>'
+          );
+        })
+        .join("");
+    }
+
+    renderWishes();
+
+    f("kvWishes").addEventListener("click", function (e) {
+      var row = e.target.closest(".kv-wish");
+
+      if (!row) return;
+
+      var r = wishes[+row.getAttribute("data-i")];
+      var wd = e.target.closest("[data-wd]");
+
+      if (wd) {
+        var d = +wd.getAttribute("data-wd");
+        var at = r.days.indexOf(d);
+
+        if (at >= 0) r.days.splice(at, 1);
+        else r.days.push(d);
+
+        wd.classList.toggle("on", at < 0);
+      } else if (e.target.closest("[data-wrm]")) {
+        wishes.splice(+row.getAttribute("data-i"), 1);
+        renderWishes();
+      }
+    });
+
+    f("kvWishes").addEventListener("input", function (e) {
+      var row = e.target.closest(".kv-wish");
+
+      if (!row) return;
+
+      var r = wishes[+row.getAttribute("data-i")];
+
+      if (e.target.classList.contains("kv-wf")) r.from = e.target.value;
+      if (e.target.classList.contains("kv-wto")) r.to = e.target.value;
+    });
+
     f("kvLat").value = k && k.lat !== null && k.lat !== undefined ? k.lat : "";
     f("kvLon").value = k && k.lon !== null && k.lon !== undefined ? k.lon : "";
     f("kvTb").value = k && k.travelBefore ? k.travelBefore : "";
@@ -960,6 +1104,9 @@
 
       if (a === "close") {
         close();
+      } else if (a === "wish") {
+        wishes.push({ days: [], from: "", to: "" });
+        renderWishes();
       } else if (a === "gps") {
         var info = f("kvLocInfo");
 
@@ -1046,6 +1193,11 @@
           ownerAddr: f("kvOwner").value.trim(),
           notes: f("kvNotes").value.trim(),
           bossNote: f("kvBoss").value.trim(),
+          wishes: cleanWishes(
+            wishes.map(function (r) {
+              return { days: r.days, from: r.from || "00:00", to: r.to || "23:59" };
+            })
+          ),
           lat: coord(f("kvLat").value, 90),
           lon: coord(f("kvLon").value, 180),
           travelBefore: Math.max(0, Math.min(240, Math.round(Number(f("kvTb").value) || 0))),
@@ -1471,6 +1623,8 @@
     nextNumber: nextMainNr,
     nextInsertNumber: nextInsertNr,
     parseNr: parseNr,
+    wishText: wishText,
+    wishWindows: wishWindows,
     getGps: getGps,
     geocodeAddress: geocodeAddress,
     geocodeText: geocodeText,
