@@ -65,12 +65,14 @@
     var plan = parse(data["schornstein-planer-v8"]) || {};
     var kd = parse(data["schornstein-planer-kunden-v1"]) || {};
     var lv = parse(data["schornsteinplaner_luftverbund_v2"]) || {};
+    var vd = parse(data["schornsteinplaner_vdi3781_v1"]) || {};
     var projects = Array.isArray(lv) ? lv : Array.isArray(lv.projects) ? lv.projects : [];
 
     return {
       termine: Array.isArray(plan.appointments) ? plan.appointments.length : 0,
       kunden: Array.isArray(kd.kunden) ? kd.kunden.length : 0,
       projekte: projects.length,
+      vdi: Array.isArray(vd.list) ? vd.list.filter(function (x) { return x && x.D && x.D.g && (x.D.g.b || x.D.g.nn || x.D.g.ht); }).length : 0,
       eintraege: Object.keys(data).length
     };
   }
@@ -169,7 +171,8 @@
       "Alle aktuellen Daten dieser App werden durch " + label + " ersetzt:\n\n" +
       "• " + sum.termine + " Termine\n" +
       "• " + sum.kunden + " Kunden\n" +
-      "• " + sum.projekte + " Luftverbund-Projekte\n\n" +
+      "• " + sum.projekte + " Luftverbund-Projekte\n" +
+      "• " + sum.vdi + " Schornsteinhöhen-Berechnungen (VDI 3781)\n\n" +
       "Der bisherige Stand wird vorher automatisch zwischengespeichert (Rückgängig möglich). Fortfahren?";
 
     if (!confirm(msg)) return;
@@ -292,14 +295,14 @@
       (last ? "Letzte Sicherung: " + E(fmt(last)) : "Noch nie gesichert") +
       "</strong>" +
       (warn ? (last ? "Älter als 7 Tage – bitte jetzt sichern.<br>" : "Bitte jetzt einmal sichern.<br>") : "") +
-      "Gespeichert: " + sum.termine + " Termine, " + sum.kunden + " Kunden, " + sum.projekte + " Luftverbund-Projekte.</div>" +
+      "Gespeichert: " + sum.termine + " Termine, " + sum.kunden + " Kunden, " + sum.projekte + " Luftverbund-Projekte, " + sum.vdi + " Schornsteinhöhen-Berechnungen.</div>" +
       '<button type="button" class="btn btn-primary sg-act" id="sgBackup">\u{1F4BE} Alles sichern</button>' +
       '<label class="btn btn-gold sg-act" for="sgImport">\u{1F4C2} Alles einlesen</label>' +
       '<input id="sgImport" type="file" accept="application/json,.json" hidden>' +
       (undo && undo.data
         ? '<button type="button" class="btn btn-light sg-act sg-undo" id="sgUndo">\u21A9 Stand vor dem letzten Einlesen wiederherstellen (' + E(fmt(undo.savedAt)) + ")</button>"
         : "") +
-      '<p class="sg-note">Sichert alles in einer Datei: Termine, Kunden, Luftverbund-Projekte, Einstellungen und Quittungsnummern. ' +
+      '<p class="sg-note">Sichert alles in einer Datei: Termine, Kunden, Luftverbund-Projekte, Schornsteinhöhen-Berechnungen, Einstellungen und Quittungsnummern. ' +
       "Beim Einlesen werden die aktuellen Daten ersetzt (vorher wird automatisch der alte Stand zwischengespeichert). " +
       "Auf dem iPhone öffnet „Alles sichern“ das Teilen-Menü (In Dateien sichern).</p>";
 
