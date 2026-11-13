@@ -1529,6 +1529,10 @@
     .sp-act.missed { border-color: #c9791b; background: #fff1dc; color: #8a4b00; }
     .sp-badge-warn { background: #fde0e0; color: #a02f2f; }
     .sp-badge-wish { background: #e3f1e8; color: #2e6f45; }
+    .sp-wishapt { margin-top: 12px; padding: 12px 14px; border: 1px solid #e3d3a8; border-radius: 12px; background: #fffaf0; }
+    .sp-badge-time { background: #fff1c9; color: #7a5200; }
+    .sp-badge-time.sp-badge-line { margin: 4px 0 3px 0; }
+    .sp-badge-time.bad { background: #fbd5d5; color: #8f2f2f; }
     .sp-badge-line { display: block; width: max-content; margin: 2px 0 1px; }
     .sp-badge { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: #fbe3c2; color: #7a4600; font-size: .7rem; font-weight: 800; white-space: nowrap; }
     .sp-appt-wrap { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
@@ -3742,6 +3746,14 @@
       <div class="field"><label for="spAptDuration">Dauer</label><select id="spAptDuration"><option value="10">10 Minuten</option><option value="15">15 Minuten</option><option value="20">20 Minuten</option><option value="30">30 Minuten</option><option value="45">45 Minuten</option><option value="60">60 Minuten</option></select></div>
       <div class="field"><label for="spAptTravelB">Fahrtzeit vorher (Min.)</label><input id="spAptTravelB" type="number" min="0" max="240" step="5" inputmode="numeric" placeholder="0"></div>
       <div class="field"><label for="spAptTravelA">Fahrtzeit nachher (Min.)</label><input id="spAptTravelA" type="number" min="0" max="240" step="5" inputmode="numeric" placeholder="0"></div>
+    </div>
+    <div class="sp-wishapt">
+      <div class="sp-works-title">⏰ Kunde möchte nur zu bestimmter Zeit (nur für diesen Termin)</div>
+      <div class="sp-form-grid">
+        <div class="field"><label for="spAptWishFrom">Frühestens ab (Uhr)</label><input id="spAptWishFrom" type="time" step="60"></div>
+        <div class="field"><label for="spAptWishTo">Spätestens fertig bis (Uhr)</label><input id="spAptWishTo" type="time" step="60"></div>
+      </div>
+      <div id="spAptWishAptInfo" hidden style="margin-top:8px;font-size:.84rem;font-weight:700"></div>
     </div>
     <div class="sp-works-box">
       <div class="sp-works-title">Arbeiten (werden im Terminvorschlag angekreuzt)</div>
@@ -6932,6 +6944,7 @@
     document.querySelectorAll("[data-sp-view]").forEach(b => b.addEventListener("click", () => { moduleState.view = b.dataset.spView; render(); }));
     $("spAptPickCustomer").addEventListener("click", pickCustomerForAppointment);
     ["spAptDate", "spAptTime", "spAptDuration"].forEach(id => $(id).addEventListener("change", updateWishHint));
+    ["spAptTime", "spAptDuration", "spAptWishFrom", "spAptWishTo"].forEach(id => { $(id).addEventListener("change", updateAptWishInfo); $(id).addEventListener("input", updateAptWishInfo); });
     $("spDoneCancel").addEventListener("click", closeDoneModal);
     $("spDoneUndo").addEventListener("click", unsetDone);
     $("spDoneNoteSave").addEventListener("click", saveBossNoteOnly);
@@ -7067,14 +7080,16 @@
   function apptCard(a, compact) {
     const addr = addrLine(a);
     const att = attemptOf(a);
-    const title = (a.customer || "Ohne Kundennamen") + (addr ? " – " + addr : "") + (att > 1 ? ` (${attemptLabel(att)})` : "") + (a.missed ? " – nicht angetroffen" : "") + (slipStale(a) ? " – Anmeldezettel neu drucken" : "");
+    const title = (a.customer || "Ohne Kundennamen") + (addr ? " – " + addr : "") + (att > 1 ? ` (${attemptLabel(att)})` : "") + (a.missed ? " – nicht angetroffen" : "") + (slipStale(a) ? " – Anmeldezettel neu drucken" : "") + (aptWishText(a) ? " – Kunde möchte " + aptWishText(a) : "");
     const badgeTime = att > 1 && compact ? ` <span class="sp-badge">${att}.</span>` : "";
     const stale = slipStale(a);
     const tbm = clampTravel(a.travelBefore), tam = clampTravel(a.travelAfter);
     const code = workCode(a);
     const codeHtml = code ? `<span class="sp-code" title="${esc(worksText(a).join(", "))}">${esc(code)}</span>` : "";
-    const badgeLine = (att > 1 && !compact ? `<span class="sp-badge sp-badge-line">${attemptLabel(att)}</span>` : "") + (stale && !compact ? `<span class="sp-badge sp-badge-line sp-badge-warn">⚠ Zettel neu drucken</span>` : "");
-    const mark = (a.done ? "✔ " : a.missed ? "🚪 " : "") + (stale && compact ? "⚠ " : "") + ((tbm || tam) && compact ? "🚗 " : "");
+    const wt = aptWishText(a), wbad = wt && !aptWishOk(a, a.time, a.duration);
+    const wishBadge = wt && !compact ? `<span class="sp-badge sp-badge-line sp-badge-time${wbad ? " bad" : ""}">⏰ Kunde: ${esc(wt)}${wbad ? " – Uhrzeit prüfen!" : ""}</span>` : "";
+    const badgeLine = wishBadge + (att > 1 && !compact ? `<span class="sp-badge sp-badge-line">${attemptLabel(att)}</span>` : "") + (stale && !compact ? `<span class="sp-badge sp-badge-line sp-badge-warn">⚠ Zettel neu drucken</span>` : "");
+    const mark = (a.done ? "✔ " : a.missed ? "🚪 " : "") + (stale && compact ? "⚠ " : "") + ((tbm || tam) && compact ? "🚗 " : "") + (wt && compact ? (wbad ? "⚠⏰ " : "⏰ ") : "");
     const btn = `<button type="button" class="sp-appt${compact ? " compact" : ""}${a.id === moduleState.selectedId ? " selected" : ""}${a.done ? " done" : ""}${a.missed ? " missed" : ""}" data-sp-open="${esc(a.id)}" data-date="${esc(a.date)}" data-time="${esc(a.time)}" title="${esc(title)}"><span class="sp-appt-time">${mark}${esc(a.time)}${badgeTime}${compact ? codeHtml : ""}</span>${compact ? "" : codeHtml}<span class="sp-appt-main"><strong>${esc(a.customer || "Ohne Kundennamen")}</strong>${badgeLine}${compact || !addr ? "" : `<small>${esc(addr)}</small>`}${compact || !(tbm || tam) ? "" : `<small>🚗 ${tbm} Min. vorher · ${tam} Min. nachher</small>`}</span></button>`;
     if (compact) return btn;
     const inv = a.done && a.invoice ? ` · ${INV_SHORT[a.invoice] || ""}${a.invoice === "bar" && a.amount > 0 ? " " + fmtEUR(a.amount) : ""}` : "";
@@ -7245,6 +7260,8 @@
     $("spAptBossNote").value = a?.bossNote || "";
     $("spAptTravelB").value = a?.travelBefore || "";
     $("spAptTravelA").value = a?.travelAfter || "";
+    $("spAptWishFrom").value = a?.wishFrom || "";
+    $("spAptWishTo").value = a?.wishTo || "";
     const wk = Array.isArray(a?.works) ? a.works : [];
     $("spWorkKehrung").checked = wk.includes("kehrung");
     $("spWorkMessung").checked = wk.includes("messung");
@@ -7255,6 +7272,7 @@
     syncWorkOther();
     moduleState.aptCustomer = a?.kid ? { id: a.kid, nr: a.knr || "" } : null;
     showAptCustomerInfo();
+    updateAptWishInfo();
     $("spDeleteAppointment").hidden = !a;
     $("spMoveFromApt").hidden = !a;
     $("spDoneFromApt").hidden = !a;
@@ -7281,6 +7299,42 @@
   }
 
   /* Kundenverwaltung: Kunde wählen, Name und Adresse übernehmen */
+  /* Wunschzeit nur für diesen Termin („Kunde möchte ab 15:30 Uhr“) */
+  function aptWishText(a) {
+    const f = a && a.wishFrom, t = a && a.wishTo;
+    if (f && t) return `${f}–${t} Uhr`;
+    if (f) return `ab ${f} Uhr`;
+    if (t) return `bis ${t} Uhr`;
+    return "";
+  }
+  function aptWishOk(a, time, dur) {
+    if (!a || !time) return true;
+    const s = toMin(time);
+    if (a.wishFrom && s < toMin(a.wishFrom)) return false;
+    if (a.wishTo && s + (Number(dur) || 15) > toMin(a.wishTo)) return false;
+    return true;
+  }
+  function formWish() { return { wishFrom: $("spAptWishFrom").value, wishTo: $("spAptWishTo").value }; }
+  function updateAptWishInfo() {
+    const el = $("spAptWishAptInfo");
+    if (!el) return;
+    const w = formWish();
+    if (!w.wishFrom && !w.wishTo) { el.hidden = true; el.textContent = ""; return; }
+    const time = $("spAptTime").value, dur = Number($("spAptDuration").value) || 15;
+    const ok = aptWishOk(w, time, dur);
+    el.hidden = false;
+    el.style.color = ok ? "#2e6f45" : "#a02f2f";
+    el.textContent = ok
+      ? `✓ Die Uhrzeit passt zum Wunsch des Kunden (${aptWishText(w)}).`
+      : `⚠ Der Kunde möchte ${aptWishText(w)} – diese Uhrzeit passt nicht.`;
+    if (!ok && w.wishFrom && time && toMin(time) < toMin(w.wishFrom)) {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "sp-linkbtn"; b.style.marginLeft = "8px";
+      b.textContent = `→ Uhrzeit auf ${w.wishFrom} setzen`;
+      b.addEventListener("click", () => { $("spAptTime").value = w.wishFrom; updateAptWishInfo(); updateWishHint(); });
+      el.appendChild(b);
+    }
+  }
   /* Wunschzeit des gewählten Kunden prüfen */
   function wishOk(c, date, time, dur) {
     const wins = window.SPKunden.wishWindows(c, fromIso(date).getDay());
@@ -7916,6 +7970,9 @@
     $("spAptBossNote").value = kRec && kRec.bossNote ? kRec.bossNote : "";
     $("spAptTravelB").value = old.travelBefore || (kRec && kRec.travelBefore) || "";
     $("spAptTravelA").value = old.travelAfter || (kRec && kRec.travelAfter) || "";
+    $("spAptWishFrom").value = old.wishFrom || "";
+    $("spAptWishTo").value = old.wishTo || "";
+    updateAptWishInfo();
     moduleState.pendingRetry = { attempt: att, prevId: old.id };
     syncWorkOther(); showAptCustomerInfo();
     $("spModalTitle").textContent = `Termin anlegen – ${attemptLabel(att)}`;
@@ -7975,6 +8032,7 @@
     const kc = a && a.kid && window.SPKunden ? window.SPKunden.get(a.kid) : null;
     if (holiday) msg.push(`Feiertag: ${holiday} – an Feiertagen kann kein Termin liegen.`);
     else {
+      if (a && aptWishText(a) && !aptWishOk(a, time, dur)) msg.push(`Der Kunde möchte ${aptWishText(a)} – diese Uhrzeit passt nicht.`);
       if (kc && window.SPKunden.wishText(kc) && !wishOk(kc, date, time, dur)) msg.push(`Außerhalb der Wunschzeit des Kunden (${window.SPKunden.wishText(kc)}).`);
       if (wd === 0 || wd === 6) msg.push("Der gewählte Tag ist ein Wochenende.");
       if (clash) msg.push(`Überschneidung mit dem Termin um ${clash.time} Uhr (${clash.customer || "ohne Namen"}). Die anderen Termine bleiben unverändert, auch deine Uhrzeit.`);
@@ -8167,6 +8225,7 @@
         if (a.invoice === "bar" && a.receiptNo && fs >= 0.78) cNote.push(line1("Quittung " + a.receiptNo, 7.8 * fs, false, "#4f5962"));
       } else {
       if (k && k.phone) cNote.push(line1("Tel. " + k.phone, 8.6 * fs, true));
+      if (aptWishText(a)) cNote.push(line1("Kunde: " + aptWishText(a), 8.6 * fs, true, "#8a4b00"));
       if (clampTravel(a.travelBefore) || clampTravel(a.travelAfter)) cNote.push(line1("Fahrt: " + clampTravel(a.travelBefore) + " Min. vorher · " + clampTravel(a.travelAfter) + " Min. nachher", 8.2 * fs, false, "#4f5962"));
       if (a.notes) cNote = cNote.concat(wrap(a.notes, 8.4 * fs, false, wNote).map(t => line1(t, 8.4 * fs, false)));
       if (lv.notes < 99) {
@@ -8764,7 +8823,10 @@
     if (holiday) return alert(`Am ${fmtDate(date)} ist ${holiday}. Termine an Feiertagen sind standardmäßig gesperrt.`);
     const clash = overlapWith(date, time, Number($("spAptDuration").value) || 15, moduleState.editingId, clampTravel($("spAptTravelB").value), clampTravel($("spAptTravelA").value));
     if (clash && !confirm(`Der Termin überschneidet sich mit dem Termin um ${clash.time} Uhr (${clash.customer || "ohne Namen"}). Trotzdem speichern?`)) return;
-    const item={ id:moduleState.editingId || uuid(), date,time, customer:$("spAptCustomer").value.trim(), street:$("spAptStreet").value.trim(), house:$("spAptHouse").value.trim(), zip:$("spAptZip").value.trim(), city:$("spAptCity").value.trim(), duration:Number($("spAptDuration").value)||15, notes:$("spAptNotes").value.trim(), bossNote:$("spAptBossNote").value.trim(), travelBefore:clampTravel($("spAptTravelB").value), travelAfter:clampTravel($("spAptTravelA").value), works:selectedWorks(), workOther:$("spWorkOtherText").value.trim(), kid:moduleState.aptCustomer?.id||"", knr:moduleState.aptCustomer?.nr||"", ...(moduleState.pendingRetry && !moduleState.editingId ? { attempt: moduleState.pendingRetry.attempt, prevId: moduleState.pendingRetry.prevId } : {}), updatedAt:new Date().toISOString() };
+    { const w = formWish();
+      if (w.wishFrom && w.wishTo && toMin(w.wishFrom) >= toMin(w.wishTo)) return alert("Bei der Wunschzeit muss „Frühestens ab“ vor „Spätestens fertig bis“ liegen.");
+      if (!aptWishOk(w, time, Number($("spAptDuration").value) || 15) && !confirm(`Der Kunde möchte ${aptWishText(w)}, der Termin liegt um ${time} Uhr. Trotzdem speichern?`)) return; }
+    const item={ id:moduleState.editingId || uuid(), date,time, customer:$("spAptCustomer").value.trim(), street:$("spAptStreet").value.trim(), house:$("spAptHouse").value.trim(), zip:$("spAptZip").value.trim(), city:$("spAptCity").value.trim(), duration:Number($("spAptDuration").value)||15, notes:$("spAptNotes").value.trim(), bossNote:$("spAptBossNote").value.trim(), travelBefore:clampTravel($("spAptTravelB").value), travelAfter:clampTravel($("spAptTravelA").value), wishFrom:$("spAptWishFrom").value || "", wishTo:$("spAptWishTo").value || "", works:selectedWorks(), workOther:$("spWorkOtherText").value.trim(), kid:moduleState.aptCustomer?.id||"", knr:moduleState.aptCustomer?.nr||"", ...(moduleState.pendingRetry && !moduleState.editingId ? { attempt: moduleState.pendingRetry.attempt, prevId: moduleState.pendingRetry.prevId } : {}), updatedAt:new Date().toISOString() };
     const list=appointments(); const idx=list.findIndex(x=>x.id===item.id); if(idx>=0) list[idx]={ ...list[idx], ...item }; else list.push(item);
     persist({appointments:list}); moduleState.selectedId=item.id; moduleState.date=fromIso(date); closeModal(); render();
     if (doPrint) printAppointmentNow(item.id); else warnStale(item.id);
@@ -8803,7 +8865,7 @@
     if(!list.length) return alert('Keine Termine im gewählten Zeitraum.');
     const now=new Date(); const stamp=`${now.getUTCFullYear()}${pad(now.getUTCMonth()+1)}${pad(now.getUTCDate())}T${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}${pad(now.getUTCSeconds())}Z`;
     const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Schornstein Planer//DE','CALSCALE:GREGORIAN','METHOD:PUBLISH'];
-    list.forEach(a=>{ const start=icsDateTime(a); const endDate=new Date(fromIso(a.date)); const [hh,mm]=a.time.split(':').map(Number); endDate.setHours(hh,mm+(Number(a.duration)||15),0,0); const end=`${iso(endDate).replaceAll('-','')}T${pad(endDate.getHours())}${pad(endDate.getMinutes())}00`; const address=[a.street&&`${a.street} ${a.house||''}`,a.zip,a.city].filter(Boolean).join(', '); lines.push('BEGIN:VEVENT',`UID:${icsEscape(a.id)}@schornstein-planer.de`,`DTSTAMP:${stamp}`,`DTSTART:${start}`,`DTEND:${end}`,`SUMMARY:${icsEscape('Schornsteinfegertermin – '+(a.customer||'Kundentermin'))}`,`LOCATION:${icsEscape(address)}`,`DESCRIPTION:${icsEscape(a.notes||'')}`,'END:VEVENT'); });
+    list.forEach(a=>{ const start=icsDateTime(a); const endDate=new Date(fromIso(a.date)); const [hh,mm]=a.time.split(':').map(Number); endDate.setHours(hh,mm+(Number(a.duration)||15),0,0); const end=`${iso(endDate).replaceAll('-','')}T${pad(endDate.getHours())}${pad(endDate.getMinutes())}00`; const address=[a.street&&`${a.street} ${a.house||''}`,a.zip,a.city].filter(Boolean).join(', '); lines.push('BEGIN:VEVENT',`UID:${icsEscape(a.id)}@schornstein-planer.de`,`DTSTAMP:${stamp}`,`DTSTART:${start}`,`DTEND:${end}`,`SUMMARY:${icsEscape('Schornsteinfegertermin – '+(a.customer||'Kundentermin'))}`,`LOCATION:${icsEscape(address)}`,`DESCRIPTION:${icsEscape([aptWishText(a)&&('Kunde möchte '+aptWishText(a)),a.notes].filter(Boolean).join('\n'))}`,'END:VEVENT'); });
     lines.push('END:VCALENDAR'); const blob=new Blob([lines.join('\r\n')+'\r\n'],{type:'text/calendar;charset=utf-8'}); const link=document.createElement('a'); link.href=URL.createObjectURL(blob); link.download=filename; link.click(); setTimeout(()=>URL.revokeObjectURL(link.href),1000);
   }
   function exportRange() { const from=$("spExportFrom").value,to=$("spExportTo").value; if(!from||!to||from>to) return alert('Bitte einen gültigen Exportzeitraum auswählen.'); downloadICS(rangeAppointments(from,to),`schornstein-planer-${from}-bis-${to}.ics`); }
