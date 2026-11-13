@@ -1543,28 +1543,12 @@
     "<p>Kunden anlegen und suchen – Auswahl nach Ort, Straße und Hausnummer. " +
     "Im Terminplaner und im Luftverbund-Rechner werden Name und Adresse direkt übernommen.</p></div>" +
     '<div class="kv-tools">' +
-    '<button type="button" class="btn btn-light" id="kvExport">Kunden sichern</button>' +
-    '<label class="btn btn-light" for="kvImport" style="cursor:pointer">Kunden laden</label>' +
+    '<label class="btn btn-light" for="kvImport" style="cursor:pointer" title="Kundenliste aus einer Datei übernehmen (die Gesamtsicherung findest du oben im Menü „Datensicherung“)">Kundenliste importieren</label>' +
     '<input id="kvImport" type="file" accept="application/json,.json" hidden>' +
     "</div></div>" +
     '<div id="kvManage"></div></div>';
 
   mountBrowser(view.querySelector("#kvManage"), "manage", null);
-
-  view.querySelector("#kvExport").addEventListener("click", function () {
-    var d = new Date();
-    var stamp =
-      d.getFullYear() +
-      "-" +
-      String(d.getMonth() + 1).padStart(2, "0") +
-      "-" +
-      String(d.getDate()).padStart(2, "0");
-
-    shareOrDownload(
-      new Blob([JSON.stringify(exportData(), null, 2)], { type: "application/json" }),
-      "kunden-" + stamp + ".json"
-    );
-  });
 
   view.querySelector("#kvImport").addEventListener("change", function (e) {
     var file = e.target.files && e.target.files[0];
