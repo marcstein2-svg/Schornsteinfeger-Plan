@@ -1384,6 +1384,24 @@
     .sp-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
     .sp-business-grid { margin-top: 12px; }
     .sp-proposal-list { display: grid; gap: 7px; margin: 12px 0; max-height: 260px; overflow: auto; }
+    .sp-search { margin-bottom: 12px; }
+    .sp-search label { display: block; font-weight: 700; font-size: .9rem; margin-bottom: 6px; }
+    .sp-search-row { display: flex; gap: 8px; }
+    .sp-search-row input { flex: 1; min-width: 0; }
+    .sp-search-results { margin-top: 8px; border: 1px solid var(--border); border-radius: 12px; background: #fff; max-height: 360px; overflow: auto; }
+    .sp-search-head { padding: 8px 12px; font-size: .82rem; color: #4f5962; background: #f7f8f9; border-bottom: 1px solid var(--border); position: sticky; top: 0; }
+    .sp-search-item { display: flex; gap: 10px; align-items: center; justify-content: space-between; padding: 9px 12px; border-bottom: 1px solid #eceef0; cursor: pointer; }
+    .sp-search-item:last-child { border-bottom: 0; }
+    .sp-search-item:hover { background: #fbf6ea; }
+    .sp-search-item.past { opacity: .78; }
+    .sp-search-main { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .sp-search-main span { color: #4f5962; font-size: .88rem; overflow-wrap: anywhere; }
+    .sp-search-state { font-size: .72rem; font-weight: 700; padding: 1px 7px; border-radius: 999px; margin-left: 6px; vertical-align: 1px; background: #eef0f2; color: #4f5962; white-space: nowrap; }
+    .sp-search-state.done { background: #e1f3e7; color: #2e6f45; }
+    .sp-search-state.missed { background: #fdeccf; color: #8a4b00; }
+    .sp-search-empty { padding: 12px; color: #4f5962; }
+    .sp-appt.sp-flash { animation: spFlash 2.2s ease-out 1; }
+    @keyframes spFlash { 0%, 60% { box-shadow: 0 0 0 3px #e8b84a; background: #fff3cf; } 100% { box-shadow: 0 0 0 0 transparent; } }
     .sp-proposal-item { display: grid; grid-template-columns: 34px 1fr auto; gap: 8px; align-items: center; border: 1px solid var(--border); border-radius: 10px; padding: 9px; }
     .sp-proposal-item.selected { border-color: var(--gold); background: #fffaf0; }
     .sp-proposal-item input { accent-color: var(--gold); }
@@ -1438,6 +1456,7 @@
     .sp-appt.missed { border-left-color: #c9791b; background: #fff7ea; }
     .sp-act.missed { border-color: #c9791b; background: #fff1dc; color: #8a4b00; }
     .sp-badge-warn { background: #fde0e0; color: #a02f2f; }
+    .sp-badge-wish { background: #e3f1e8; color: #2e6f45; }
     .sp-badge-line { display: block; width: max-content; margin: 2px 0 1px; }
     .sp-badge { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: #fbe3c2; color: #7a4600; font-size: .7rem; font-weight: 800; white-space: nowrap; }
     .sp-appt-wrap { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
@@ -1863,6 +1882,15 @@
         </summary>
         <div class="sp-collapse-body">
 
+      <div class="sp-search">
+        <label for="spSearch">🔍 Termin suchen – nach Name, Straße, Ort oder Kundennummer</label>
+        <div class="sp-search-row">
+          <input id="spSearch" type="search" autocomplete="off" placeholder="z. B. Müller oder Hauptstraße 12" enterkeyhint="search">
+          <button class="btn btn-light" type="button" id="spSearchClear" hidden>✕ Leeren</button>
+        </div>
+        <div class="sp-search-results" id="spSearchResults" hidden></div>
+      </div>
+
       <div class="sp-toolbar">
         <div class="sp-toolbar-group">
           <button class="btn btn-light" type="button" id="spPrevPeriod">‹</button>
@@ -1906,6 +1934,7 @@
             <div class="field"><label for="spEmployeeName">Mitarbeiter</label><input id="spEmployeeName" type="text" placeholder="Name des Mitarbeiters"></div>
             <div class="field"><label for="spPhone">Telefon</label><input id="spPhone" type="tel" placeholder="Telefonnummer"></div>
             <div class="field"><label for="spBusinessAddress">Betriebsanschrift</label><input id="spBusinessAddress" type="text" placeholder="Straße, PLZ Ort"></div>
+            <div class="field"><label for="spBossEmail">E-Mail-Adresse des Chefs (für die Erledigt-Liste)</label><input id="spBossEmail" type="email" autocomplete="off" placeholder="chef@beispiel.de"></div>
           </div>
           <div class="sp-day-print">
             <div class="field"><label for="spDayDate">Tag für Tagesübersicht / Erledigt-Liste</label><input id="spDayDate" type="date"></div>
@@ -1914,7 +1943,10 @@
               <button class="btn btn-light" type="button" id="spPrintDays">📋 Alle Tage im Zeitraum (je Tag ein Blatt)</button>
               <button class="btn btn-gold" type="button" id="spPrintDone">✅ Erledigt-Liste drucken (für den Chef)</button>
               <button class="btn btn-light" type="button" id="spPrintDoneRange">✅ Erledigt-Liste für den Zeitraum</button>
+              <button class="btn btn-primary" type="button" id="spMailDone">✉ Erledigt-Liste per E-Mail an den Chef</button>
+              <button class="btn btn-light" type="button" id="spMailDoneRange">✉ … für den Zeitraum per E-Mail</button>
             </div>
+            <p class="sp-muted" id="spMailStatus" hidden style="margin:8px 0 0"></p>
             <div class="sp-exp-box">
               <div class="sp-works-title">Ausgaben aus den Bareinnahmen (z. B. Tanken) – werden in der Erledigt-Liste abgezogen</div>
               <div id="spExpList"></div>
@@ -2696,7 +2728,8 @@
 
       <p>
         Die Anwendung stellt Planungs-, Berechnungs- und Dokumentationsfunktionen
-        zur Verfügung. Die bereitgestellten Berechnungen und Angaben dienen
+        zur Verfügung, darunter Terminplanung, Kundenverwaltung, Erledigt-Listen
+        und Quittungen. Die bereitgestellten Berechnungen und Angaben dienen
         ausschließlich der Unterstützung bei der betrieblichen Planung und
         ersetzen keine eigenständige fachliche, rechtliche oder behördliche Prüfung.
       </p>
@@ -2842,6 +2875,16 @@
         <li>Datum der erfassten Leistungen</li>
         <li>optionale Notizen zu Leistungseinträgen</li>
         <li>individuell eingetragene freie Tage</li>
+        <li>Termine mit Datum, Uhrzeit, Dauer, Tätigkeiten, Fahrzeiten und Notizen</li>
+        <li>Kundendaten aus der Kundenverwaltung, z. B. Kundennummer, Name,
+          Anschrift, Telefonnummer, Bemerkungen, Wunschzeiten und der Standort
+          (Koordinaten) eines Kunden</li>
+        <li>Angaben zur Erledigung von Terminen, z. B. Rechnungsart, bar kassierte
+          Beträge, Ausgaben aus Bareinnahmen und Bemerkungen für den Arbeitgeber</li>
+        <li>Angaben für Quittungen, z. B. Name und Anschrift des Betriebs,
+          Steuernummer, USt-IdNr., Umsatzsteuersatz, Quittungsnummern und die
+          E-Mail-Adresse eines Empfängers für die Erledigt-Liste</li>
+        <li>Rechenwerte und Eingaben des Luftverbund-Rechners</li>
       </ul>
 
       <p>
@@ -2871,11 +2914,12 @@
       </p>
 
       <p>
-        Im Bereich „Planung &amp; Termine“ können Termine angelegt werden. Dabei
-        können vom Nutzer freiwillig Termin- und Kundendaten eingegeben werden,
-        insbesondere Name, Anschrift, Datum, Uhrzeit und Notizen. Auch diese
-        Daten werden ausschließlich lokal im Browser des Nutzers gespeichert.
-      </p>
+        Im Bereich „Planung &amp; Termine“ können Termine angelegt und eine
+        Kundenverwaltung genutzt werden. Dabei können vom Nutzer freiwillig
+        Termin- und Kundendaten eingegeben werden, insbesondere Name, Anschrift,
+        Telefonnummer, Kundennummer, Datum, Uhrzeit, Wunschzeiten, Standort,
+        Zahlungsangaben und Notizen. Auch diese Daten werden ausschließlich lokal
+        im Browser des Nutzers gespeichert.</p>
 
       <p>
         Zusätzlich speichert die Anwendung lokal, ob einzelne Bereiche der
@@ -2947,11 +2991,12 @@
 
       <p>
         Daten verlassen das Gerät des Nutzers nur, wenn der Nutzer dies selbst
-        auslöst, etwa durch den Kalender-Export, die Datensicherung, den Druck
-        eines Terminvorschlags oder das Teilen der erzeugten PDF-Datei über die
-        Funktionen seines Geräts. Für erzeugte Dateien, Ausdrucke und deren
-        Weitergabe ist der Nutzer verantwortlich.
-      </p>
+        auslöst, etwa durch den Kalender-Export, die Gesamtsicherung, den Druck
+        eines Terminvorschlags, einer Quittung oder einer Erledigt-Liste, den
+        Versand einer Datei per E-Mail oder das Teilen der erzeugten PDF-Datei
+        über die Funktionen seines Geräts sowie durch die Adresssuche über
+        OpenStreetMap (siehe Abschnitt 9). Für erzeugte Dateien, Ausdrucke und
+        deren Weitergabe ist der Nutzer verantwortlich.</p>
 
       <p>
         Die lokal gespeicherten Daten sind nicht gesondert verschlüsselt. Der
@@ -3005,7 +3050,74 @@
       </p>
 
       <h2>
-        9. Cookies und Tracking
+        9. Adresssuche und Standort (OpenStreetMap)
+      </h2>
+
+      <p>
+        In der Kundenverwaltung kann der Standort eines Kunden auf zwei Wegen
+        ermittelt werden, um Fahrzeiten und Routen zu planen:
+      </p>
+
+      <ul>
+        <li>
+          <strong>Standort des Geräts (GPS):</strong> Nur wenn der Nutzer die
+          Funktion auslöst und der Standortabfrage im Browser bzw. Betriebssystem
+          zustimmt, liest die Anwendung die aktuellen Koordinaten des Geräts aus
+          und speichert sie lokal beim Kunden. Die Koordinaten werden nicht an
+          den Betreiber übertragen.
+        </li>
+        <li>
+          <strong>Adresssuche über OpenStreetMap:</strong> Wird die Adresssuche
+          ausgelöst (einzeln beim Kunden oder gesammelt für mehrere Kunden),
+          sendet dein Browser die Anschrift des Kunden (Straße, Hausnummer,
+          Postleitzahl, Ort) an den Dienst „Nominatim“ der OpenStreetMap
+          Foundation (nominatim.openstreetmap.org), um die Koordinaten zu
+          ermitteln. Dabei wird technisch bedingt auch die IP-Adresse des
+          Nutzers an diesen Dienst übertragen. Die Anfrage geht direkt vom Gerät
+          des Nutzers an den Anbieter, nicht über den Betreiber dieser Website.
+          Es gelten die Datenschutzhinweise der OpenStreetMap Foundation.
+        </li>
+      </ul>
+
+      <p>
+        Die Adresssuche erfolgt ausschließlich auf Veranlassung des Nutzers. Der
+        Nutzer ist dafür verantwortlich, dass die Weitergabe von Kundenanschriften
+        an diesen Dienst in seinem Betrieb zulässig ist. Wer das nicht möchte,
+        kann die Adresssuche unbenutzt lassen und den Standort per GPS übernehmen
+        oder ohne Standort planen. Die Berechnung von Routen und Fahrzeiten
+        erfolgt lokal auf dem Gerät des Nutzers, ohne einen externen Routendienst.
+      </p>
+
+      <h2>
+        10. Versand der Erledigt-Liste per E-Mail
+      </h2>
+
+      <p>
+        Der Schornstein Planer kann die Erledigt-Liste als PDF-Datei erzeugen und
+        zum Versand an eine vom Nutzer hinterlegte E-Mail-Adresse (z. B. die des
+        Arbeitgebers) vorbereiten. Dazu wird die Teilen-Funktion des Geräts oder
+        das E-Mail-Programm des Nutzers geöffnet.
+      </p>
+
+      <p>
+        Der Schornstein Planer stellt dabei keine Verbindung zu einem E-Mail-Konto
+        her, kennt keine Zugangsdaten und versendet selbst keine E-Mails. Der
+        Betreiber erhält weder die E-Mail-Adresse noch die Liste. Die hinterlegte
+        Empfängeradresse wird nur lokal im Browser gespeichert.
+      </p>
+
+      <p>
+        Die Erledigt-Liste kann personenbezogene Daten von Kunden enthalten (z. B.
+        Name, Anschrift, Kundennummer, Zahlungsart, Beträge und Bemerkungen). Der
+        Nutzer ist dafür verantwortlich, dass er diese Liste nur an dazu befugte
+        Empfänger sendet und dass der Versandweg angemessen geschützt ist.
+        Gewöhnliche E-Mails sind nicht Ende-zu-Ende-verschlüsselt. Werden
+        Kundendaten im Auftrag eines Betriebs verarbeitet, sollte die Nutzung der
+        Anwendung mit dem verantwortlichen Betrieb abgestimmt sein.
+      </p>
+
+      <h2>
+        11. Cookies und Tracking
       </h2>
 
       <p>
@@ -3020,7 +3132,7 @@
       </p>
 
       <h2>
-        10. Externe Links
+        12. Externe Links
       </h2>
 
       <p>
@@ -3044,7 +3156,7 @@
       </p>
 
       <h2>
-        11. Kontaktaufnahme
+        13. Kontaktaufnahme
       </h2>
 
       <p>
@@ -3063,7 +3175,7 @@
       </p>
 
       <h2>
-        12. Deine Rechte
+        14. Deine Rechte
       </h2>
 
       <p>
@@ -3087,7 +3199,7 @@
       </p>
 
       <h2>
-        13. Löschung lokal gespeicherter Planungsdaten
+        15. Löschung lokal gespeicherter Planungsdaten
       </h2>
 
       <p>
@@ -3113,7 +3225,7 @@
       </p>
 
       <h2>
-        14. Aktualität dieser Datenschutzerklärung
+        16. Aktualität dieser Datenschutzerklärung
       </h2>
 
       <p>
@@ -3205,6 +3317,62 @@
       </p>
 
       <h2>
+        Terminplanung, Routen und Anmeldezettel
+      </h2>
+
+      <p>
+        Automatische Terminvorschläge, Routen und Fahrzeiten sind Näherungswerte.
+        Fahrzeiten werden aus der Entfernung zwischen den gespeicherten
+        Standorten geschätzt und berücksichtigen weder Verkehr noch Straßenverlauf.
+        Der Nutzer prüft jeden Terminvorschlag, bevor er ihn verwendet.
+      </p>
+
+      <p>
+        Hinweistexte auf Anmeldezetteln, etwa zur 2. und zur 3. und letzten
+        Anmeldung oder zu gesetzlichen Pflichten des Eigentümers, sind allgemeine
+        Hinweise und keine Rechtsberatung. Der Betrieb bzw. der Nutzer ist dafür
+        verantwortlich, dass Inhalt, Fristen und Verfahren zu den für ihn
+        geltenden Vorgaben passen, und passt die Texte bei Bedarf an.
+      </p>
+
+      <h2>
+        Quittungen, Rechnungsangaben und Erledigt-Liste
+      </h2>
+
+      <p>
+        Die Quittungsfunktion ist ein Hilfsmittel zum Erstellen von Zahlungsbelegen
+        für Barzahlungen. Alle Angaben auf der Quittung, insbesondere Steuernummer,
+        Umsatzsteuersatz bzw. Hinweis auf die Kleinunternehmerregelung,
+        Leistungsbeschreibung und Betrag, werden vom Nutzer eingegeben oder
+        bestätigt. Die Anwendung prüft sie nicht.
+      </p>
+
+      <p>
+        Die Anwendung ersetzt weder eine Buchführung noch eine steuerliche oder
+        rechtliche Beratung. Welche Anforderungen im Einzelfall an Belege,
+        Rechnungsangaben, die Aufzeichnung von Bareinnahmen und die Aufbewahrung
+        gelten, ist vom Betrieb bzw. von dessen Steuerberatung zu klären.
+      </p>
+
+      <p>
+        Quittungsnummern werden lokal auf dem verwendeten Gerät fortlaufend
+        vergeben. Bei Datenverlust, Wiederherstellung einer älteren Sicherung oder
+        Nutzung auf mehreren Geräten können Nummern doppelt vorkommen.
+      </p>
+
+      <h2>
+        Berechnungshilfen
+      </h2>
+
+      <p>
+        Ergebnisse und Lösungsvorschläge der Rechner, etwa des
+        Luftverbund-Rechners, dienen der Unterstützung bei der fachlichen
+        Beurteilung. Sie ersetzen weder die Prüfung der Anlage vor Ort noch die
+        Beurteilung durch eine fachkundige Person und sind nicht anstelle der
+        maßgeblichen technischen Regeln und Herstellerangaben anzuwenden.
+      </p>
+
+      <h2>
         Eigene Eingaben
       </h2>
 
@@ -3220,6 +3388,8 @@
       <p>
         Die Planungsdaten werden lokal im Browser gespeichert. Der Betreiber
         übernimmt daher keine Garantie für deren dauerhafte Verfügbarkeit.
+        Der Nutzer sollte regelmäßig die Gesamtsicherung erstellen und die
+        Sicherungsdatei geschützt aufbewahren.
       </p>
 
       <p>
@@ -3264,12 +3434,39 @@
     </div>
     <div class="sp-cash" id="spCashBox" hidden>
       <div class="field"><label for="spCashAmount">Betrag bar kassiert (€)</label><input id="spCashAmount" type="text" inputmode="decimal" autocomplete="off" placeholder="z. B. 85,50"></div>
-      <button class="btn btn-primary" type="button" id="spCashSave" style="margin-top:10px">Barzahlung speichern</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+        <button class="btn btn-primary" type="button" id="spCashSave">Barzahlung speichern</button>
+        <button class="btn btn-light" type="button" id="spCashSaveReceipt">Speichern + 🧾 Quittung erstellen</button>
+      </div>
     </div>
     <div class="sp-modal-actions">
       <button class="btn btn-light" type="button" id="spDoneCancel">Abbrechen</button>
       <button class="btn btn-light" type="button" id="spDoneNoteSave">Nur Bemerkung speichern</button>
+      <button class="btn btn-gold" type="button" id="spReceiptOpen" hidden>🧾 Quittung erstellen</button>
       <button class="btn btn-danger" type="button" id="spDoneUndo" hidden>Als nicht erledigt markieren</button>
+    </div>
+  </div>
+</div>
+
+<div class="sp-modal-backdrop" id="spReceiptModal" hidden>
+  <div class="sp-modal" role="dialog" aria-modal="true" aria-labelledby="spRcTitle" style="max-width:560px">
+    <h3 id="spRcTitle">Quittung erstellen</h3>
+    <p class="sp-muted" id="spRcWho" style="margin:-4px 0 4px"></p>
+    <p class="sp-muted" id="spRcNo" style="margin:0 0 12px;font-size:.85em"></p>
+    <div class="sp-form-grid">
+      <div class="field"><label for="spRcAmount">Bezahlter Betrag brutto (€)</label><input id="spRcAmount" type="text" inputmode="decimal" autocomplete="off" placeholder="z. B. 85,50"></div>
+      <div class="field"><label for="spRcVat">Umsatzsteuer</label><select id="spRcVat"><option value="19">19 % Umsatzsteuer</option><option value="7">7 % Umsatzsteuer</option><option value="0">Kleinunternehmer (§ 19 UStG)</option></select></div>
+      <div class="field"><label for="spRcServiceDate">Leistungsdatum</label><input id="spRcServiceDate" type="date"></div>
+      <div class="field"><label for="spRcDate">Datum der Quittung</label><input id="spRcDate" type="date"></div>
+      <div class="field"><label for="spRcTaxNo">Steuernummer des Betriebs</label><input id="spRcTaxNo" type="text" autocomplete="off" placeholder="z. B. 12/345/67890"></div>
+      <div class="field"><label for="spRcVatId">USt-IdNr. (optional)</label><input id="spRcVatId" type="text" autocomplete="off" placeholder="DE123456789"></div>
+    </div>
+    <div class="field" style="margin-top:10px"><label for="spRcWork">Leistung (erscheint auf der Quittung)</label><textarea id="spRcWork" rows="2"></textarea></div>
+    <label style="display:flex;gap:8px;align-items:center;margin-top:10px"><input type="checkbox" id="spRcCopy" checked> Durchschrift für den Betrieb mitdrucken (zweites Exemplar auf demselben Blatt)</label>
+    <p class="sp-muted" id="spRcWarn" style="margin:10px 0 0;color:#a02f2f" hidden></p>
+    <div class="sp-modal-actions">
+      <button class="btn btn-light" type="button" id="spRcCancel">Abbrechen</button>
+      <button class="btn btn-primary" type="button" id="spRcCreate">🧾 Quittung als PDF erstellen</button>
     </div>
   </div>
 </div>
@@ -3373,6 +3570,7 @@
     <div class="sp-muted" style="margin-top:10px;font-size:.84rem">Die Dauer je Kunde ergibt sich aus der gewählten Tätigkeit (mehrere = Summe). <button type="button" class="sp-linkbtn" id="spTimesOpenAuto">⏱ Zeiten je Tätigkeit anpassen</button></div>
     <label class="sp-work" style="margin-top:12px;display:flex"><input type="checkbox" id="spAutoBreak"><span>30 Minuten Pause berücksichtigen<br><small class="sp-muted" style="font-weight:600">Pause 12:30–13:00 Uhr – in dieser Zeit werden keine Termine vergeben (bei 15-Minuten-Terminen sind es zwischen 12 und 13 Uhr dann nur 2 statt 4).</small></span></label>
     <div class="sp-route-box">
+      <label class="sp-work" style="display:flex;margin-bottom:8px"><input type="checkbox" id="spAutoWish"><span>Wunschzeiten der Kunden beachten<br><small class="sp-muted" style="font-weight:600">Kunden mit Wunschzeiten (z. B. „Fr ab 14:00 Uhr“) werden nur in diesen Zeitfenstern eingeplant. Sie werden zuerst eingeplant, die übrigen Kunden füllen die Lücken.</small></span></label>
       <label class="sp-work" style="display:flex"><input type="checkbox" id="spAutoRoute"><span>Kürzeste Fahrroute berücksichtigen<br><small class="sp-muted" style="font-weight:600">Die Kunden werden nach ihrem Standort so geordnet, dass möglichst wenig gefahren wird. Kunden ohne Standort werden nach Ort und Straße einsortiert.</small></span></label>
       <label class="sp-work" style="display:flex;margin-top:8px"><input type="checkbox" id="spAutoDrive"><span>Fahrtzeit zwischen den Kunden aus der Entfernung berechnen<br><small class="sp-muted" style="font-weight:600">Wird als „Fahrtzeit vorher“ eingeplant (Luftlinie × 1,3, auf 5 Minuten aufgerundet). Eine größere eingetragene Fahrtzeit gilt weiterhin.</small></span></label>
       <div class="sp-form-grid" style="margin-top:8px"><div class="field"><label for="spAutoSpeed">Ø Geschwindigkeit (km/h)</label><input id="spAutoSpeed" type="number" min="10" max="130" inputmode="numeric"></div></div>
@@ -3399,6 +3597,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
       <button class="btn btn-gold" type="button" id="spAptPickCustomer">👥 Kunde aus Kundenverwaltung wählen</button>
       <span id="spAptCustomerInfo" class="sp-muted" style="font-weight:700"></span>
+      <div id="spAptWishInfo" hidden style="width:100%;font-size:.84rem;font-weight:700"></div>
     </div>
     <div class="sp-form-grid">
       <div class="field"><label for="spAptDate">Datum</label><input id="spAptDate" type="date"></div>
@@ -3430,6 +3629,7 @@
     <div class="sp-modal-actions">
       <button class="btn btn-light" type="button" id="spCancelAppointment">Abbrechen</button>
       <button class="btn btn-light" type="button" id="spMoveFromApt" hidden>⇄ Verschieben</button>
+      <button class="btn btn-gold" type="button" id="spPrintFromApt">🖨 Speichern &amp; drucken</button>
       <button class="btn btn-light" type="button" id="spDoneFromApt" hidden>✔ Erledigt …</button>
       <button class="btn btn-light" type="button" id="spMissFromApt" hidden>🚪 Nicht angetroffen …</button>
       <button class="btn btn-danger" type="button" id="spDeleteAppointment" hidden>Löschen</button>
@@ -4154,12 +4354,37 @@
 
   }
 
+  /* Der Terminplaner (eigenes Modul) schreibt Termine, Einstellungen, Ausgaben usw. direkt in den Speicher.
+     Damit das Speichern der Hauptseite diese Daten NICHT mit dem veralteten Stand vom Seitenstart überschreibt
+     (Termine „erledigt“/„verschoben“ gingen sonst verloren), werden sie hier frisch aus dem Speicher übernommen. */
+  function isPlannerKey(k) {
+    return k === "appointments" || k === "appointmentSettings" || !(k in defaultPlan);
+  }
+
   function saveData() {
+
+    let stored = {};
+
+    try {
+      stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}") || {};
+    } catch (e) {
+      stored = {};
+    }
+
+    const out = { ...plan };
+
+    Object.keys(stored).forEach(k => {
+      if (isPlannerKey(k)) out[k] = stored[k];
+    });
 
     localStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify(plan)
+      JSON.stringify(out)
     );
+
+    Object.keys(out).forEach(k => {
+      if (isPlannerKey(k)) plan[k] = out[k];
+    });
 
   }
 
@@ -6427,15 +6652,23 @@
     $("spPrevPeriod").addEventListener("click", () => move(-1));
     $("spNextPeriod").addEventListener("click", () => move(1));
     $("spToday").addEventListener("click", () => { moduleState.date = new Date(); render(); });
+    initSearch();
     $("spToggleEmpty").addEventListener("click", () => { moduleState.showEmpty = !moduleState.showEmpty; render(); });
     $("spNewAppointment").addEventListener("click", () => openModal(iso(moduleState.date), "09:00"));
     document.querySelectorAll("[data-sp-view]").forEach(b => b.addEventListener("click", () => { moduleState.view = b.dataset.spView; render(); }));
     $("spAptPickCustomer").addEventListener("click", pickCustomerForAppointment);
+    ["spAptDate", "spAptTime", "spAptDuration"].forEach(id => $(id).addEventListener("change", updateWishHint));
     $("spDoneCancel").addEventListener("click", closeDoneModal);
     $("spDoneUndo").addEventListener("click", unsetDone);
     $("spDoneNoteSave").addEventListener("click", saveBossNoteOnly);
     document.querySelectorAll(".sp-inv").forEach(b => b.addEventListener("click", () => chooseInvoice(b.dataset.inv)));
     $("spCashSave").addEventListener("click", saveCash);
+    $("spCashSaveReceipt").addEventListener("click", () => { const id = moduleState.doneId; if (saveCash(true)) openReceiptModal(id); });
+    $("spReceiptOpen").addEventListener("click", () => { const id = moduleState.doneId; closeDoneModal(); openReceiptModal(id); });
+    $("spRcCancel").addEventListener("click", closeReceiptModal);
+    $("spRcCreate").addEventListener("click", createReceipt);
+    ["spRcTaxNo", "spRcVatId"].forEach(i => $(i).addEventListener("input", updateReceiptWarn));
+    $("spRcVat").addEventListener("change", updateReceiptWarn);
     $("spCashAmount").addEventListener("keydown", e => { if (e.key === "Enter") saveCash(); });
     $("spMissCancel").addEventListener("click", closeMissModal);
     $("spMissRe").addEventListener("click", reRegister);
@@ -6448,9 +6681,12 @@
     $("spMoveTime").addEventListener("input", updateMoveInfo);
     document.querySelectorAll("[data-mv]").forEach(b => b.addEventListener("click", () => moveQuick(b.dataset.mv)));
     $("spMoveFromApt").addEventListener("click", () => { const id = moduleState.editingId; closeModal(); openMoveModal(id); });
+    $("spPrintFromApt").addEventListener("click", () => saveAppointment({ print: true }));
     $("spDoneFromApt").addEventListener("click", () => { const id = moduleState.editingId; closeModal(); openDoneModal(id); });
     $("spPrintDone").addEventListener("click", () => printDone(false));
     $("spPrintDoneRange").addEventListener("click", () => printDone(true));
+    $("spMailDone").addEventListener("click", () => mailDone(false));
+    $("spMailDoneRange").addEventListener("click", () => mailDone(true));
     $("spPrintDay").addEventListener("click", printDay);
     $("spPrintDays").addEventListener("click", printDayRange);
     $("spDayDate").addEventListener("change", () => { moduleState.dayManual = true; renderExpenses(); });
@@ -6469,7 +6705,7 @@
     });
     ["spAutoFrom", "spAutoTo", "spAutoStart", "spAutoEnd", "spAutoDuration", "spAutoBreak"].forEach(id => $(id).addEventListener("change", updateAuto));
     $("spAutoMax").addEventListener("input", updateAuto);
-    ["spAutoRoute", "spAutoDrive"].forEach(id => $(id).addEventListener("change", updateAuto));
+    ["spAutoWish", "spAutoRoute", "spAutoDrive"].forEach(id => $(id).addEventListener("change", updateAuto));
     $("spAutoSpeed").addEventListener("input", updateAuto);
     $("spRouteStartGps").addEventListener("click", routeStartFromGps);
     $("spRouteStartGeo").addEventListener("click", routeStartFromAddress);
@@ -6494,17 +6730,18 @@
     $("spExportRangeIcs").addEventListener("click", exportRange);
     $("spBackupData").addEventListener("click", backupData);
     $("spRestoreData").addEventListener("change", restoreData);
-    ["spBusinessName","spEmployeeName","spPhone","spBusinessAddress"].forEach(id => $(id).addEventListener("input", saveSettings));
+    ["spBusinessName","spEmployeeName","spPhone","spBusinessAddress","spBossEmail"].forEach(id => $(id).addEventListener("input", saveSettings));
     ["spProposalFrom","spProposalTo"].forEach(id => $(id).addEventListener("change", renderProposalList));
     $("year").addEventListener("change", () => render());
     $("state").addEventListener("change", () => render());
-    document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("spAppointmentModal").hidden) closeModal(); if (e.key === "Escape" && !$("spAutoModal").hidden && !document.querySelector(".kv-overlay")) closeAutoModal(); if (e.key === "Escape" && !$("spDoneModal").hidden) closeDoneModal(); if (e.key === "Escape" && !$("spMoveModal").hidden) closeMoveModal(); if (e.key === "Escape" && !$("spMissModal").hidden) closeMissModal(); if (e.key === "Escape" && !$("spExpModal").hidden) closeExpModal(); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("spAppointmentModal").hidden) closeModal(); if (e.key === "Escape" && !$("spAutoModal").hidden && !document.querySelector(".kv-overlay")) closeAutoModal(); if (e.key === "Escape" && !$("spDoneModal").hidden) closeDoneModal(); if (e.key === "Escape" && !$("spMoveModal").hidden) closeMoveModal(); if (e.key === "Escape" && !$("spMissModal").hidden) closeMissModal(); if (e.key === "Escape" && !$("spExpModal").hidden) closeExpModal(); if (e.key === "Escape" && !$("spReceiptModal").hidden) closeReceiptModal(); });
     document.addEventListener("click", e => {
       const dayBtn = e.target.closest("[data-sp-day]"); if (dayBtn) { moduleState.date = fromIso(dayBtn.dataset.spDay); moduleState.view = "day"; render(); return; }
       const dn = e.target.closest("[data-sp-done]"); if (dn) { openDoneModal(dn.dataset.spDone); return; }
       const xd = e.target.closest("[data-sp-exp-del]"); if (xd) { deleteExp(xd.dataset.spExpDel); return; }
       const ms = e.target.closest("[data-sp-miss]"); if (ms) { openMissModal(ms.dataset.spMiss); return; }
       const mv = e.target.closest("[data-sp-move]"); if (mv) { openMoveModal(mv.dataset.spMove); return; }
+      const pr = e.target.closest("[data-sp-print]"); if (pr) { printAppointmentNow(pr.dataset.spPrint); return; }
       const open = e.target.closest("[data-sp-open]"); if (open) openModal(open.dataset.date, open.dataset.time, open.dataset.spOpen);
       const select = e.target.closest("[data-sp-select]"); if (select) { moduleState.selectedId = select.dataset.spSelect; renderProposalList(); updateActionState(); }
       const edit = e.target.closest("[data-sp-edit]"); if (edit) openModal("", "", edit.dataset.spEdit);
@@ -6518,9 +6755,10 @@
     $("spEmployeeName").value = s.employeeName;
     $("spPhone").value = s.phone;
     $("spBusinessAddress").value = s.businessAddress;
+    $("spBossEmail").value = s.bossEmail || "";
   }
   function saveSettings() {
-    persist({ appointmentSettings: { ...settings(), businessName:$("spBusinessName").value.trim(), employeeName:$("spEmployeeName").value.trim(), phone:$("spPhone").value.trim(), businessAddress:$("spBusinessAddress").value.trim() } });
+    persist({ appointmentSettings: { ...settings(), businessName:$("spBusinessName").value.trim(), employeeName:$("spEmployeeName").value.trim(), phone:$("spPhone").value.trim(), businessAddress:$("spBusinessAddress").value.trim(), bossEmail:$("spBossEmail").value.trim() } });
   }
 
   function move(delta) {
@@ -6570,7 +6808,7 @@
     const inv = a.done && a.invoice ? ` · ${INV_SHORT[a.invoice] || ""}${a.invoice === "bar" && a.amount > 0 ? " " + fmtEUR(a.amount) : ""}` : "";
     const fu = a.missed ? followUpOf(a) : null;
     const missLabel = a.missed ? (fu ? `🚪 Nicht angetroffen · ${esc(attemptLabel(attemptOf(fu)))} am ${esc(shortDate(fu.date))}` : (attemptOf(a) >= 3 ? "🚪 Nicht angetroffen – letzte Anmeldung" : "🚪 Nicht angetroffen – neu anmelden")) : "🚪 Nicht angetroffen";
-    return `<div class="sp-appt-wrap">${btn}<div class="sp-appt-actions"><button type="button" class="sp-act${a.done ? " done" : ""}" data-sp-done="${esc(a.id)}">${a.done ? "✔ Erledigt" + esc(inv) : "☐ Erledigt?"}</button><button type="button" class="sp-act${a.missed ? " missed" : ""}" data-sp-miss="${esc(a.id)}">${missLabel}</button><button type="button" class="sp-act" data-sp-move="${esc(a.id)}">⇄ Verschieben</button></div></div>`;
+    return `<div class="sp-appt-wrap">${btn}<div class="sp-appt-actions"><button type="button" class="sp-act${a.done ? " done" : ""}" data-sp-done="${esc(a.id)}">${a.done ? "✔ Erledigt" + esc(inv) : "☐ Erledigt?"}</button><button type="button" class="sp-act${a.missed ? " missed" : ""}" data-sp-miss="${esc(a.id)}">${missLabel}</button><button type="button" class="sp-act" data-sp-move="${esc(a.id)}">⇄ Verschieben</button><button type="button" class="sp-act" data-sp-print="${esc(a.id)}">🖨 Drucken</button></div></div>`;
   }
   function freeTimeIn(day, hour) {
     const used = appointments().filter(a => a.date === day && Number(a.time.slice(0, 2)) === hour).map(a => a.time);
@@ -6620,8 +6858,82 @@
     }).join("")}</div>`;
   }
 
+
+  /* ================= Termine suchen (Name, Adresse, Kundennummer) ================= */
+  const foldA = t => String(t || "").toLowerCase().replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss");
+  const foldB = t => String(t || "").toLowerCase().replace(/ß/g, "ss").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  function searchHay(a) {
+    const raw = [a.customer, a.street, a.house, [a.street, a.house].filter(Boolean).join(" "), a.zip, a.city, [a.zip, a.city].filter(Boolean).join(" "), a.knr, a.notes, a.bossNote, a.date && shortDate(a.date)].filter(Boolean).join(" | ");
+    return foldA(raw) + " | " + foldB(raw);
+  }
+  function searchAppointments(q) {
+    const tokens = String(q || "").trim().split(/\s+/).filter(Boolean);
+    if (!tokens.length) return null;
+    const todayIso = iso(new Date());
+    const hits = appointments().filter(a => {
+      const hay = searchHay(a);
+      return tokens.every(t => hay.includes(foldA(t)) || hay.includes(foldB(t)));
+    });
+    const key = a => `${a.date} ${a.time || ""}`;
+    const upcoming = hits.filter(a => a.date >= todayIso).sort((x, y) => key(x).localeCompare(key(y)));
+    const past = hits.filter(a => a.date < todayIso).sort((x, y) => key(y).localeCompare(key(x)));
+    return upcoming.concat(past);
+  }
+  function renderSearch() {
+    const box = $("spSearchResults"), inp = $("spSearch");
+    if (!box || !inp) return;
+    const q = inp.value;
+    $("spSearchClear").hidden = !q;
+    const res = searchAppointments(q);
+    if (res === null) { box.hidden = true; box.innerHTML = ""; return; }
+    box.hidden = false;
+    if (!res.length) { box.innerHTML = '<div class="sp-search-empty">Kein Termin gefunden. Gesucht wird in Name, Straße, Hausnummer, PLZ, Ort, Kundennummer und Notizen.</div>'; return; }
+    const todayIso = iso(new Date()), MAX = 40;
+    const rows = res.slice(0, MAX).map(a => {
+      const addr = addrLine(a), att = attemptOf(a);
+      const state = a.done ? '<span class="sp-search-state done">✔ erledigt</span>' : a.missed ? '<span class="sp-search-state missed">🚪 nicht angetroffen</span>' : '<span class="sp-search-state">offen</span>';
+      const att2 = att > 1 ? `<span class="sp-search-state">${esc(attemptLabel(att))}</span>` : "";
+      return `<div class="sp-search-item${a.date < todayIso ? " past" : ""}" data-sp-goto="${esc(a.id)}" role="button" tabindex="0"><div class="sp-search-main"><strong>${esc(fmtDate(a.date))} · ${esc(a.time || "")} Uhr${state}${att2}</strong><span>${esc(a.customer || "Ohne Kundennamen")}${a.knr ? " · Kd-Nr " + esc(a.knr) : ""}${addr ? " – " + esc(addr) : ""}</span></div><button class="btn btn-light" type="button" data-sp-sedit="${esc(a.id)}">Bearbeiten</button></div>`;
+    }).join("");
+    box.innerHTML = `<div class="sp-search-head">${res.length} Treffer${res.length > MAX ? " (die ersten " + MAX + " – bitte genauer suchen)" : ""} · antippen zeigt den Termin im Kalender</div>${rows}`;
+  }
+  function gotoAppointment(id) {
+    const a = appointments().find(x => x.id === id);
+    if (!a) return;
+    moduleState.date = fromIso(a.date);
+    moduleState.selectedId = id;
+    moduleState.dayManual = false;
+    render();
+    requestAnimationFrame(() => {
+      const el = document.querySelector(`#spCalendar [data-sp-open="${(window.CSS && CSS.escape) ? CSS.escape(id) : id}"]`);
+      if (!el) return;
+      el.scrollIntoView({ block: "center", behavior: "smooth" });
+      el.classList.add("sp-flash");
+      setTimeout(() => el.classList.remove("sp-flash"), 2300);
+    });
+  }
+  function initSearch() {
+    const inp = $("spSearch"), box = $("spSearchResults");
+    if (!inp) return;
+    let t = null;
+    inp.addEventListener("input", () => { clearTimeout(t); t = setTimeout(renderSearch, 120); $("spSearchClear").hidden = !inp.value; });
+    inp.addEventListener("keydown", e => {
+      if (e.key === "Escape") { inp.value = ""; renderSearch(); }
+      if (e.key === "Enter") { e.preventDefault(); const first = box.querySelector("[data-sp-goto]"); if (first) gotoAppointment(first.dataset.spGoto); }
+    });
+    $("spSearchClear").addEventListener("click", () => { inp.value = ""; renderSearch(); inp.focus(); });
+    box.addEventListener("click", e => {
+      const ed = e.target.closest("[data-sp-sedit]"); if (ed) { e.stopPropagation(); openModal("", "", ed.dataset.spSedit); return; }
+      const row = e.target.closest("[data-sp-goto]"); if (row) gotoAppointment(row.dataset.spGoto);
+    });
+    box.addEventListener("keydown", e => {
+      if (e.key === "Enter" || e.key === " ") { const row = e.target.closest("[data-sp-goto]"); if (row && e.target === row) { e.preventDefault(); gotoAppointment(row.dataset.spGoto); } }
+    });
+  }
+
   function render() {
     if (!$('spCalendar')) return;
+    renderSearch();
     if ($("spDayDate") && !moduleState.dayManual) $("spDayDate").value = iso(moduleState.date);
     renderExpenses();
     const week = moduleState.view === "week";
@@ -6696,10 +7008,30 @@
   }
 
   /* Kundenverwaltung: Kunde wählen, Name und Adresse übernehmen */
+  /* Wunschzeit des gewählten Kunden prüfen */
+  function wishOk(c, date, time, dur) {
+    const wins = window.SPKunden.wishWindows(c, fromIso(date).getDay());
+    if (wins === null) return true;
+    const s = toMin(time);
+    return wins.some(([a, b]) => s >= a && s + dur <= b);
+  }
+  function updateWishHint() {
+    const el = $("spAptWishInfo");
+    if (!el) return;
+    const c = moduleState.aptCustomer && window.SPKunden ? window.SPKunden.get(moduleState.aptCustomer.id) : null;
+    const txt = c ? window.SPKunden.wishText(c) : "";
+    if (!txt) { el.hidden = true; return; }
+    const date = $("spAptDate").value, time = $("spAptTime").value;
+    const ok = !date || !time || wishOk(c, date, time, Number($("spAptDuration").value) || 15);
+    el.hidden = false;
+    el.style.color = ok ? "#2e6f45" : "#a02f2f";
+    el.textContent = (ok ? "✓ Passt zur Wunschzeit des Kunden: " : "⚠ Wunschzeit des Kunden: ") + txt + (ok ? "" : " – dieser Termin liegt außerhalb.");
+  }
   function showAptCustomerInfo() {
     const el = $("spAptCustomerInfo"); if (!el) return;
     const c = moduleState.aptCustomer;
     el.textContent = c && c.nr ? `Kd-Nr ${c.nr}` : "";
+    updateWishHint();
   }
   function pickCustomerForAppointment() {
     if (!window.SPKunden) return alert("Die Kundenverwaltung ist nicht geladen. Bitte die Seite neu laden.");
@@ -6840,6 +7172,7 @@
     $("spAutoDuration").value = p.duration || "15";
     $("spAutoMax").value = p.max || "";
     $("spAutoBreak").checked = p.pause !== false;
+    $("spAutoWish").checked = p.wish !== false;
     $("spAutoRoute").checked = p.route !== false;
     $("spAutoDrive").checked = p.drive !== false;
     $("spAutoSpeed").value = p.speed || 40;
@@ -7007,29 +7340,70 @@
     const durOf = k => { const l = autoWorkList(autoWork(k.id)); return l.length ? minutesForWorks(l) : dur; };
     /* Fahrtzeit je Kunde (vorher/nachher) gehört zur belegten Zeit */
     const tbOf = k => clampTravel(autoWork(k.id).tb), taOf = k => clampTravel(autoWork(k.id).ta);
-    let idx = 0, di = 0, o = startMin, prevK = null;   // o = Beginn der belegten Zeit (Fahrt vorher + Termin + Fahrt nachher)
-    while (idx < cand.length && di < days.length) {
-      const k = cand[idx], d = durOf(k), ta = taOf(k), st = dayState(days[di]);
-      /* Anfahrt: vom vorherigen Kunden des Tages, beim ersten Kunden vom Startpunkt */
-      const from = prevK || startPt;
+    const useWish = $("spAutoWish").checked;
+    const dayItems = {};   // Tag -> [{ k, e }]: Kunden mit Ende der belegten Zeit (für die Anfahrt vom vorherigen Kunden)
+    const prevOf = (key, o) => { let best = null; (dayItems[key] || []).forEach(it => { if (it.e <= o && (!best || it.e > best.e)) best = it; }); return best ? best.k : null; };
+    const driveFrom = (key, o, k) => {
+      const from = prevOf(key, o) || startPt;
       const km = from && hasLoc(from) && hasLoc(k) ? distKm(from, k) : 0;
-      const driveMinutes = driveOn && km > 0.05 ? Math.ceil(km * 1.3 / speed * 12) * 5 : 0;
-      const tb = Math.max(tbOf(k), driveMinutes), total = tb + d + ta;
-      if (maxDay && st.count >= maxDay) { di++; o = startMin; prevK = null; continue; }   // Tageslimit erreicht
+      const dm = driveOn && km > 0.05 ? Math.ceil(km * 1.3 / speed * 12) * 5 : 0;
+      return { km, tb: Math.max(tbOf(k), dm) };
+    };
+    const putItem = (key, st, k, o, total, d, tb, ta, km, wish) => {
+      st.busy.push({ s: o, e: o + total }); st.count++;
+      (dayItems[key] = dayItems[key] || []).push({ k, e: o + total });
+      res.placed.push({ k, date: key, time: fromMin(o + tb), dur: d, tb, ta, km: Math.round(km * 10) / 10, retry: retryInfo(k), wish });
+    };
+    const inPause = (o, total) => pause && o < BREAK_TO && o + total > BREAK_FROM;
+
+    /* 1) Kunden mit Wunschzeiten zuerst in ihre Zeitfenster legen */
+    const wishers = useWish && window.SPKunden ? cand.filter(k => Array.isArray(k.wishes) && k.wishes.length) : [];
+    const queue = cand.filter(k => !wishers.includes(k));
+    res.wishFailed = [];
+    wishers.forEach(k => {
+      const d = durOf(k), ta = taOf(k);
+      let done = false;
+      for (let i = 0; i < days.length && !done; i++) {
+        const key = days[i], wins = window.SPKunden.wishWindows(k, fromIso(key).getDay());
+        if (!wins || !wins.length) continue;
+        const st = dayState(key);
+        if (maxDay && st.count >= maxDay) continue;
+        for (const [wf, wt] of wins) {
+          let s = Math.max(wf, startMin);
+          for (let guard = 0; guard < 400 && s + d <= wt && s + d + ta <= endMin; guard++) {
+            const { km, tb } = driveFrom(key, s, k), o = s - tb, total = tb + d + ta;
+            if (o < startMin) { s = startMin + tb; continue; }
+            if (inPause(o, total)) { s = BREAK_TO + tb; continue; }
+            const clash = st.busy.find(b => o < b.e && o + total > b.s);
+            if (clash) { s = clash.e + tb; continue; }
+            putItem(key, st, k, o, total, d, tb, ta, km, true); done = true; break;
+          }
+          if (done) break;
+        }
+      }
+      if (!done) res.wishFailed.push(k);
+    });
+
+    /* 2) Alle übrigen Kunden der Reihe nach (Route) in die verbleibenden Lücken */
+    let idx = 0, di = 0, o = startMin;
+    while (idx < queue.length && di < days.length) {
+      const k = queue[idx], d = durOf(k), ta = taOf(k), key = days[di], st = dayState(key);
+      if (maxDay && st.count >= maxDay) { di++; o = startMin; continue; }   // Tageslimit erreicht
       let placed = false;
-      while (o + total <= endMin) {
-        if (pause && o < BREAK_TO && o + total > BREAK_FROM) { o = BREAK_TO; continue; }   // Pause: danach weiter
+      for (;;) {
+        const { km, tb } = driveFrom(key, o, k), total = tb + d + ta;
+        if (o + total > endMin) break;
+        if (inPause(o, total)) { o = BREAK_TO; continue; }   // Pause: danach weiter
         const clash = st.busy.find(b => o < b.e && o + total > b.s);
         if (clash) { o = clash.e; continue; }
-        st.busy.push({ s: o, e: o + total });
-        st.count++;
-        res.placed.push({ k, date: days[di], time: fromMin(o + tb), dur: d, tb, ta, km: Math.round(km * 10) / 10, retry: retryInfo(k) });
-        o += total; idx++; placed = true; prevK = k;
+        putItem(key, st, k, o, total, d, tb, ta, km, false);
+        o += total; idx++; placed = true;
         break;
       }
-      if (!placed) { di++; o = startMin; prevK = null; }
+      if (!placed) { di++; o = startMin; }
     }
-    res.unplaced = cand.slice(idx);
+    res.placed.sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+    res.unplaced = queue.slice(idx);
     return res;
   }
 
@@ -7063,12 +7437,13 @@
       let day = "";
       plan.placed.forEach(p => {
         if (p.date !== day) { day = p.date; html += `<div class="sp-auto-day">${esc(fmtDate(day))}</div>`; }
-        html += `<div class="sp-auto-line sp-auto-cust" data-kid="${esc(p.k.id)}"><span class="sp-auto-time">${esc(p.time)}</span><span class="sp-auto-who"><span>${esc(p.k.name)} – ${esc(addrLine(p.k))}<small class="sp-muted"> (${p.dur} Min.${p.tb || p.ta ? ` · 🚗 ${p.tb}/${p.ta}` : ""}${p.km ? ` · ${String(p.km).replace(".", ",")} km` : ""})</small>${p.retry ? `<span class="sp-badge">${attemptLabel(p.retry.attempt)}</span>` : ""}</span><span class="sp-auto-works">${chipsHtml(p.k.id)}</span></span></div>`;
+        html += `<div class="sp-auto-line sp-auto-cust" data-kid="${esc(p.k.id)}"><span class="sp-auto-time">${esc(p.time)}</span><span class="sp-auto-who"><span>${esc(p.k.name)} – ${esc(addrLine(p.k))}<small class="sp-muted"> (${p.dur} Min.${p.tb || p.ta ? ` · 🚗 ${p.tb}/${p.ta}` : ""}${p.km ? ` · ${String(p.km).replace(".", ",")} km` : ""})</small>${p.retry ? `<span class="sp-badge">${attemptLabel(p.retry.attempt)}</span>` : ""}${p.wish ? `<span class="sp-badge sp-badge-wish">⏰ ${esc(window.SPKunden.wishText(p.k))}</span>` : ""}</span><span class="sp-auto-works">${chipsHtml(p.k.id)}</span></span></div>`;
       });
       html += `</div>`;
     }
     if (plan.unplaced.length) html += `<div class="sp-auto-warn">Für ${plan.unplaced.length} Kunden ist im gewählten Zeitraum kein freier Platz mehr (${plan.unplaced.slice(0, 3).map(k => esc(k.name)).join(", ")}${plan.unplaced.length > 3 ? " …" : ""}). Verlängere den Zeitraum oder die tägliche Zeit.</div>`;
     if (plan.skipped.length) html += `<div class="sp-auto-warn">${plan.skipped.length} ${plan.skipped.length === 1 ? "Kunde hat" : "Kunden haben"} im Zeitraum schon einen Termin und ${plan.skipped.length === 1 ? "wird" : "werden"} übersprungen (${plan.skipped.slice(0, 3).map(k => esc(k.name)).join(", ")}${plan.skipped.length > 3 ? " …" : ""}).</div>`;
+    if ((plan.wishFailed || []).length) html += `<div class="sp-auto-warn">Für ${plan.wishFailed.length} ${plan.wishFailed.length === 1 ? "Kunden passt" : "Kunden passt"} keine Wunschzeit in den gewählten Zeitraum (${plan.wishFailed.slice(0, 3).map(k => esc(k.name) + " – " + esc(window.SPKunden.wishText(k))).join("; ")}${plan.wishFailed.length > 3 ? " …" : ""}). Verlängere den Zeitraum oder schalte „Wunschzeiten beachten“ aus.</div>`;
     if (plan.exhausted.length) html += `<div class="sp-auto-warn">${plan.exhausted.length} ${plan.exhausted.length === 1 ? "Kunde wurde" : "Kunden wurden"} bei der 3. und letzten Anmeldung nicht angetroffen und ${plan.exhausted.length === 1 ? "wird" : "werden"} nicht erneut eingeplant (${plan.exhausted.slice(0, 3).map(k => esc(k.name)).join(", ")}${plan.exhausted.length > 3 ? " …" : ""}).</div>`;
     box.innerHTML = html;
   }
@@ -7084,7 +7459,7 @@
       return { id: uuid(), date, time, customer: k.name, street: k.street, house: k.house, zip: k.zip, city: k.city, duration: p.dur || dur, notes: k.notes || "", works: autoWorkList(w), workOther: w.other ? w.text.trim() : "", kid: k.id, knr: k.nr, ...(k.bossNote ? { bossNote: k.bossNote } : {}), ...(p.tb ? { travelBefore: p.tb } : {}), ...(p.ta ? { travelAfter: p.ta } : {}), ...(p.retry ? { attempt: p.retry.attempt, prevId: p.retry.prevId } : {}), auto: batch, updatedAt: now };
     });
     persist({ appointments: appointments().concat(items) });
-    autoSavePrefs({ lastBatch: batch, start: $("spAutoStart").value, end: $("spAutoEnd").value, duration: String(dur), pause: $("spAutoBreak").checked, max: plan.maxDay || "", route: $("spAutoRoute").checked, drive: $("spAutoDrive").checked, speed: Number($("spAutoSpeed").value) || 40 });
+    autoSavePrefs({ lastBatch: batch, start: $("spAutoStart").value, end: $("spAutoEnd").value, duration: String(dur), pause: $("spAutoBreak").checked, max: plan.maxDay || "", wish: $("spAutoWish").checked, route: $("spAutoRoute").checked, drive: $("spAutoDrive").checked, speed: Number($("spAutoSpeed").value) || 40 });
     moduleState.date = fromIso(items[0].date);
     moduleState.view = "week";
     closeAutoModal();
@@ -7162,6 +7537,8 @@
     $("spDoneNote").value = a.bossNote || "";
     const cash = !!a.done && a.invoice === "bar";
     $("spCashBox").hidden = !cash;
+    $("spReceiptOpen").hidden = !cash;
+    $("spReceiptOpen").textContent = a.receiptNo ? "🧾 Quittung " + a.receiptNo + " erneut drucken" : "🧾 Quittung erstellen";
     $("spCashAmount").value = cash && a.amount > 0 ? String(a.amount).replace(".", ",") : "";
     $("spDoneModal").hidden = false;
     if (cash) $("spCashAmount").focus();
@@ -7186,11 +7563,13 @@
     document.querySelectorAll(".sp-inv").forEach(b => b.classList.toggle("on", b.dataset.inv === "bar"));
     $("spCashAmount").focus();
   }
-  function saveCash() {
+  function saveCash(forReceipt) {
     const n = parseAmount($("spCashAmount").value);
-    if (Number.isNaN(n)) return alert("Bitte einen gültigen Betrag eingeben, z. B. 85,50.");
-    if (n === null && !confirm("Ohne Betrag speichern? Er fehlt dann in der Bar-Summe.")) return;
+    if (Number.isNaN(n)) { alert("Bitte einen gültigen Betrag eingeben, z. B. 85,50."); return false; }
+    if (forReceipt === true && !(n > 0)) { alert("Für die Quittung wird der bezahlte Betrag benötigt."); return false; }
+    if (n === null && !confirm("Ohne Betrag speichern? Er fehlt dann in der Bar-Summe.")) return false;
     setDone("bar", n);
+    return true;
   }
   function saveBossNoteOnly() {
     const id = moduleState.doneId, bn = $("spDoneNote").value.trim();
@@ -7317,8 +7696,10 @@
     const wd = fromIso(date).getDay();
     const clash = overlapWith(date, time, dur, a.id, tb, ta);
     const msg = [];
+    const kc = a && a.kid && window.SPKunden ? window.SPKunden.get(a.kid) : null;
     if (holiday) msg.push(`Feiertag: ${holiday} – an Feiertagen kann kein Termin liegen.`);
     else {
+      if (kc && window.SPKunden.wishText(kc) && !wishOk(kc, date, time, dur)) msg.push(`Außerhalb der Wunschzeit des Kunden (${window.SPKunden.wishText(kc)}).`);
       if (wd === 0 || wd === 6) msg.push("Der gewählte Tag ist ein Wochenende.");
       if (clash) msg.push(`Überschneidung mit dem Termin um ${clash.time} Uhr (${clash.customer || "ohne Namen"}). Die anderen Termine bleiben unverändert, auch deine Uhrzeit.`);
     }
@@ -7419,7 +7800,7 @@
 
     const biz = [s.businessName, s.employeeName].filter(Boolean).join(" · ");
     const cols = [
-      { w: 26, h: "" }, { w: 56, h: "Uhrzeit" }, { w: DONE ? 182 : 196, h: "Kunde / Adresse" }, { w: DONE ? 108 : 118, h: "Tätigkeit" }, { w: CW - 26 - 56 - (DONE ? 182 : 196) - (DONE ? 108 : 118), h: DONE ? "Rechnung" : "Hinweis" }
+      { w: 26, h: "" }, { w: 56, h: "Uhrzeit" }, { w: 54, h: "Kd-Nr" }, { w: DONE ? 162 : 172, h: "Kunde / Adresse" }, { w: DONE ? 100 : 108, h: "Tätigkeit" }, { w: CW - 26 - 56 - 54 - (DONE ? 162 : 172) - (DONE ? 100 : 108), h: DONE ? "Rechnung" : "Hinweis" }
     ];
     const padX = 5, padY = 5;
 
@@ -7449,7 +7830,6 @@
       minH: Math.max(10, 24 * (fs - 0.55) / 0.45),
       compact: fs < 0.88,
       notes: fs >= 0.96 ? 99 : fs >= 0.9 ? 3 : fs >= 0.8 ? 2 : fs >= 0.72 ? 1 : 0,
-      kd: fs >= 0.78,
       extra: fs >= 0.88
     });
     const HDR_END = MT + 28 + 14 + 8 + 10 + 18;
@@ -7461,7 +7841,7 @@
       const out = lines.slice(0, n);
       if (out.length) {
         let t = out[out.length - 1];
-        while (t.length > 1 && wid(t + "…", bold, size) > cols[4].w - 2 * padX) t = t.slice(0, -1);
+        while (t.length > 1 && wid(t + "…", bold, size) > cols[5].w - 2 * padX) t = t.slice(0, -1);
         out[out.length - 1] = t + "…";
       }
       return out;
@@ -7470,7 +7850,7 @@
     const makeRows = (list, lv, kind) => list.map(a => {
       const k = a.kid && window.SPKunden ? window.SPKunden.get(a.kid) : null;
       const fs = lv.fs;
-      const wWho = cols[2].w - 2 * padX, wWork = cols[3].w - 2 * padX, wNote = cols[4].w - 2 * padX;
+      const wWho = cols[3].w - 2 * padX, wWork = cols[4].w - 2 * padX, wNote = cols[5].w - 2 * padX;
       const addr = [[a.street, a.house].filter(Boolean).join(" "), [a.zip, a.city].filter(Boolean).join(" ")].filter(Boolean);
 
       const cTime = [line1(a.time, 10.5 * fs, true)];
@@ -7504,12 +7884,11 @@
         const n = attemptOf(a), fu = followUpOf(a);
         wrap("nicht angetroffen (" + attemptLabel(n) + ")", 9 * fs, true, wNote).forEach(t => cNote.push(line1(t, 9 * fs, true, "#8a4b00")));
         cNote.push(fu ? line1("neu angemeldet am " + shortDate(fu.date), 8.4 * fs, false) : line1(n >= 3 ? "letzte Anmeldung – keine weitere" : "noch nicht neu angemeldet", 8.4 * fs, true, "#a02f2f"));
-        if (lv.kd && a.knr) cNote.push(line1("Kd-Nr " + a.knr, 7.8 * fs, false, "#8a9199"));
       } else if (DONE) {
         const lab = a.invoice ? INV_LABEL[a.invoice] : "nicht angegeben";
         wrap(lab, 9 * fs, !!a.invoice, wNote).forEach(t => cNote.push(line1(t, 9 * fs, !!a.invoice, a.invoice ? undefined : "#a02f2f")));
         if (a.invoice === "bar") cNote.push(a.amount > 0 ? line1(fmtEUR(a.amount), 9.6 * fs, true) : line1("Betrag fehlt", 8.6 * fs, true, "#a02f2f"));
-        if (lv.kd && a.knr) cNote.push(line1("Kd-Nr " + a.knr, 7.8 * fs, false, "#8a9199"));
+        if (a.invoice === "bar" && a.receiptNo && fs >= 0.78) cNote.push(line1("Quittung " + a.receiptNo, 7.8 * fs, false, "#4f5962"));
       } else {
       if (k && k.phone) cNote.push(line1("Tel. " + k.phone, 8.6 * fs, true));
       if (clampTravel(a.travelBefore) || clampTravel(a.travelAfter)) cNote.push(line1("Fahrt: " + clampTravel(a.travelBefore) + " Min. vorher · " + clampTravel(a.travelAfter) + " Min. nachher", 8.2 * fs, false, "#4f5962"));
@@ -7521,10 +7900,14 @@
         cNote = ph.concat(clip(rest, Math.max(0, lv.notes - (ph.length ? 0 : 0)), 8.4 * fs, false));
         if (lv.notes === 0) cNote = ph;
       }
-      if (lv.kd && a.knr) cNote.push(line1("Kd-Nr " + a.knr, 7.8 * fs, false, "#8a9199"));
       }
 
-      const cells = [[], cTime, cWho, cWork, cNote];
+      /* Kundennummer: eigene Spalte, bleibt bei jeder Zeilendichte sichtbar */
+      const knr = String(a.knr || (k && k.nr) || "").trim();
+      let kSz = 8.8 * Math.max(fs, 0.8);
+      while (knr && kSz > 5 && wid(knr, true, kSz) > cols[2].w - 2 * padX) kSz -= 0.2;
+      const cKd = [knr ? line1(knr, kSz, true) : line1("–", 8.4 * fs, false, "#8a9199")];
+      const cells = [[], cTime, cKd, cWho, cWork, cNote];
       const inner = Math.max(lv.minH, ...cells.map(c => c.reduce((n, l) => n + lead(l), 0)));
       /* Bemerkung für den Chef: nur in der Chef-Liste, über die ganze Breite unter dem Termin */
       const sub = DONE && a.bossNote ? wrap("Bemerkung: " + a.bossNote, 8.4 * fs, false, CW - cols[0].w - 2 * padX).map(t => line1(t, 8.4 * fs, false, "#7a4600")) : [];
@@ -7668,6 +8051,235 @@
     return new Blob([bytes], { type: "application/pdf" });
   }
 
+  /* ================= Quittung für Barzahlung ================= */
+  const EU_UNITS = ["null","ein","zwei","drei","vier","fünf","sechs","sieben","acht","neun","zehn","elf","zwölf","dreizehn","vierzehn","fünfzehn","sechzehn","siebzehn","achtzehn","neunzehn"];
+  const EU_TENS = ["","","zwanzig","dreißig","vierzig","fünfzig","sechzig","siebzig","achtzig","neunzig"];
+  function wordsBelow100(n) { return n < 20 ? EU_UNITS[n] : (n % 10 ? EU_UNITS[n % 10] + "und" : "") + EU_TENS[Math.floor(n / 10)]; }
+  function wordsBelow1000(n) { const h = Math.floor(n / 100), r = n % 100; return (h ? EU_UNITS[h] + "hundert" : "") + (r ? wordsBelow100(r) : ""); }
+  function wordsInt(n) {
+    if (n === 0) return "null";
+    const th = Math.floor(n / 1000), r = n % 1000;
+    return (th ? (th === 1 ? "ein" : wordsBelow1000(th)) + "tausend" : "") + (r ? wordsBelow1000(r) : "");
+  }
+  /* 85,50 -> „Fünfundachtzig Euro und fünfzig Cent“ */
+  function eurInWords(amount) {
+    const total = Math.round(Number(amount) * 100), euro = Math.floor(total / 100), cent = total % 100;
+    let t = wordsInt(euro) + " Euro";
+    if (cent) t += " und " + wordsBelow100(cent) + " Cent";
+    return t.charAt(0).toUpperCase() + t.slice(1);
+  }
+  const VAT_MODES = { "19": "19 % Umsatzsteuer", "7": "7 % Umsatzsteuer", "0": "Kleinunternehmer (§ 19 UStG, keine Umsatzsteuer)" };
+
+  function openReceiptModal(id) {
+    const a = appointments().find(x => x.id === id);
+    if (!a) return;
+    const s = settings();
+    moduleState.receiptId = id;
+    $("spRcWho").textContent = [a.customer || "Ohne Namen", a.knr ? "Kd-Nr " + a.knr : ""].filter(Boolean).join(" · ");
+    $("spRcAmount").value = a.amount > 0 ? String(a.amount).replace(".", ",") : "";
+    $("spRcWork").value = a.receiptWork || worksText(a).join(", ") || "Schornsteinfegerarbeiten";
+    $("spRcServiceDate").value = a.date || iso(new Date());
+    $("spRcDate").value = a.receiptDate || iso(new Date());
+    $("spRcTaxNo").value = s.taxNo || "";
+    $("spRcVatId").value = s.vatId || "";
+    $("spRcVat").value = VAT_MODES[a.receiptVat] ? a.receiptVat : (VAT_MODES[s.vatMode] ? s.vatMode : "19");
+    $("spRcCopy").checked = s.receiptCopy !== false;
+    $("spRcNo").textContent = a.receiptNo ? "Quittungsnummer " + a.receiptNo + " (bereits vergeben – bleibt beim erneuten Drucken gleich)" : "Die Quittungsnummer wird beim Erstellen automatisch vergeben.";
+    updateReceiptWarn();
+    $("spReceiptModal").hidden = false;
+    if (!($("spRcAmount").value)) $("spRcAmount").focus();
+  }
+  function closeReceiptModal() { $("spReceiptModal").hidden = true; moduleState.receiptId = null; }
+  function updateReceiptWarn() {
+    const s = settings(), miss = [];
+    if (!s.businessName && !s.employeeName) miss.push("Betrieb / Name");
+    if (!s.businessAddress) miss.push("Betriebsanschrift");
+    if (!$("spRcTaxNo").value.trim() && !$("spRcVatId").value.trim() && $("spRcVat").value !== "0") miss.push("Steuernummer oder USt-IdNr");
+    else if (!$("spRcTaxNo").value.trim() && !$("spRcVatId").value.trim()) miss.push("Steuernummer");
+    $("spRcWarn").hidden = !miss.length;
+    $("spRcWarn").textContent = miss.length ? "Es fehlt noch: " + miss.join(", ") + (miss.some(m => m.startsWith("Betrieb")) ? " (Betrieb, Mitarbeiter und Anschrift trägst du im Planer bei „Betrieb“ ein)." : ".") : "";
+  }
+  function createReceipt() {
+    const id = moduleState.receiptId;
+    const a = appointments().find(x => x.id === id);
+    if (!a) return;
+    const amount = parseAmount($("spRcAmount").value);
+    if (amount === null || Number.isNaN(amount) || amount <= 0) return alert("Bitte den bezahlten Betrag eingeben, z. B. 85,50.");
+    const work = $("spRcWork").value.trim() || "Schornsteinfegerarbeiten";
+    const vat = $("spRcVat").value, date = $("spRcDate").value || iso(new Date());
+    const sDate = $("spRcServiceDate").value || a.date;
+    const copy = $("spRcCopy").checked;
+    const cur = settings();
+    const year = Number(date.slice(0, 4)) || new Date().getFullYear();
+    let no = a.receiptNo, counter = cur.receiptCounter && typeof cur.receiptCounter === "object" ? { ...cur.receiptCounter } : {};
+    if (!no) {
+      counter[year] = (Number(counter[year]) || 0) + 1;
+      no = "Q-" + year + "-" + String(counter[year]).padStart(4, "0");
+    }
+    persist({
+      appointmentSettings: { ...cur, taxNo: $("spRcTaxNo").value.trim(), vatId: $("spRcVatId").value.trim(), vatMode: vat, receiptCopy: copy, receiptCounter: counter },
+      appointments: appointments().map(x => x.id === id ? { ...x, amount, receiptNo: no, receiptDate: date, receiptWork: work, receiptVat: vat } : x)
+    });
+    const cust = a.kid && window.SPKunden ? window.SPKunden.get(a.kid) : null;
+    const blob = buildReceiptPdf({
+      no, date, serviceDate: sDate, work, amount, vat, copy,
+      customer: a.customer || "", street: [a.street, a.house].filter(Boolean).join(" "), city: [a.zip, a.city].filter(Boolean).join(" "),
+      knr: String(a.knr || (cust && cust.nr) || "").trim()
+    }, settings());
+    const name = "Quittung_" + no + ".pdf";
+    closeReceiptModal(); render();
+    if (window.navigator.standalone === true || isIOSDevice()) sharePdf(blob, name); else openPdfTab(blob, name);
+  }
+
+  function buildReceiptPdf(r, s) {
+    const W = 595.28, H = 841.89, ML = 40, CW = W - 2 * ML;
+    const cpMap = { "€": 0x80, "„": 0x84, "…": 0x85, "‘": 0x91, "’": 0x92, "“": 0x93, "”": 0x94, "•": 0x95, "–": 0x96, "—": 0x97 };
+    const nz = str => {
+      let o = "";
+      for (const ch of String(str ?? "")) {
+        const c = ch.codePointAt(0);
+        if (c < 32) o += " ";
+        else if (c < 128 || (c >= 160 && c <= 255) || cpMap[ch]) o += ch;
+        else if (ch === "−") o += "-";
+        else { const d = ch.normalize("NFKD").replace(/[^\x20-\x7e]/g, ""); o += d || "?"; }
+      }
+      return o;
+    };
+    const enc = str => { let o = ""; for (const ch of str) o += cpMap[ch] ? String.fromCharCode(cpMap[ch]) : ch; return o.replace(/([\\()])/g, "\\$1"); };
+    const cv = document.createElement("canvas").getContext("2d");
+    const wid = (str, bold, size) => { cv.font = (bold ? "bold " : "") + "100px Helvetica, Arial, sans-serif"; return cv.measureText(nz(str)).width * size / 100 * 1.02; };
+    const col = hex => { const n = parseInt(hex.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(v => (v / 255).toFixed(3)).join(" "); };
+    const f = v => Number(v).toFixed(2);
+    const wrap = (str, size, bold, maxW) => {
+      const out = [];
+      String(str ?? "").split(/\r?\n/).forEach(par => {
+        let ln = "";
+        par.split(/\s+/).filter(Boolean).forEach(w => {
+          const t = ln ? ln + " " + w : w;
+          if (!ln || wid(t, bold, size) <= maxW) ln = t; else { out.push(ln); ln = w; }
+        });
+        out.push(ln);
+      });
+      return out;
+    };
+    const ops = [];
+    const T = (x, y, str, o = {}) => {
+      const size = o.size || 10, bold = !!o.bold;
+      let px = x;
+      if (o.align === "right") px = x - wid(str, bold, size);
+      ops.push("BT /" + (bold ? "F2" : "F1") + " " + size + " Tf " + col(o.color || "#22272d") + " rg " + f(px) + " " + f(H - y) + " Td (" + enc(nz(str)) + ") Tj ET");
+    };
+    const R = (x, y, w, h, o = {}) => {
+      const fill = o.fill ? col(o.fill) + " rg " : "";
+      const stroke = o.stroke ? col(o.stroke) + " RG " + (o.lw || 0.8) + " w " : "";
+      ops.push(fill + stroke + f(x) + " " + f(H - y - h) + " " + f(w) + " " + f(h) + " re " + (o.fill && o.stroke ? "B" : o.fill ? "f" : "S"));
+    };
+    const L = (x1, y1, x2, y2, color, lw, dash) => ops.push((dash ? "[" + dash + "] 0 d " : "[] 0 d ") + col(color) + " RG " + lw + " w " + f(x1) + " " + f(H - y1) + " m " + f(x2) + " " + f(H - y2) + " l S");
+
+    const fmtD = v => { const m = String(v || "").match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? m[3] + "." + m[2] + "." + m[1] : String(v || ""); };
+    const eur = n => Number(n).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+    const rate = r.vat === "7" ? 0.07 : r.vat === "19" ? 0.19 : 0;
+    const gross = Math.round(r.amount * 100) / 100;
+    const net = rate ? Math.round(gross / (1 + rate) * 100) / 100 : gross;
+    const tax = Math.round((gross - net) * 100) / 100;
+    const biz = s.businessName || s.employeeName || "";
+
+    /* ein Quittungsblock; top = obere Kante, label = Exemplar-Hinweis */
+    const block = (top, label) => {
+      let y = top;
+      T(ML, y + 16, "QUITTUNG", { size: 22, bold: true });
+      T(ML + CW, y + 8, "Nr. " + r.no, { size: 11, bold: true, align: "right" });
+      T(ML + CW, y + 21, label, { size: 8, color: "#6c757d", align: "right" });
+      y += 30;
+      L(ML, y, ML + CW, y, "#c79a42", 1.4);
+      y += 14;
+
+      /* Aussteller links, Kunde rechts */
+      const colW = CW / 2 - 12, xR = ML + CW / 2 + 12;
+      let yl = y, yr = y;
+      T(ML, yl + 8, "AUSSTELLER", { size: 7.5, bold: true, color: "#9a7220" }); yl += 20;
+      const issuer = [];
+      if (biz) issuer.push({ t: biz, b: true });
+      if (s.businessName && s.employeeName) issuer.push({ t: s.employeeName });
+      if (s.businessAddress) wrap(s.businessAddress, 9.5, false, colW).forEach(t => issuer.push({ t }));
+      if (s.phone) issuer.push({ t: "Tel. " + s.phone });
+      if (s.taxNo) issuer.push({ t: "Steuernummer: " + s.taxNo, b: true });
+      if (s.vatId) issuer.push({ t: "USt-IdNr.: " + s.vatId, b: true });
+      if (!issuer.length) issuer.push({ t: "(Betrieb im Planer eintragen)", c: "#a02f2f" });
+      issuer.forEach(l => { T(ML, yl, l.t, { size: 9.5, bold: l.b, color: l.c }); yl += 12.5; });
+
+      T(xR, yr + 8, "ZAHLER / KUNDE", { size: 7.5, bold: true, color: "#9a7220" }); yr += 20;
+      const cl = [];
+      if (r.customer) wrap(r.customer, 10, true, colW).forEach(t => cl.push({ t, b: true }));
+      if (r.street) cl.push({ t: r.street });
+      if (r.city) cl.push({ t: r.city });
+      if (r.knr) cl.push({ t: "Kundennummer: " + r.knr, b: true });
+      cl.forEach(l => { T(xR, yr, l.t, { size: 9.5, bold: l.b }); yr += 12.5; });
+      y = Math.max(yl, yr) + 8;
+
+      /* Leistung */
+      R(ML, y, CW, 17, { fill: "#eef0f2" });
+      T(ML + 6, y + 12, "Leistung", { size: 8.4, bold: true, color: "#4f5962" });
+      T(ML + CW - 6, y + 12, "Leistungsdatum: " + fmtD(r.serviceDate), { size: 8.4, bold: true, color: "#4f5962", align: "right" });
+      y += 17;
+      const wl = wrap(r.work, 10, false, CW - 12).slice(0, 4);
+      wl.forEach(t => { y += 13; T(ML + 6, y, t, { size: 10 }); });
+      y += 10;
+      L(ML, y, ML + CW, y, "#d5d9dd", 0.6);
+      y += 12;
+
+      /* Beträge */
+      const xv = ML + CW - 6;
+      if (rate) {
+        T(ML + 6, y + 9, "Nettobetrag", { size: 9.5 }); T(xv, y + 9, eur(net), { size: 9.5, align: "right" }); y += 14;
+        T(ML + 6, y + 9, "zzgl. " + r.vat + " % Umsatzsteuer", { size: 9.5 }); T(xv, y + 9, eur(tax), { size: 9.5, align: "right" }); y += 14;
+      } else {
+        T(ML + 6, y + 9, "Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.", { size: 9, color: "#4f5962" }); y += 14;
+      }
+      R(ML, y + 2, CW, 24, { fill: "#f4f5f6" });
+      T(ML + 6, y + 18.5, "Gesamtbetrag (bar bezahlt)", { size: 10.5, bold: true });
+      T(xv, y + 19, eur(gross), { size: 14, bold: true, align: "right" });
+      y += 32;
+
+      const confirm = "Den Betrag von " + eur(gross) + " (in Worten: " + eurInWords(gross) + ") habe ich in bar erhalten. Betrag dankend erhalten.";
+      wrap(confirm, 9.5, false, CW).forEach(t => { y += 13; T(ML, y, t, { size: 9.5 }); });
+      y += 30;
+
+      /* Ort/Datum + Unterschrift */
+      L(ML, y, ML + 170, y, "#22272d", 0.7);
+      L(ML + CW - 200, y, ML + CW, y, "#22272d", 0.7);
+      T(ML, y + 10, "Ort, " + fmtD(r.date), { size: 8, color: "#6c757d" });
+      T(ML + CW - 200, y + 10, "Unterschrift" + (s.employeeName ? " (" + s.employeeName + ")" : "") + " / Stempel", { size: 8, color: "#6c757d" });
+    };
+
+    const HALF = H / 2;
+    block(34, r.copy ? "Original für den Kunden" : "");
+    if (r.copy) {
+      L(ML - 10, HALF, W - ML + 10, HALF, "#9aa1a8", 0.6, "4 3");
+      T(W - ML, HALF - 3, "Hier abtrennen", { size: 7.5, color: "#9aa1a8", align: "right" });
+      block(HALF + 24, "Durchschrift für den Betrieb");
+    }
+
+    const stream = ops.join("\n");
+    const objs = [
+      "<< /Type /Catalog /Pages 2 0 R >>",
+      "<< /Type /Pages /Kids [5 0 R] /Count 1 >>",
+      "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+      "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>",
+      "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + W + " " + H + "] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 6 0 R >>",
+      "<< /Length " + stream.length + " >>\nstream\n" + stream + "\nendstream"
+    ];
+    let pdf = "%PDF-1.4\n%âãÏÓ\n";
+    const offs = [];
+    objs.forEach((o, i) => { offs.push(pdf.length); pdf += (i + 1) + " 0 obj\n" + o + "\nendobj\n"; });
+    const xr = pdf.length;
+    pdf += "xref\n0 " + (objs.length + 1) + "\n0000000000 65535 f \n" + offs.map(o => String(o).padStart(10, "0") + " 00000 n \n").join("") +
+      "trailer\n<< /Size " + (objs.length + 1) + " /Root 1 0 R >>\nstartxref\n" + xr + "\n%%EOF";
+    const bytes = new Uint8Array(pdf.length);
+    for (let i = 0; i < pdf.length; i++) bytes[i] = pdf.charCodeAt(i) & 255;
+    return new Blob([bytes], { type: "application/pdf" });
+  }
+
   function openPdfTab(blob, name) {
     const url = URL.createObjectURL(blob);
     const w = window.open(url, "_blank");
@@ -7675,7 +8287,7 @@
     setTimeout(() => URL.revokeObjectURL(url), 10 * 60 * 1000);
   }
 
-  function printDays(dates, mode) {
+  function printDays(dates, mode, deliver = true) {
     const all = appointments();
     const done = mode === "done";
     const days = dates.map(date => {
@@ -7694,7 +8306,63 @@
       : (dates.length === 1 ? "Für diesen Tag sind keine Termine eingetragen." : "Im gewählten Zeitraum sind keine Termine eingetragen."));
     const blob = buildDayPdf(days, settings(), mode);
     const name = (done ? "Erledigt-Liste_" : "Tagesuebersicht_") + days[0].date + (days.length > 1 ? "_bis_" + days[days.length - 1].date : "") + ".pdf";
+    if (!deliver) return { blob, name, days };
     if (window.navigator.standalone === true || isIOSDevice()) sharePdf(blob, name); else openPdfTab(blob, name);
+  }
+
+  /* ================= Erledigt-Liste per E-Mail an den Chef ================= */
+  function mailStatus(msg) { const el = $("spMailStatus"); el.textContent = msg; el.hidden = !msg; }
+  function doneDatesFor(range) {
+    if (!range) { const d = $("spDayDate").value; if (!d) { alert("Bitte einen Tag wählen."); return null; } return [d]; }
+    const from = $("spProposalFrom").value, to = $("spProposalTo").value;
+    if (!from || !to || from > to) { alert("Bitte oben bei „Von“ und „Bis“ einen gültigen Zeitraum wählen."); return null; }
+    const dates = [];
+    for (let d = fromIso(from); iso(d) <= to; d = addDays(d, 1)) dates.push(iso(d));
+    return dates;
+  }
+  async function mailDone(range) {
+    const to = ($("spBossEmail").value || "").trim();
+    if (!/^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]{2,}$/.test(to)) {
+      alert("Bitte zuerst oben die E-Mail-Adresse des Chefs eintragen.");
+      $("spBossEmail").scrollIntoView({ block: "center" }); $("spBossEmail").focus();
+      return;
+    }
+    const dates = doneDatesFor(range);
+    if (!dates) return;
+    const doc = printDays(dates, "done", false);
+    if (!doc) return;
+    const s = settings(), days = doc.days;
+    const first = days[0].date, last = days[days.length - 1].date;
+    const when = first === last ? shortDate(first) : shortDate(first) + " bis " + shortDate(last);
+    const who = s.employeeName || s.businessName || "";
+    let count = 0, bar = 0, barMissing = 0, exp = 0;
+    days.forEach(d => { count += d.items.length; (d.expenses || []).forEach(x => { exp += x.amount; }); d.items.forEach(a => { if (a.invoice === "bar") { if (a.amount > 0) bar += a.amount; else barMissing++; } }); });
+    const subject = "Erledigt-Liste " + when + (who ? " – " + who : "");
+    const lines = ["Hallo,", "", "anbei die Erledigt-Liste für " + (first === last ? "den " : "den Zeitraum ") + when + ".", "", "Erledigte Termine: " + count];
+    if (bar > 0 || barMissing) lines.push("Bar kassiert: " + fmtEUR(bar) + (barMissing ? " (bei " + barMissing + " Termin" + (barMissing > 1 ? "en" : "") + " fehlt der Betrag)" : ""));
+    if (exp > 0) lines.push("Ausgaben aus Bareinnahmen: " + fmtEUR(exp), "Bar abzuliefern: " + fmtEUR(bar - exp));
+    lines.push("", "Viele Grüße", who);
+    const body = lines.join("\n");
+
+    const file = new File([doc.blob], doc.name, { type: "application/pdf" });
+    try {
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try { await navigator.clipboard.writeText(to); } catch (e) {}
+        mailStatus("Wähle im Teilen-Fenster dein E-Mail-Programm. Die Adresse des Chefs (" + to + ") ist in die Zwischenablage kopiert – falls sie nicht eingetragen ist, einfach einfügen.");
+        await navigator.share({ files: [file], title: subject, text: body });
+        return;
+      }
+    } catch (err) {
+      if (err && err.name === "AbortError") { mailStatus(""); return; }
+    }
+    /* Ohne Teilen-Funktion (z. B. manche PC-Browser): PDF speichern und die Mail mit Empfänger, Betreff und Text öffnen */
+    const url = URL.createObjectURL(doc.blob);
+    const link = document.createElement("a");
+    link.href = url; link.download = doc.name;
+    document.body.appendChild(link); link.click(); link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    mailStatus("Die PDF-Datei „" + doc.name + "“ wurde gespeichert (Ordner „Downloads“). Bitte in der gleich geöffneten E-Mail als Anhang einfügen.");
+    setTimeout(() => { window.location.href = "mailto:" + encodeURIComponent(to).replace(/%40/g, "@") + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body); }, 400);
   }
   function printDay() {
     const d = $("spDayDate").value;
@@ -7716,7 +8384,8 @@
     printDays([d], "done");
   }
 
-  function saveAppointment() {
+  function saveAppointment(opts) {
+    const doPrint = !!(opts && opts.print === true);
     const date=$("spAptDate").value, time=$("spAptTime").value;
     if (!date || !time) return alert("Bitte Datum und Uhrzeit angeben.");
     const holiday=holidayMap(new Date(date).getFullYear()).get(date);
@@ -7725,7 +8394,15 @@
     if (clash && !confirm(`Der Termin überschneidet sich mit dem Termin um ${clash.time} Uhr (${clash.customer || "ohne Namen"}). Trotzdem speichern?`)) return;
     const item={ id:moduleState.editingId || uuid(), date,time, customer:$("spAptCustomer").value.trim(), street:$("spAptStreet").value.trim(), house:$("spAptHouse").value.trim(), zip:$("spAptZip").value.trim(), city:$("spAptCity").value.trim(), duration:Number($("spAptDuration").value)||15, notes:$("spAptNotes").value.trim(), bossNote:$("spAptBossNote").value.trim(), travelBefore:clampTravel($("spAptTravelB").value), travelAfter:clampTravel($("spAptTravelA").value), works:selectedWorks(), workOther:$("spWorkOtherText").value.trim(), kid:moduleState.aptCustomer?.id||"", knr:moduleState.aptCustomer?.nr||"", ...(moduleState.pendingRetry && !moduleState.editingId ? { attempt: moduleState.pendingRetry.attempt, prevId: moduleState.pendingRetry.prevId } : {}), updatedAt:new Date().toISOString() };
     const list=appointments(); const idx=list.findIndex(x=>x.id===item.id); if(idx>=0) list[idx]={ ...list[idx], ...item }; else list.push(item);
-    persist({appointments:list}); moduleState.selectedId=item.id; moduleState.date=fromIso(date); closeModal(); render(); warnStale(item.id);
+    persist({appointments:list}); moduleState.selectedId=item.id; moduleState.date=fromIso(date); closeModal(); render();
+    if (doPrint) printAppointmentNow(item.id); else warnStale(item.id);
+  }
+  /* Einzelnen Termin direkt drucken (A5 auf halber A4-Seite), ohne vorher auswählen zu müssen */
+  function printAppointmentNow(id) {
+    const a = appointments().find(x => x.id === id);
+    if (!a) return;
+    moduleState.selectedId = id;
+    printProposals([a], true, "Terminvorschlag_" + a.date + ".pdf");
   }
   function deleteAppointment() {
     if (!moduleState.editingId) return;
@@ -7805,6 +8482,15 @@
     #spPrintRoot .biz-role { margin-top: .8mm; font-size: 8.5pt; color: #6c757d; }
     #spPrintRoot .biz-addr { margin-top: 1.8mm; font-size: 8.5pt; line-height: 1.35; color: #444; }
     #spPrintRoot .kicker { margin-top: 5.5mm; font-size: 9.5pt; font-weight: 700; color: #9a7220; }
+    #spPrintRoot .kicker.last { font-size: 14pt; color: #b3261e; letter-spacing: .01em; }
+    #spPrintRoot .warn3 { margin-top: 3.5mm; padding: 2.6mm 3.6mm; border: .6mm solid #b3261e; border-radius: 1.5mm; background: #fdecec; color: #5c120d; font-size: 10.5pt; line-height: 1.4; }
+    #spPrintRoot .warn3 strong { display: block; margin-bottom: .8mm; font-size: 12pt; color: #b3261e; }
+    #spPrintRoot .sheet.t1 .kicker.last { font-size: 13pt; }
+    #spPrintRoot .sheet.t1 .warn3 { margin-top: 2.6mm; padding: 2mm 3mm; font-size: 9.8pt; }
+    #spPrintRoot .sheet.t2 .kicker.last { font-size: 12pt; }
+    #spPrintRoot .sheet.t2 .warn3 { margin-top: 2mm; padding: 1.6mm 2.6mm; font-size: 9pt; line-height: 1.32; }
+    #spPrintRoot .sheet.t2 .warn3 strong { font-size: 10.5pt; }
+    #spPrintRoot .sheet.t3 .warn3 { margin-top: 1.5mm; padding: 1.2mm 2.4mm; font-size: 8.4pt; line-height: 1.28; }
     #spPrintRoot h1 { margin-top: 1mm; font-size: 19pt; line-height: 1.15; font-weight: 700; letter-spacing: -.01em; color: #22272d; }
     #spPrintRoot .letter { margin-top: 4.5mm; font-size: 9.5pt; line-height: 1.5; }
     #spPrintRoot .letter p { margin-bottom: 2.2mm; }
@@ -7869,12 +8555,24 @@
   function fitSheets(root) {
     const prev = root.getAttribute("style");
     root.style.cssText = "display:block;position:fixed;left:-10000px;top:0;visibility:hidden;";
+    const fits = sh => {
+      const limit = sh.getBoundingClientRect().bottom - parseFloat(getComputedStyle(sh).paddingBottom);
+      return sh.lastElementChild.getBoundingClientRect().bottom <= limit + 1;
+    };
     root.querySelectorAll(".sheet").forEach(sh => {
+      let ok = false;
       for (const cls of ["", "t1", "t2", "t3"]) {
         sh.classList.remove("t1", "t2", "t3");
         if (cls) sh.classList.add(cls);
-        const limit = sh.getBoundingClientRect().bottom - parseFloat(getComputedStyle(sh).paddingBottom);
-        if (sh.lastElementChild.getBoundingClientRect().bottom <= limit + 1) break;
+        if (fits(sh)) { ok = true; break; }
+      }
+      /* Reicht auch die engste Stufe nicht (viel Text, z. B. 3. Anmeldung + Hinweise), wird der Inhalt stufenlos verkleinert */
+      if (!ok) {
+        const kids = [...sh.children];
+        for (let z = 0.96; z >= 0.55; z = Math.round((z - 0.03) * 100) / 100) {
+          kids.forEach(el => { el.style.zoom = z; });
+          if (fits(sh)) break;
+        }
       }
     });
     if (prev === null) root.removeAttribute("style"); else root.setAttribute("style", prev);
@@ -7960,7 +8658,7 @@
     d.bizAddr.split(/\r?\n/).filter(Boolean).forEach((ln, i) => { y += i ? 11 : 15; T(ML, y, ln, { size: 8.5, color: "#444444" }); });
     y += 10; L(ML, y, ML + CW, y, "#c79a42", 1.4);
 
-    y += g(26); T(ML, y, "Terminvorschlag" + (d.attempt > 1 ? " · " + attemptLabel(d.attempt) : ""), { size: 9.5, bold: true, color: "#9a7220" });
+    y += g(26); T(ML, y, "Terminvorschlag" + (d.attempt > 1 ? " · " + attemptLabel(d.attempt) : ""), d.last ? { size: 14, bold: true, color: "#b3261e" } : { size: 9.5, bold: true, color: "#9a7220" });
     y += g(25); T(ML, y, "Ihr Schornsteinfeger kommt …", { size: 19, bold: true });
 
     // Brieftext
@@ -7994,6 +8692,17 @@
       y = flow([{ t: "Hinweis:", b: true }, ...words(notesTxt)], ML + 12, y, CW - 24, 9, 12) - 12;
     }
     y += g(12); R(ML, top, CW, y - top, { stroke: "#22272d", lw: 1.1 });
+    if (d.last) {
+      const toks = [{ t: "3. und letzte Anmeldung!", b: true }, ...words("Nach dem Schornsteinfeger-Handwerksgesetz (SchfHwG, § 1 Abs. 1) sind Sie als Eigentümer verpflichtet, die im Feuerstättenbescheid festgelegten Arbeiten durchführen zu lassen.", true)];
+      y += g(14);
+      const keepOps3 = ops; ops = [];
+      const ey3 = flow(toks, ML + 12, y + 17, CW - 24, 10.6, 13.6);
+      ops = keepOps3;
+      const hh3 = (ey3 - (y + 17)) + 12;
+      R(ML, y, CW, hh3, { fill: "#fdecec", stroke: "#b3261e", lw: 1.6 });
+      flow(toks, ML + 12, y + 17, CW - 24, 10.6, 13.6);
+      y += hh3;
+    }
     if (d.hint) {
       const toks = [{ t: "Hinweis zur Feststoffmessung:", b: true }, ...words(d.hint)];
       y += g(14);
@@ -8095,6 +8804,7 @@
       notes: a.notes || "",
       works: proposalWorks(a),
       attempt: attemptOf(a),
+      last: attemptOf(a) >= 3,
       hint: Array.isArray(a.works) && a.works.includes("feststoff") ? "Die Messung dauert ca. " + durText(workMinutesCfg().feststoff) + ". Bitte bereiten Sie Ihren Pelletkessel bzw. Scheitholzkessel für die Messung vor." : ""
     };
   }
@@ -8122,6 +8832,7 @@
       : "";
     const notes = d.notes ? `<div class="notes"><strong>Hinweis:</strong> ${esc(d.notes)}</div>` : "";
     const bizAddr = d.bizAddr ? `<div class="biz-addr">${esc(d.bizAddr)}</div>` : "";
+    const warn3 = d.last ? `<div class="warn3"><strong>3. und letzte Anmeldung!</strong> Nach dem Schornsteinfeger-Handwerksgesetz (SchfHwG, § 1 Abs. 1) sind Sie als Eigentümer verpflichtet, die im Feuerstättenbescheid festgelegten Arbeiten durchführen zu lassen.</div>` : "";
     const hint = d.hint ? `<div class="hint"><strong>Hinweis zur Feststoffmessung:</strong> ${esc(d.hint)}</div>` : "";
     return `
       <div class="sheet">
@@ -8133,7 +8844,7 @@
           </div>
         </div>
 
-        <div class="kicker">Terminvorschlag${d.attempt > 1 ? " · " + attemptLabel(d.attempt) : ""}</div>
+        <div class="kicker${d.last ? " last" : ""}">Terminvorschlag${d.attempt > 1 ? " · " + attemptLabel(d.attempt) : ""}</div>
         <h1>Ihr Schornsteinfeger kommt …</h1>
 
         <div class="letter">
@@ -8154,6 +8865,7 @@
           </div>
         </div>
         ${hint}
+        ${warn3}
 
         <div class="contact">Sollten Sie an diesem Termin verhindert sein, rufen Sie mich bitte an – wir vereinbaren gerne einen alternativen Termin. Sie erreichen mich unter:</div>
         <div class="phone"><span class="lbl">Telefon</span><span class="num">${phone}</span></div>
