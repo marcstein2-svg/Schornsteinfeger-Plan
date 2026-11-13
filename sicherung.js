@@ -235,6 +235,7 @@
   css.textContent =
     ".sg-menu{position:relative;margin-left:auto;z-index:99999}" +
     ".sg-menu + .legal-menu{margin-left:0}" +
+    ".sg-menu .nav-ic{margin-right:0}" +
     ".sg-dot{display:none;width:8px;height:8px;border-radius:50%;background:#f0a63a;margin-left:2px}" +
     ".sg-menu.warn .sg-dot{display:inline-block}" +
     ".sg-dropdown{position:absolute;top:calc(100% + 4px);right:0;width:320px;padding:12px;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 15px 35px rgba(0,0,0,.22);z-index:999999;color:var(--text)}" +
@@ -256,7 +257,7 @@
 
   menu.innerHTML =
     '<button class="legal-button" id="sgButton" type="button" aria-expanded="false" aria-haspopup="true">' +
-    "\u{1F4BE} Datensicherung" +
+    '<span class="nav-ic" aria-hidden="true">\u{1F4BE}</span>Sicherung' +
     '<span class="sg-dot" aria-hidden="true"></span>' +
     '<span class="legal-arrow" aria-hidden="true">\u25BC</span>' +
     "</button>" +
