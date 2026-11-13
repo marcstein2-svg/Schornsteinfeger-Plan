@@ -1384,7 +1384,51 @@
     .sp-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
     .sp-business-grid { margin-top: 12px; }
     .sp-proposal-list { display: grid; gap: 7px; margin: 12px 0; max-height: 260px; overflow: auto; }
-    .sp-search { margin-bottom: 12px; }
+    /* ===== Übersichtlichere Planer-Seite ===== */
+    .sr-only { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .sp-fixed > summary { display: none !important; }
+    .sp-collapse-main.sp-fixed > .sp-planning-appointments { margin-top: 0; }
+    .sp-collapse-inner.sp-fixed { border: 0; background: transparent; box-shadow: none; }
+    .sp-collapse-inner.sp-fixed > .sp-collapse-body { padding: 0; }
+    .sp-search { margin-bottom: 10px; }
+    .sp-search-row input { min-height: 44px; -webkit-appearance: none; appearance: none; border: 1px solid var(--border); border-radius: 10px; padding: 0 12px; background: #fff; font: inherit; }
+    .sp-search-row input:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+    .sp-appt-actions .sp-act { min-height: 34px; padding: 4px 9px; font-size: .76rem; }
+    .sp-toolbar { gap: 10px; padding: 10px 12px; align-items: center; }
+    .sp-toolbar strong { min-width: 0; margin-left: 6px; }
+    .sp-toolbar .sp-nav-group { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+    .sp-toolbar .sp-seg { display: flex; gap: 0; }
+    .sp-toolbar .sp-seg .btn { border-radius: 0; }
+    .sp-toolbar .sp-seg .btn:first-child { border-radius: 9px 0 0 9px; }
+    .sp-toolbar .sp-seg .btn:last-child { border-radius: 0 9px 9px 0; margin-left: -1px; }
+    .sp-toolbar .sp-actions-row { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 8px; padding-top: 10px; border-top: 1px solid var(--border); }
+    .sp-toolbar .sp-actions-row .btn { min-height: 42px; }
+    .sp-toolbar .sp-actions-row .sp-minor { font-size: .82rem; padding-left: 12px; padding-right: 12px; }
+    .sp-legend-d { margin-bottom: 10px; font-size: .85rem; }
+    .sp-legend-d > summary { cursor: pointer; color: var(--muted); font-weight: 650; padding: 4px 2px; list-style: none; }
+    .sp-legend-d > summary::before { content: "ℹ "; }
+    .sp-legend-d > summary::-webkit-details-marker { display: none; }
+    .sp-legend-d[open] > summary { margin-bottom: 6px; }
+    .sp-secondary-stack { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+    .sp-block { margin-top: 12px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: #fbfbfc; }
+    .sp-block:first-child { margin-top: 0; }
+    .sp-block h4 { margin: 0 0 10px; font-size: .98rem; }
+    .sp-btnrow { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 8px; margin-top: 8px; }
+    .sp-btnrow .btn { width: 100%; justify-content: center; min-height: 44px; }
+    .sp-appt-actions { align-items: flex-start; }
+    details.sp-more { display: inline-block; }
+    details.sp-more[open] { display: block; flex: 1 0 100%; }
+    details.sp-more[open] > summary { margin-bottom: 0; }
+    details.sp-more > summary { list-style: none; display: inline-flex; align-items: center; }
+    details.sp-more > summary::-webkit-details-marker { display: none; }
+    details.sp-more[open] > summary { border-color: var(--gold); background: #fffaf0; }
+    .sp-more-menu { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    @media (max-width: 760px) {
+      .sp-toolbar .sp-actions-row .btn-gold, .sp-toolbar .sp-actions-row .btn-primary { flex: 1 1 100%; }
+      .sp-toolbar .sp-actions-row .sp-minor { flex: 1 1 calc(50% - 4px); }
+      .sp-btnrow { grid-template-columns: 1fr; }
+    }
+    .sp-search-old { margin-bottom: 12px; }
     .sp-search label { display: block; font-weight: 700; font-size: .9rem; margin-bottom: 6px; }
     .sp-search-row { display: flex; gap: 8px; }
     .sp-search-row input { flex: 1; min-width: 0; }
@@ -1843,7 +1887,7 @@
 
     <!-- PLANUNG & TERMINE (einklappbar) -->
 
-    <details class="sp-collapse sp-collapse-main" id="planung-termine" data-sp-collapse="main" open>
+    <details class="sp-collapse sp-collapse-main sp-fixed" id="planung-termine" open>
       <summary>
         <span aria-hidden="true">📋</span>
         <span>Planung &amp; Termine</span>
@@ -1860,20 +1904,7 @@
       id="terminplanung"
     >
 
-      <div class="sp-card-header">
-        <div>
-          <span class="sp-eyebrow">📅 Terminplanung</span>
-          <h2>Kalender</h2>
-          <p>Plane Kundentermine lokal im Browser. Die Dauer richtet sich nach den Tätigkeiten.</p>
-        </div>
-        <div class="sp-calendar-actions">
-          <button class="btn btn-light" type="button" id="spBackupData">💾 Daten sichern</button>
-          <label class="btn btn-light sp-file-label" for="spRestoreData">📂 Daten wiederherstellen</label>
-          <input id="spRestoreData" type="file" accept="application/json,.json" hidden>
-        </div>
-      </div>
-
-      <details class="sp-collapse sp-collapse-inner" data-sp-collapse="overview" open>
+      <details class="sp-collapse sp-collapse-inner sp-fixed" open>
         <summary>
           <span aria-hidden="true">🗓</span>
           <span>Terminübersicht</span>
@@ -1883,103 +1914,131 @@
         <div class="sp-collapse-body">
 
       <div class="sp-search">
-        <label for="spSearch">🔍 Termin suchen – nach Name, Straße, Ort oder Kundennummer</label>
+        <label for="spSearch" class="sr-only">Termin suchen – nach Name, Straße, Ort oder Kundennummer</label>
         <div class="sp-search-row">
-          <input id="spSearch" type="search" autocomplete="off" placeholder="z. B. Müller oder Hauptstraße 12" enterkeyhint="search">
+          <input id="spSearch" type="search" autocomplete="off" placeholder="🔍 Termin suchen – Name, Straße, Ort, Kundennummer" enterkeyhint="search">
           <button class="btn btn-light" type="button" id="spSearchClear" hidden>✕ Leeren</button>
         </div>
         <div class="sp-search-results" id="spSearchResults" hidden></div>
       </div>
 
       <div class="sp-toolbar">
-        <div class="sp-toolbar-group">
+        <div class="sp-toolbar-group sp-nav-group">
           <button class="btn btn-light" type="button" id="spPrevPeriod">‹</button>
           <button class="btn btn-light" type="button" id="spToday">Heute</button>
           <button class="btn btn-light" type="button" id="spNextPeriod">›</button>
           <strong id="spCalendarTitle"></strong>
         </div>
-        <div class="sp-toolbar-group">
+        <div class="sp-toolbar-group sp-seg">
           <button class="btn btn-light sp-view-btn active" type="button" data-sp-view="day">Tag</button>
           <button class="btn btn-light sp-view-btn" type="button" data-sp-view="week">Woche</button>
-          <button class="btn btn-light" type="button" id="spToggleEmpty">Freie Stunden zeigen</button>
-          <button class="btn btn-light" type="button" id="spMapRoute">🗺 Route des Tages</button>
-          <button class="btn btn-light" type="button" id="spAutoOpen">⚡ Termine automatisch einplanen</button>
+        </div>
+        <div class="sp-toolbar-group sp-actions-row">
           <button class="btn btn-gold" type="button" id="spNewAppointment">+ Termin</button>
+          <button class="btn btn-primary" type="button" id="spAutoOpen">⚡ Termine automatisch einplanen</button>
+          <button class="btn btn-light sp-minor" type="button" id="spMapRoute">🗺 Route des Tages</button>
+          <button class="btn btn-light sp-minor" type="button" id="spToggleEmpty">Freie Stunden zeigen</button>
         </div>
       </div>
 
-      <div class="sp-legend" id="spLegend"><b>Kürzel:</b> <span><b>K</b> Kehren</span> <span><b>M</b> Messen</span> <span><b>MK</b> Messen + Kehren</span> <span><b>FSS</b> Feuerstättenschau</span> <span><b>MK+FSS</b> Messen, Kehren + Feuerstättenschau</span> <span><b>FSM</b> Feststoffmessung</span> <span><b>S</b> Sonderarbeit</span></div>
+      <details class="sp-legend-d"><summary>Kürzel erklärt (K, M, MK, FSS …)</summary><div class="sp-legend" id="spLegend"><span><b>K</b> Kehren</span> <span><b>M</b> Messen</span> <span><b>MK</b> Messen + Kehren</span> <span><b>FSS</b> Feuerstättenschau</span> <span><b>MK+FSS</b> Messen, Kehren + Feuerstättenschau</span> <span><b>FSM</b> Feststoffmessung</span> <span><b>S</b> Sonderarbeit</span></div></details>
       <div class="sp-calendar-notice" id="spCalendarNotice" hidden></div>
       <div class="sp-calendar" id="spCalendar"></div>
 
         </div>
       </details>
 
-      <div class="sp-secondary-grid">
-        <details class="sp-collapse sp-collapse-inner" data-sp-collapse="proposal">
+      <div class="sp-secondary-stack">
+        <details class="sp-collapse sp-collapse-inner" data-sp-collapse="print">
           <summary>
             <span aria-hidden="true">🖨</span>
-            <span>Terminvorschlag drucken</span>
+            <span>Drucken &amp; Listen</span>
+            <span class="sp-collapse-hint">Anmeldezettel · Tagesübersicht · Erledigt-Liste</span>
             <span class="sp-chevron" aria-hidden="true"></span>
           </summary>
           <div class="sp-collapse-body">
-          <p class="sp-muted">Wähle einen Zeitraum. Du kannst einen einzelnen Termin als A5-Blatt drucken (er steht auf der linken Hälfte einer A4-Seite im Querformat) oder alle Termine des Zeitraums gesammelt (2 Terminvorschläge pro A4-Seite quer). Falls dein Browser nicht automatisch auf Querformat stellt, wähle es im Druckdialog.</p>
-          <div class="sp-form-grid">
-            <div class="field"><label for="spProposalFrom">Von</label><input id="spProposalFrom" type="date"></div>
-            <div class="field"><label for="spProposalTo">Bis</label><input id="spProposalTo" type="date"></div>
-          </div>
-          <div id="spProposalList" class="sp-proposal-list"></div>
-          <div class="sp-form-grid sp-business-grid">
-            <div class="field"><label for="spBusinessName">Betrieb</label><input id="spBusinessName" type="text" placeholder="Name des Schornsteinfegerbetriebs"></div>
-            <div class="field"><label for="spEmployeeName">Mitarbeiter</label><input id="spEmployeeName" type="text" placeholder="Name des Mitarbeiters"></div>
-            <div class="field"><label for="spPhone">Telefon</label><input id="spPhone" type="tel" placeholder="Telefonnummer"></div>
-            <div class="field"><label for="spBusinessAddress">Betriebsanschrift</label><input id="spBusinessAddress" type="text" placeholder="Straße, PLZ Ort"></div>
-            <div class="field"><label for="spBossEmail">E-Mail-Adresse des Chefs (für die Erledigt-Liste)</label><input id="spBossEmail" type="email" autocomplete="off" placeholder="chef@beispiel.de"></div>
-          </div>
-          <div class="sp-day-print">
-            <div class="field"><label for="spDayDate">Tag für Tagesübersicht / Erledigt-Liste</label><input id="spDayDate" type="date"></div>
-            <div class="form-actions">
-              <button class="btn btn-primary" type="button" id="spPrintDay">📋 Tagesübersicht drucken</button>
-              <button class="btn btn-light" type="button" id="spPrintDays">📋 Alle Tage im Zeitraum (je Tag ein Blatt)</button>
-              <button class="btn btn-gold" type="button" id="spPrintDone">✅ Erledigt-Liste drucken (für den Chef)</button>
-              <button class="btn btn-light" type="button" id="spPrintDoneRange">✅ Erledigt-Liste für den Zeitraum</button>
-              <button class="btn btn-primary" type="button" id="spMailDone">✉ Erledigt-Liste per E-Mail an den Chef</button>
-              <button class="btn btn-light" type="button" id="spMailDoneRange">✉ … für den Zeitraum per E-Mail</button>
+            <div class="sp-block sp-print-range">
+              <h4>Zeitraum und Tag wählen</h4>
+              <div class="sp-form-grid">
+                <div class="field"><label for="spProposalFrom">Von</label><input id="spProposalFrom" type="date"></div>
+                <div class="field"><label for="spProposalTo">Bis</label><input id="spProposalTo" type="date"></div>
+                <div class="field"><label for="spDayDate">Einzelner Tag</label><input id="spDayDate" type="date"></div>
+              </div>
+              <p class="sp-muted" style="margin:8px 0 0">„Von / Bis“ gilt für alle Knöpfe mit „Zeitraum“, „Einzelner Tag“ für die Tages-Knöpfe.</p>
             </div>
-            <p class="sp-muted" id="spMailStatus" hidden style="margin:8px 0 0"></p>
-            <div class="sp-exp-box">
-              <div class="sp-works-title">Ausgaben aus den Bareinnahmen (z. B. Tanken) – werden in der Erledigt-Liste abgezogen</div>
-              <div id="spExpList"></div>
-              <button class="btn btn-light" type="button" id="spExpAdd" style="margin-top:8px">＋ Ausgabe eintragen</button>
+
+            <div class="sp-block">
+              <h4>🖨 Anmeldezettel für Kunden</h4>
+              <p class="sp-muted" style="margin:0 0 8px">Ein Termin als A5-Blatt (halbe A4-Seite im Querformat) oder alle Termine des Zeitraums, 2 pro A4-Seite. Einzelne Termine druckst du am schnellsten direkt im Kalender mit „🖨 Drucken“.</p>
+              <div id="spProposalList" class="sp-proposal-list"></div>
+              <div class="sp-btnrow">
+                <button class="btn btn-primary" type="button" id="spPrintProposal" disabled>🖨 Ausgewählten Termin drucken</button>
+                <button class="btn btn-gold" type="button" id="spPrintRange">🖨 Alle Termine im Zeitraum (2 pro A4)</button>
+              </div>
+            </div>
+
+            <div class="sp-block">
+              <h4>📋 Tagesübersicht für dich</h4>
+              <div class="sp-btnrow">
+                <button class="btn btn-primary" type="button" id="spPrintDay">📋 Tagesübersicht drucken</button>
+                <button class="btn btn-light" type="button" id="spPrintDays">📋 Alle Tage im Zeitraum (je Tag ein Blatt)</button>
+              </div>
+            </div>
+
+            <div class="sp-block">
+              <h4>✅ Erledigt-Liste für den Chef</h4>
+              <div class="sp-btnrow">
+                <button class="btn btn-gold" type="button" id="spPrintDone">✅ Erledigt-Liste drucken</button>
+                <button class="btn btn-light" type="button" id="spPrintDoneRange">✅ Zeitraum drucken</button>
+                <button class="btn btn-primary" type="button" id="spMailDone">✉ Per E-Mail an den Chef</button>
+                <button class="btn btn-light" type="button" id="spMailDoneRange">✉ Zeitraum per E-Mail</button>
+              </div>
+              <p class="sp-muted" id="spMailStatus" hidden style="margin:8px 0 0"></p>
+              <div class="field" style="margin-top:12px"><label for="spBossEmail">E-Mail-Adresse des Chefs</label><input id="spBossEmail" type="email" autocomplete="off" placeholder="chef@beispiel.de"></div>
+              <div class="sp-exp-box">
+                <div class="sp-works-title">Ausgaben aus den Bareinnahmen (z. B. Tanken) – werden in der Erledigt-Liste abgezogen</div>
+                <div id="spExpList"></div>
+                <button class="btn btn-light" type="button" id="spExpAdd" style="margin-top:8px">＋ Ausgabe eintragen</button>
+              </div>
             </div>
           </div>
-          <div class="form-actions">
-            <button class="btn btn-primary" type="button" id="spPrintProposal" disabled>🖨 Ausgewählten Termin drucken (A5 auf halber A4-Seite)</button>
-            <button class="btn btn-gold" type="button" id="spPrintRange">🖨 Alle Termine im Zeitraum drucken (2 pro A4)</button>
-            <button class="btn btn-light" type="button" id="spExportSelectedIcs" disabled>📅 Diesen Termin exportieren</button>
+        </details>
+
+        <details class="sp-collapse sp-collapse-inner" data-sp-collapse="settings">
+          <summary>
+            <span aria-hidden="true">⚙</span>
+            <span>Betrieb &amp; Angaben</span>
+            <span class="sp-chevron" aria-hidden="true"></span>
+          </summary>
+          <div class="sp-collapse-body">
+            <p class="sp-muted">Diese Angaben stehen auf Anmeldezetteln, Listen und Quittungen. Sie werden automatisch gespeichert.</p>
+            <div class="sp-form-grid sp-business-grid">
+              <div class="field"><label for="spBusinessName">Betrieb</label><input id="spBusinessName" type="text" placeholder="Name des Schornsteinfegerbetriebs"></div>
+              <div class="field"><label for="spEmployeeName">Mitarbeiter</label><input id="spEmployeeName" type="text" placeholder="Name des Mitarbeiters"></div>
+              <div class="field"><label for="spPhone">Telefon</label><input id="spPhone" type="tel" placeholder="Telefonnummer"></div>
+              <div class="field"><label for="spBusinessAddress">Betriebsanschrift</label><input id="spBusinessAddress" type="text" placeholder="Straße, PLZ Ort"></div>
+            </div>
           </div>
-        </div></details>
+        </details>
 
         <details class="sp-collapse sp-collapse-inner" data-sp-collapse="export">
           <summary>
             <span aria-hidden="true">📅</span>
-            <span>Kalender-Export &amp; Datensicherung</span>
+            <span>Kalender-Export</span>
             <span class="sp-chevron" aria-hidden="true"></span>
           </summary>
           <div class="sp-collapse-body">
-          <p class="sp-muted">Exportiere einen einzelnen Termin oder alle Termine eines frei gewählten Zeitraums für Android, iOS und andere Kalenderprogramme.</p>
-          <div class="sp-form-grid">
-            <div class="field"><label for="spExportFrom">Von</label><input id="spExportFrom" type="date"></div>
-            <div class="field"><label for="spExportTo">Bis</label><input id="spExportTo" type="date"></div>
+            <p class="sp-muted">Exportiere einen einzelnen Termin oder alle Termine eines Zeitraums für Android, iOS und andere Kalenderprogramme.</p>
+            <div class="sp-form-grid">
+              <div class="field"><label for="spExportFrom">Von</label><input id="spExportFrom" type="date"></div>
+              <div class="field"><label for="spExportTo">Bis</label><input id="spExportTo" type="date"></div>
+            </div>
+            <div class="sp-btnrow" style="margin-top:10px">
+              <button class="btn btn-gold" type="button" id="spExportRangeIcs">📅 Zeitraum als Kalender exportieren</button>
+              <button class="btn btn-light" type="button" id="spExportSelectedIcs" disabled>📅 Ausgewählten Termin exportieren</button>
+            </div>
           </div>
-          <div class="form-actions">
-            <button class="btn btn-gold" type="button" id="spExportRangeIcs">📅 Zeitraum als Kalender exportieren</button>
-          </div>
-          <div class="sp-backup-note">
-            <strong>Lokale Datensicherung</strong><br>
-            Termine, Betriebseinstellungen und die vorhandenen Planungsdaten bleiben auf diesem Gerät. Über „Daten sichern“ kannst du eine vollständige JSON-Sicherung erzeugen und später wieder importieren.
-          </div>
-        </div></details>
+        </details>
       </div>
 
     </section>
@@ -2260,6 +2319,22 @@
         >
           Leistung speichern
         </button>
+
+      </div>
+
+      <div class="auto-count" style="margin:14px 0;padding:12px 14px;border:1px solid var(--border);border-radius:12px;background:#f7faf8">
+
+        <label style="display:flex;gap:8px;align-items:center;font-weight:700;cursor:pointer">
+          <input type="checkbox" id="countDoneApts">
+          Erledigte Termine aus dem Terminplaner automatisch anrechnen
+        </label>
+
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px">
+          <label for="amountPerApt" style="font-size:.9rem">Menge je erledigtem Termin</label>
+          <input id="amountPerApt" type="text" inputmode="decimal" autocomplete="off" style="width:90px">
+        </div>
+
+        <p id="autoCountInfo" style="margin:8px 0 0;font-size:.86rem;color:var(--muted)"></p>
 
       </div>
 
@@ -3736,6 +3811,12 @@
     appointments:
       [],
 
+    countDoneAppointments:
+      true,
+
+    amountPerAppointment:
+      1,
+
     appointmentSettings:
       {
         businessName: "",
@@ -3862,6 +3943,14 @@
         "click",
         savePerformance
       );
+
+    document
+      .getElementById("countDoneApts")
+      .addEventListener("change", onAutoCountChange);
+
+    document
+      .getElementById("amountPerApt")
+      .addEventListener("change", onAutoCountChange);
 
     document
       .getElementById("addFreeDay")
@@ -5721,11 +5810,78 @@
      BERECHNUNGEN
   ===================================================== */
 
+  /* Erledigte Termine aus dem Terminplaner (frisch aus dem Speicher gelesen) zählen als Leistung */
+  function doneAppointmentEntries(
+    data = plan
+  ) {
+
+    const countOn =
+      data.countDoneAppointments !== undefined
+        ? data.countDoneAppointments
+        : plan.countDoneAppointments;
+
+    if (countOn === false) {
+      return [];
+    }
+
+    let apps = [];
+
+    try {
+      const stored =
+        JSON.parse(
+          localStorage.getItem(STORAGE_KEY) || "{}"
+        ) || {};
+
+      apps = Array.isArray(stored.appointments)
+        ? stored.appointments
+        : [];
+    } catch (error) {
+      apps = [];
+    }
+
+    const f = Number(
+      data.amountPerAppointment !== undefined
+        ? data.amountPerAppointment
+        : plan.amountPerAppointment
+    );
+    const amount = Number.isFinite(f) && f >= 0 ? f : 1;
+    const year = String(data.year || "");
+    const start = String(data.startDate || "");
+
+    return apps
+      .filter(a =>
+        a && a.done && a.date &&
+        (!year || String(a.date).slice(0, 4) === year) &&
+        (!start || String(a.date) >= start)
+      )
+      .map(a => ({
+        id: "apt-" + a.id,
+        date: a.date,
+        amount,
+        note:
+          "Termin " + (a.time || "") + " Uhr: " +
+          (a.customer || "ohne Namen") +
+          (a.attempt > 1 ? " (" + a.attempt + ". Anmeldung)" : ""),
+        auto: true
+      }));
+
+  }
+
+  function allEntries(
+    data = plan
+  ) {
+
+    return data.entries.concat(
+      doneAppointmentEntries(data)
+    );
+
+  }
+
   function getCompletedAmount(
     data = plan
   ) {
 
-    return data.entries.reduce(
+    return allEntries(data).reduce(
       (sum, entry) =>
         sum +
         Number(
@@ -5795,6 +5951,8 @@
     renderHolidays();
 
     renderHistory();
+
+    renderAutoCount();
 
     if (window.SchornsteinPlanerTermine) {
       window.SchornsteinPlanerTermine.render();
@@ -6229,6 +6387,58 @@
 
   }
 
+  function renderAutoCount() {
+
+    const box = document.getElementById("countDoneApts");
+    const amt = document.getElementById("amountPerApt");
+    const info = document.getElementById("autoCountInfo");
+
+    if (!box || !amt || !info) {
+      return;
+    }
+
+    box.checked = plan.countDoneAppointments !== false;
+
+    if (document.activeElement !== amt) {
+      amt.value = String(
+        Number.isFinite(Number(plan.amountPerAppointment))
+          ? plan.amountPerAppointment
+          : 1
+      ).replace(".", ",");
+    }
+
+    amt.disabled = !box.checked;
+
+    const list = doneAppointmentEntries(plan);
+    const sum = list.reduce((n, e) => n + e.amount, 0);
+
+    info.textContent = box.checked
+      ? list.length
+        ? "Angerechnet: " + list.length + " erledigte Termine " + (plan.startDate ? "ab dem Startdatum " + formatDate(plan.startDate) : "im Jahr " + plan.year) + " = " + formatNumber(sum) + ". Es genügt, den Termin im Kalender abzuhaken – hier musst du ihn nicht noch einmal eintragen."
+        : "Noch keine erledigten Termine " + (plan.startDate ? "ab dem Startdatum " + formatDate(plan.startDate) : "im Jahr " + plan.year) + ". Sobald du einen Termin im Kalender als erledigt abhakst, wird er hier mitgezählt. (Termine vor dem Startdatum zählen nicht.)"
+      : "Aus: Erledigte Termine werden nicht angerechnet. Leistungen trägst du dann nur von Hand ein.";
+
+  }
+
+  function onAutoCountChange() {
+
+    plan.countDoneAppointments =
+      document.getElementById("countDoneApts").checked;
+
+    const n = parseAmount(
+      document.getElementById("amountPerApt").value
+    );
+
+    if (Number.isFinite(n) && n >= 0) {
+      plan.amountPerAppointment = n;
+    }
+
+    saveData();
+
+    renderAll();
+
+  }
+
   function renderHistory() {
 
     const container =
@@ -6236,8 +6446,10 @@
         "historyList"
       );
 
+    const all = allEntries(plan);
+
     if (
-      !plan.entries.length
+      !all.length
     ) {
 
       container.innerHTML = `
@@ -6255,7 +6467,7 @@
     }
 
     const entries =
-      [...plan.entries]
+      [...all]
         .sort(
           (a, b) =>
             b.date.localeCompare(
@@ -6300,7 +6512,10 @@
 
               </div>
 
-              <button
+              ${
+                entry.auto
+                  ? `<span class="list-item-meta" style="white-space:nowrap">✔ aus Termin<br>(im Kalender änderbar)</span>`
+                  : `<button
                 class="btn btn-danger btn-small"
                 type="button"
                 data-delete-entry="${escapeHtml(entry.id)}"
@@ -6308,7 +6523,8 @@
 
                 Löschen
 
-              </button>
+              </button>`
+              }
 
             </div>
 
@@ -6728,8 +6944,6 @@
     $("spPrintRange").addEventListener("click", printRangeProposals);
     $("spExportSelectedIcs").addEventListener("click", () => { const a = appointments().find(x => x.id === moduleState.selectedId); if (a) downloadICS([a], `termin-${a.date}-${a.time.replace(':','')}.ics`); });
     $("spExportRangeIcs").addEventListener("click", exportRange);
-    $("spBackupData").addEventListener("click", backupData);
-    $("spRestoreData").addEventListener("change", restoreData);
     ["spBusinessName","spEmployeeName","spPhone","spBusinessAddress","spBossEmail"].forEach(id => $(id).addEventListener("input", saveSettings));
     ["spProposalFrom","spProposalTo"].forEach(id => $(id).addEventListener("change", renderProposalList));
     $("year").addEventListener("change", () => render());
@@ -6808,7 +7022,7 @@
     const inv = a.done && a.invoice ? ` · ${INV_SHORT[a.invoice] || ""}${a.invoice === "bar" && a.amount > 0 ? " " + fmtEUR(a.amount) : ""}` : "";
     const fu = a.missed ? followUpOf(a) : null;
     const missLabel = a.missed ? (fu ? `🚪 Nicht angetroffen · ${esc(attemptLabel(attemptOf(fu)))} am ${esc(shortDate(fu.date))}` : (attemptOf(a) >= 3 ? "🚪 Nicht angetroffen – letzte Anmeldung" : "🚪 Nicht angetroffen – neu anmelden")) : "🚪 Nicht angetroffen";
-    return `<div class="sp-appt-wrap">${btn}<div class="sp-appt-actions"><button type="button" class="sp-act${a.done ? " done" : ""}" data-sp-done="${esc(a.id)}">${a.done ? "✔ Erledigt" + esc(inv) : "☐ Erledigt?"}</button><button type="button" class="sp-act${a.missed ? " missed" : ""}" data-sp-miss="${esc(a.id)}">${missLabel}</button><button type="button" class="sp-act" data-sp-move="${esc(a.id)}">⇄ Verschieben</button><button type="button" class="sp-act" data-sp-print="${esc(a.id)}">🖨 Drucken</button></div></div>`;
+    return `<div class="sp-appt-wrap">${btn}<div class="sp-appt-actions"><button type="button" class="sp-act${a.done ? " done" : ""}" data-sp-done="${esc(a.id)}">${a.done ? "✔ Erledigt" + esc(inv) : "☐ Erledigt?"}</button><button type="button" class="sp-act" data-sp-print="${esc(a.id)}">🖨 Drucken</button><details class="sp-more"><summary class="sp-act${a.missed ? " missed" : ""}">${a.missed ? "🚪 " : ""}⋯ Mehr</summary><div class="sp-more-menu"><button type="button" class="sp-act${a.missed ? " missed" : ""}" data-sp-miss="${esc(a.id)}">${missLabel}</button><button type="button" class="sp-act" data-sp-move="${esc(a.id)}">⇄ Verschieben</button></div></details></div></div>`;
   }
   function freeTimeIn(day, hour) {
     const used = appointments().filter(a => a.date === day && Number(a.time.slice(0, 2)) === hour).map(a => a.time);
@@ -6950,7 +7164,7 @@
     const toggle = $("spToggleEmpty");
     if (toggle) { toggle.hidden = week; toggle.textContent = moduleState.showEmpty ? "Freie Stunden ausblenden" : "Freie Stunden zeigen"; }
     $("spCalendar").innerHTML = week ? renderWeek(days, holidayOf) : renderDay(days[0], holidayOf);
-    showNotice(holidays.size ? `Feiertage des ausgewählten Bundeslandes werden markiert. An Feiertagen kann kein neuer Termin angelegt werden.` : "");
+    { const hol = days.map(d => holidayOf(d) ? `${shortDate(iso(d))}: ${holidayOf(d)}` : "").filter(Boolean); showNotice(hol.length ? `Feiertag – an Feiertagen kann kein neuer Termin angelegt werden (${hol.join(", ")}).` : ""); }
     renderProposalList();
     updateActionState();
   }
@@ -8423,15 +8637,6 @@
   function updateActionState() {
     const selected=appointments().find(a=>a.id===moduleState.selectedId); const enabled=!!selected;
     $("spPrintProposal").disabled=!enabled; $("spExportSelectedIcs").disabled=!enabled;
-  }
-
-  function saveBackupObject() { const d=data(); const o={ schema:"schornstein-planer-local-backup", version:1, exportedAt:new Date().toISOString(), data:d }; if (window.SPKunden) o.kunden=window.SPKunden.exportData(); return o; }
-  function backupData() {
-    const blob=new Blob([JSON.stringify(saveBackupObject(),null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`schornstein-planer-backup-${iso(new Date())}.json`; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-  }
-  function restoreData(event) {
-    const file=event.target.files?.[0]; if(!file) return; const reader=new FileReader();
-    reader.onload=()=>{ try { const obj=JSON.parse(reader.result); if(obj.schema!=="schornstein-planer-local-backup" || !obj.data || typeof obj.data!=="object") throw new Error('Ungültiges Backup'); if(!confirm('Die aktuelle lokale Planung wird durch das Backup ersetzt. Fortfahren?')) return; localStorage.setItem(KEY,JSON.stringify(obj.data)); if (obj.kunden && window.SPKunden) window.SPKunden.importData(obj.kunden); location.reload(); } catch(e){ alert('Die Sicherungsdatei konnte nicht eingelesen werden.'); } finally { event.target.value=""; } }; reader.readAsText(file);
   }
 
   function icsEscape(value) { return String(value||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\r?\n/g,'\\n'); }
