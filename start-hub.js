@@ -12,6 +12,7 @@
       id: "termine",
       icon: "\u{1F4CB}",
       title: "Planung & Termine",
+      nav: "Termine",
       text: "Kalender, Terminvorschläge drucken und Kalender-Export.",
       show: ["#planung-termine"]
     },
@@ -19,6 +20,7 @@
       id: "leistung",
       icon: "\u{1F9F9}",
       title: "Leistung & Übersicht",
+      nav: "Leistung",
       text: "Jahresplanung, erledigte Leistung, Soll/Ist-Vergleich, freie Tage, Feiertage und Historie.",
       show: [
         "#planung",
@@ -41,6 +43,7 @@
       id: "vdi",
       icon: "\u{1F4D0}",
       title: "Schornsteinhöhe (VDI 3781)",
+      nav: "Schornsteinhöhe",
       text: "Mündungshöhe und Rezirkulationszone nach VDI 3781 Blatt 4 berechnen – mit Skizze und PDF.",
       show: ["#vdiView"],
       script: "vdi3781.js"
@@ -49,6 +52,7 @@
       id: "kunden",
       icon: "\u{1F465}",
       title: "Kundenverwaltung",
+      nav: "Kunden",
       text: "Kunden mit Kundennummer anlegen und suchen – für Termine und Rechner.",
       show: ["#kundenView"]
     }
@@ -185,7 +189,10 @@
     ".hub-tag{font-size:.74rem;font-weight:800;color:#7d5b20}" +
     ".hub-back{display:flex;align-items:center;gap:12px;margin-bottom:16px}" +
     ".hub-back strong{font-size:1.1rem}" +
-    ".main-nav .nav-link.on{background:rgba(255,255,255,.12);color:#fff}";
+    ".main-nav{flex-wrap:wrap}" +
+    ".main-nav .nav-link.on{background:rgba(255,255,255,.12);color:#fff}" +
+    ".nav-ic{margin-right:6px;font-size:.95em}" +
+    "@media(max-width:1000px){.nav-ic{display:none}}";
 
   document.head.appendChild(css);
 
@@ -261,21 +268,22 @@
     a.remove();
   });
 
-  function addLink(label, id) {
+  function addLink(label, id, icon) {
     var a = document.createElement("a");
 
     a.className = "nav-link";
     a.href = "#" + id;
     a.setAttribute("data-hub", id);
-    a.textContent = label;
+    a.title = label;
+    a.innerHTML = '<span class="nav-ic" aria-hidden="true">' + icon + "</span>" + label;
 
     nav.insertBefore(a, legal);
   }
 
-  addLink("\u{1F3E0} Start", "start");
+  addLink("Start", "start", "\u{1F3E0}");
 
   FUNCTIONS.forEach(function (f) {
-    addLink(f.icon + " " + f.title, f.id);
+    addLink(f.nav || f.title, f.id, f.icon);
   });
 
   function find(id) {
