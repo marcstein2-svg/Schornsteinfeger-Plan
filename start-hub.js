@@ -13,7 +13,7 @@
       icon: "\u{1F4CB}",
       title: "Planung & Termine",
       nav: "Termine",
-      text: "Kalender, Terminvorschläge drucken und Kalender-Export.",
+      text: "Kalender, automatische Terminplanung mit Fahrtroute, Anmeldung per Zettel oder WhatsApp.",
       show: ["#planung-termine"]
     },
     {
@@ -53,7 +53,7 @@
       icon: "\u{1F465}",
       title: "Kundenverwaltung",
       nav: "Kunden",
-      text: "Kunden mit Kundennummer anlegen und suchen – für Termine und Rechner.",
+      text: "Kunden mit Kundennummer, Hinweisen für unterwegs und WhatsApp-Anmeldung – für Termine und Rechner.",
       show: ["#kundenView"]
     }
   ];
