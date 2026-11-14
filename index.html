@@ -1529,6 +1529,14 @@
     .sp-act.missed { border-color: #c9791b; background: #fff1dc; color: #8a4b00; }
     .sp-badge-warn { background: #fde0e0; color: #a02f2f; }
     .sp-badge-wish { background: #e3f1e8; color: #2e6f45; }
+    .sp-pool-count { display: inline-block; min-width: 20px; margin-left: 6px; padding: 0 6px; border-radius: 999px; background: #20252b; color: #fff; font-size: .72rem; font-weight: 800; line-height: 20px; text-align: center; }
+    .sp-pool-count[hidden] { display: none; }
+    #spPoolOpen.has-items { border-color: #c79a42; background: #fff6df; }
+    .sp-pool-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid #e3e7ea; }
+    .sp-pool-row small { display: block; color: #6c757d; font-weight: 600; }
+    .sp-pool-why { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: #e3f1e8; color: #2e6f45; font-size: .7rem; font-weight: 800; }
+    .sp-pool-why.moved { background: #fbe3c2; color: #7a4600; }
+    .sp-pool-x { border: 1px solid #d5dadf; background: #fff; border-radius: 9px; padding: 4px 10px; cursor: pointer; font-weight: 800; }
     .sp-wishapt { margin-top: 12px; padding: 12px 14px; border: 1px solid #e3d3a8; border-radius: 12px; background: #fffaf0; }
     .sp-badge-time { background: #fff1c9; color: #7a5200; }
     .sp-badge-time.sp-badge-line { margin: 4px 0 3px 0; }
@@ -1967,6 +1975,7 @@
         </div>
         <div class="sp-toolbar-group sp-actions-row">
           <button class="btn btn-gold" type="button" id="spNewAppointment">+ Termin</button>
+          <button class="btn btn-light" type="button" id="spPoolOpen">🗂 Druckpool<span class="sp-pool-count" id="spPoolCount" hidden>0</span></button>
           <button class="btn btn-primary" type="button" id="spAutoOpen">⚡ Termine automatisch einplanen</button>
           <button class="btn btn-light sp-minor" type="button" id="spMapRoute">🗺 Route des Tages</button>
           <button class="btn btn-light sp-minor" type="button" id="spToggleEmpty">Freie Stunden zeigen</button>
@@ -3727,6 +3736,30 @@
   </div>
 </div>
 
+<div class="sp-modal-backdrop" id="spPoolModal" hidden>
+  <div class="sp-modal" role="dialog" aria-modal="true" aria-labelledby="spPoolTitle">
+    <h3 id="spPoolTitle">🗂 Druckpool</h3>
+    <p class="sp-muted" style="margin:0 0 10px">Hier sammeln sich die Anmeldezettel, die noch gedruckt werden müssen (neue und verschobene Termine). Gedruckt wird mit 2 Zetteln pro A4-Seite – so bleibt keine halbe Seite leer.</p>
+    <div id="spPoolInfo" style="font-weight:700;margin-bottom:6px"></div>
+    <div id="spPoolList"></div>
+    <div class="sp-works-box" style="margin-top:12px">
+      <div class="sp-works-title">Weitere Termine hinzufügen</div>
+      <div class="sp-form-grid">
+        <div class="field"><label for="spPoolFrom">Von</label><input id="spPoolFrom" type="date"></div>
+        <div class="field"><label for="spPoolTo">Bis</label><input id="spPoolTo" type="date"></div>
+      </div>
+      <div class="sp-btnrow" style="margin-top:8px"><button class="btn btn-light" type="button" id="spPoolAddRange">＋ Alle Termine im Zeitraum hinzufügen</button></div>
+    </div>
+    <label class="sp-work" style="display:flex;margin-top:12px"><input type="checkbox" id="spPoolAuto"><span>Neue und verschobene Termine automatisch in den Druckpool legen</span></label>
+    <div id="spPoolLast" style="margin-top:10px"></div>
+    <div class="sp-modal-actions">
+      <button class="btn btn-light" type="button" id="spPoolClose">Schließen</button>
+      <button class="btn btn-danger" type="button" id="spPoolClear">Pool leeren</button>
+      <button class="btn btn-primary" type="button" id="spPoolPrint">🖨 Druckpool drucken</button>
+    </div>
+  </div>
+</div>
+
 <div class="sp-modal-backdrop" id="spAppointmentModal" hidden>
   <div class="sp-modal" role="dialog" aria-modal="true" aria-labelledby="spModalTitle">
     <h3 id="spModalTitle">Termin anlegen</h3>
@@ -3773,6 +3806,7 @@
     <div class="sp-modal-actions">
       <button class="btn btn-light" type="button" id="spCancelAppointment">Abbrechen</button>
       <button class="btn btn-light" type="button" id="spMoveFromApt" hidden>⇄ Verschieben</button>
+      <button class="btn btn-light" type="button" id="spPoolFromApt">🗂 Speichern &amp; in Druckpool</button>
       <button class="btn btn-gold" type="button" id="spPrintFromApt">🖨 Speichern &amp; drucken</button>
       <button class="btn btn-light" type="button" id="spDoneFromApt" hidden>✔ Erledigt …</button>
       <button class="btn btn-light" type="button" id="spMissFromApt" hidden>🚪 Nicht angetroffen …</button>
@@ -6969,6 +7003,13 @@
     document.querySelectorAll("[data-mv]").forEach(b => b.addEventListener("click", () => moveQuick(b.dataset.mv)));
     $("spMoveFromApt").addEventListener("click", () => { const id = moduleState.editingId; closeModal(); openMoveModal(id); });
     $("spPrintFromApt").addEventListener("click", () => saveAppointment({ print: true }));
+    $("spPoolFromApt").addEventListener("click", () => saveAppointment({ pool: true }));
+    $("spPoolOpen").addEventListener("click", openPoolModal);
+    $("spPoolClose").addEventListener("click", closePoolModal);
+    $("spPoolPrint").addEventListener("click", () => poolPrint());
+    $("spPoolClear").addEventListener("click", () => { if (confirm("Alle Termine aus dem Druckpool nehmen? Die Termine selbst bleiben erhalten.")) { persist({ printPool: [] }); renderPool(); render(); } });
+    $("spPoolAddRange").addEventListener("click", poolAddRange);
+    $("spPoolAuto").addEventListener("change", e => persist({ printPoolAuto: e.target.checked }));
     $("spDoneFromApt").addEventListener("click", () => { const id = moduleState.editingId; closeModal(); openDoneModal(id); });
     $("spPrintDone").addEventListener("click", () => printDone(false));
     $("spPrintDoneRange").addEventListener("click", () => printDone(true));
@@ -7019,7 +7060,7 @@
     ["spProposalFrom","spProposalTo"].forEach(id => $(id).addEventListener("change", renderProposalList));
     $("year").addEventListener("change", () => render());
     $("state").addEventListener("change", () => render());
-    document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("spAppointmentModal").hidden) closeModal(); if (e.key === "Escape" && !$("spAutoModal").hidden && !document.querySelector(".kv-overlay")) closeAutoModal(); if (e.key === "Escape" && !$("spDoneModal").hidden) closeDoneModal(); if (e.key === "Escape" && !$("spMoveModal").hidden) closeMoveModal(); if (e.key === "Escape" && !$("spMissModal").hidden) closeMissModal(); if (e.key === "Escape" && !$("spExpModal").hidden) closeExpModal(); if (e.key === "Escape" && !$("spReceiptModal").hidden) closeReceiptModal(); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("spAppointmentModal").hidden) closeModal(); if (e.key === "Escape" && !$("spAutoModal").hidden && !document.querySelector(".kv-overlay")) closeAutoModal(); if (e.key === "Escape" && !$("spDoneModal").hidden) closeDoneModal(); if (e.key === "Escape" && !$("spMoveModal").hidden) closeMoveModal(); if (e.key === "Escape" && !$("spMissModal").hidden) closeMissModal(); if (e.key === "Escape" && !$("spExpModal").hidden) closeExpModal(); if (e.key === "Escape" && !$("spReceiptModal").hidden) closeReceiptModal(); if (e.key === "Escape" && !$("spPoolModal").hidden) closePoolModal(); });
     document.addEventListener("click", e => {
       const dayBtn = e.target.closest("[data-sp-day]"); if (dayBtn) { moduleState.date = fromIso(dayBtn.dataset.spDay); moduleState.view = "day"; render(); return; }
       const dn = e.target.closest("[data-sp-done]"); if (dn) { openDoneModal(dn.dataset.spDone); return; }
@@ -7027,6 +7068,8 @@
       const ms = e.target.closest("[data-sp-miss]"); if (ms) { openMissModal(ms.dataset.spMiss); return; }
       const mv = e.target.closest("[data-sp-move]"); if (mv) { openMoveModal(mv.dataset.spMove); return; }
       const pr = e.target.closest("[data-sp-print]"); if (pr) { printAppointmentNow(pr.dataset.spPrint); return; }
+      const pl = e.target.closest("[data-sp-pool]"); if (pl) { const id = pl.dataset.spPool; if (inPool(id)) poolRemove([id]); else poolAdd([id]); render(); return; }
+      const pd = e.target.closest("[data-sp-pool-del]"); if (pd) { poolRemove([pd.dataset.spPoolDel]); renderPool(); render(); return; }
       const open = e.target.closest("[data-sp-open]"); if (open) openModal(open.dataset.date, open.dataset.time, open.dataset.spOpen);
       const select = e.target.closest("[data-sp-select]"); if (select) { moduleState.selectedId = select.dataset.spSelect; renderProposalList(); updateActionState(); }
       const edit = e.target.closest("[data-sp-edit]"); if (edit) openModal("", "", edit.dataset.spEdit);
@@ -7088,14 +7131,15 @@
     const codeHtml = code ? `<span class="sp-code" title="${esc(worksText(a).join(", "))}">${esc(code)}</span>` : "";
     const wt = aptWishText(a), wbad = wt && !aptWishOk(a, a.time, a.duration);
     const wishBadge = wt && !compact ? `<span class="sp-badge sp-badge-line sp-badge-time${wbad ? " bad" : ""}">⏰ Kunde: ${esc(wt)}${wbad ? " – Uhrzeit prüfen!" : ""}</span>` : "";
-    const badgeLine = wishBadge + (att > 1 && !compact ? `<span class="sp-badge sp-badge-line">${attemptLabel(att)}</span>` : "") + (stale && !compact ? `<span class="sp-badge sp-badge-line sp-badge-warn">⚠ Zettel neu drucken</span>` : "");
-    const mark = (a.done ? "✔ " : a.missed ? "🚪 " : "") + (stale && compact ? "⚠ " : "") + ((tbm || tam) && compact ? "🚗 " : "") + (wt && compact ? (wbad ? "⚠⏰ " : "⏰ ") : "");
+    const pooled = inPool(a.id);
+    const badgeLine = wishBadge + (pooled && !compact ? `<span class="sp-badge sp-badge-line sp-badge-time">🗂 im Druckpool</span>` : "") + (att > 1 && !compact ? `<span class="sp-badge sp-badge-line">${attemptLabel(att)}</span>` : "") + (stale && !compact ? `<span class="sp-badge sp-badge-line sp-badge-warn">⚠ Zettel neu drucken</span>` : "");
+    const mark = (a.done ? "✔ " : a.missed ? "🚪 " : "") + (pooled && compact ? "🗂 " : "") + (stale && compact ? "⚠ " : "") + ((tbm || tam) && compact ? "🚗 " : "") + (wt && compact ? (wbad ? "⚠⏰ " : "⏰ ") : "");
     const btn = `<button type="button" class="sp-appt${compact ? " compact" : ""}${a.id === moduleState.selectedId ? " selected" : ""}${a.done ? " done" : ""}${a.missed ? " missed" : ""}" data-sp-open="${esc(a.id)}" data-date="${esc(a.date)}" data-time="${esc(a.time)}" title="${esc(title)}"><span class="sp-appt-time">${mark}${esc(a.time)}${badgeTime}${compact ? codeHtml : ""}</span>${compact ? "" : codeHtml}<span class="sp-appt-main"><strong>${esc(a.customer || "Ohne Kundennamen")}</strong>${badgeLine}${compact || !addr ? "" : `<small>${esc(addr)}</small>`}${compact || !(tbm || tam) ? "" : `<small>🚗 ${tbm} Min. vorher · ${tam} Min. nachher</small>`}</span></button>`;
     if (compact) return btn;
     const inv = a.done && a.invoice ? ` · ${INV_SHORT[a.invoice] || ""}${a.invoice === "bar" && a.amount > 0 ? " " + fmtEUR(a.amount) : ""}` : "";
     const fu = a.missed ? followUpOf(a) : null;
     const missLabel = a.missed ? (fu ? `🚪 Nicht angetroffen · ${esc(attemptLabel(attemptOf(fu)))} am ${esc(shortDate(fu.date))}` : (attemptOf(a) >= 3 ? "🚪 Nicht angetroffen – letzte Anmeldung" : "🚪 Nicht angetroffen – neu anmelden")) : "🚪 Nicht angetroffen";
-    return `<div class="sp-appt-wrap">${btn}<div class="sp-appt-actions"><button type="button" class="sp-act${a.done ? " done" : ""}" data-sp-done="${esc(a.id)}">${a.done ? "✔ Erledigt" + esc(inv) : "☐ Erledigt?"}</button><button type="button" class="sp-act" data-sp-print="${esc(a.id)}">🖨 Drucken</button><details class="sp-more"><summary class="sp-act${a.missed ? " missed" : ""}">${a.missed ? "🚪 " : ""}⋯ Mehr</summary><div class="sp-more-menu"><button type="button" class="sp-act${a.missed ? " missed" : ""}" data-sp-miss="${esc(a.id)}">${missLabel}</button><button type="button" class="sp-act" data-sp-move="${esc(a.id)}">⇄ Verschieben</button></div></details></div></div>`;
+    return `<div class="sp-appt-wrap">${btn}<div class="sp-appt-actions"><button type="button" class="sp-act${a.done ? " done" : ""}" data-sp-done="${esc(a.id)}">${a.done ? "✔ Erledigt" + esc(inv) : "☐ Erledigt?"}</button><button type="button" class="sp-act" data-sp-print="${esc(a.id)}">🖨 Drucken</button><details class="sp-more"><summary class="sp-act${a.missed ? " missed" : ""}">${a.missed ? "🚪 " : ""}⋯ Mehr</summary><div class="sp-more-menu"><button type="button" class="sp-act" data-sp-pool="${esc(a.id)}">🗂 ${pooled ? "Aus Druckpool nehmen" : "In Druckpool legen"}</button><button type="button" class="sp-act${a.missed ? " missed" : ""}" data-sp-miss="${esc(a.id)}">${missLabel}</button><button type="button" class="sp-act" data-sp-move="${esc(a.id)}">⇄ Verschieben</button></div></details></div></div>`;
   }
   function freeTimeIn(day, hour) {
     const used = appointments().filter(a => a.date === day && Number(a.time.slice(0, 2)) === hour).map(a => a.time);
@@ -7221,6 +7265,7 @@
   function render() {
     if (!$('spCalendar')) return;
     renderSearch();
+    updatePoolButton();
     renderReceipts();
     if ($("spDayDate") && !moduleState.dayManual) $("spDayDate").value = iso(moduleState.date);
     renderExpenses();
@@ -7789,6 +7834,7 @@
       return { id: uuid(), date, time, customer: k.name, street: k.street, house: k.house, zip: k.zip, city: k.city, duration: p.dur || dur, notes: k.notes || "", works: autoWorkList(w), workOther: w.other ? w.text.trim() : "", kid: k.id, knr: k.nr, ...(k.bossNote ? { bossNote: k.bossNote } : {}), ...(p.tb ? { travelBefore: p.tb } : {}), ...(p.ta ? { travelAfter: p.ta } : {}), ...(p.retry ? { attempt: p.retry.attempt, prevId: p.retry.prevId } : {}), auto: batch, updatedAt: now };
     });
     persist({ appointments: appointments().concat(items) });
+    if (poolAutoOn()) poolAdd(items.map(a => a.id));
     autoSavePrefs({ lastBatch: batch, start: $("spAutoStart").value, end: $("spAutoEnd").value, duration: String(dur), pause: $("spAutoBreak").checked, max: plan.maxDay || "", wish: $("spAutoWish").checked, route: $("spAutoRoute").checked, drive: $("spAutoDrive").checked, speed: Number($("spAutoSpeed").value) || 40 });
     moduleState.date = fromIso(items[0].date);
     moduleState.view = "week";
@@ -7995,10 +8041,71 @@
   function slipStale(a) { return !!(a.slip && (a.slip.date !== a.date || a.slip.win !== timeWindow(a.time))); }
   function markSlipPrinted(list) {
     const ids = new Set(list.map(a => a.id));
-    persist({ appointments: appointments().map(a => ids.has(a.id) ? { ...a, slip: { date: a.date, win: timeWindow(a.time) } } : a) });
+    persist({
+      appointments: appointments().map(a => ids.has(a.id) ? { ...a, slip: { date: a.date, win: timeWindow(a.time) } } : a),
+      printPool: poolIds().filter(id => !ids.has(id))   // gedruckt = nicht mehr im Druckpool
+    });
+  }
+
+  /* ================= Druckpool: Anmeldezettel sammeln und zusammen drucken (2 pro A4) ================= */
+  function poolIds() { const p = data().printPool; return Array.isArray(p) ? p : []; }
+  function poolItems() {
+    const byId = new Map(appointments().map(a => [a.id, a]));
+    return poolIds().map(id => byId.get(id)).filter(Boolean).sort((x, y) => (x.date + " " + x.time).localeCompare(y.date + " " + y.time));
+  }
+  function poolAutoOn() { return data().printPoolAuto !== false; }
+  function poolAdd(ids) { persist({ printPool: Array.from(new Set(poolIds().concat(ids))) }); }
+  function poolRemove(ids) { const x = new Set(ids); persist({ printPool: poolIds().filter(id => !x.has(id)) }); }
+  const inPool = id => poolIds().includes(id);
+  function updatePoolButton() {
+    const n = poolItems().length, c = $("spPoolCount"), b = $("spPoolOpen");
+    if (c) { c.textContent = String(n); c.hidden = !n; }
+    if (b) b.classList.toggle("has-items", n > 0);
+  }
+  function poolReason(a) { return !a.slip ? ["neu", ""] : slipStale(a) ? ["verschoben", "moved"] : ["Zettel erneut", "moved"]; }
+  function renderPool() {
+    const items = poolItems(), n = items.length, pages = Math.ceil(n / 2);
+    $("spPoolInfo").innerHTML = n
+      ? `${n} ${n === 1 ? "Zettel" : "Zettel"} = ${pages} A4-${pages === 1 ? "Seite" : "Seiten"}` + (n % 2 ? ` <span style="color:#8a5a00">· auf der letzten Seite ist noch Platz für 1 Zettel</span>` : ` <span style="color:#2e6f45">· Seiten voll belegt</span>`)
+      : "Der Druckpool ist leer.";
+    $("spPoolList").innerHTML = items.map(a => {
+      const [why, cls] = poolReason(a);
+      return `<div class="sp-pool-row"><div><strong>${esc(fmtDate(a.date))} · ${esc(a.time)} Uhr</strong><span class="sp-pool-why ${cls}">${esc(why)}</span><small>${esc(a.customer || "Ohne Kundennamen")}${addrLine(a) ? " – " + esc(addrLine(a)) : ""}</small></div><button type="button" class="sp-pool-x" data-sp-pool-del="${esc(a.id)}" title="Aus dem Druckpool nehmen" aria-label="Aus dem Druckpool nehmen">✕</button></div>`;
+    }).join("");
+    $("spPoolPrint").disabled = !n; $("spPoolClear").disabled = !n;
+    $("spPoolAuto").checked = poolAutoOn();
+    const last = (Array.isArray(data().printLast) ? data().printLast : []).filter(id => appointments().some(a => a.id === id));
+    $("spPoolLast").innerHTML = last.length ? `<span class="sp-muted">Zuletzt gedruckt: ${last.length} ${last.length === 1 ? "Zettel" : "Zettel"}</span> <button type="button" class="sp-linkbtn" id="spPoolReprint">🖨 nochmal drucken</button>` : "";
+    const rp = $("spPoolReprint"); if (rp) rp.addEventListener("click", () => poolPrint(last));
+  }
+  function openPoolModal() {
+    if (!$("spPoolFrom").value) { $("spPoolFrom").value = iso(moduleState.date); $("spPoolTo").value = iso(addDays(moduleState.date, 6)); }
+    renderPool(); $("spPoolModal").hidden = false;
+  }
+  function closePoolModal() { $("spPoolModal").hidden = true; }
+  function poolPrint(ids) {
+    const byId = new Map(appointments().map(a => [a.id, a]));
+    const list = (ids || poolItems().map(a => a.id)).map(id => byId.get(id)).filter(Boolean).sort((x, y) => (x.date + " " + x.time).localeCompare(y.date + " " + y.time));
+    if (!list.length) return alert("Der Druckpool ist leer.");
+    const keep = list.map(a => a.id);
+    printProposals(list, true, `Anmeldezettel_Druckpool_${iso(new Date())}.pdf`);
+    setTimeout(() => { persist({ printLast: keep }); if (!$("spPoolModal").hidden) renderPool(); }, 600);
+    closePoolModal();
+  }
+  function poolAddRange() {
+    const from = $("spPoolFrom").value, to = $("spPoolTo").value;
+    if (!from || !to || from > to) return alert("Bitte einen gültigen Zeitraum wählen.");
+    const ids = rangeAppointments(from, to).filter(a => !a.missed).map(a => a.id);
+    if (!ids.length) return alert("In diesem Zeitraum sind keine Termine vorhanden.");
+    poolAdd(ids); renderPool(); render();
   }
   function warnStale(id) {
     const a = appointments().find(x => x.id === id);
+    if (a && slipStale(a) && poolAutoOn()) {
+      poolAdd([a.id]);
+      showNotice(`🗂 Der Anmeldezettel von ${a.customer || "diesem Kunden"} ist durch die Änderung veraltet – der Termin liegt jetzt im Druckpool (${poolItems().length}).`);
+      return;
+    }
     if (a && slipStale(a)) alert(`Achtung: Für diesen Termin wurde schon ein Anmeldezettel gedruckt (${shortDate(a.slip.date)}, ${a.slip.win} Uhr).\n\nIm Kalender steht er jetzt am ${shortDate(a.date)}, ${timeWindow(a.time)} Uhr.\n\nBitte den Anmeldezettel neu drucken, damit Zettel und Kalender übereinstimmen.`);
   }
 
@@ -8817,6 +8924,7 @@
 
   function saveAppointment(opts) {
     const doPrint = !!(opts && opts.print === true);
+    moduleState.editingIdBeforeSave = moduleState.editingId;
     const date=$("spAptDate").value, time=$("spAptTime").value;
     if (!date || !time) return alert("Bitte Datum und Uhrzeit angeben.");
     const holiday=holidayMap(new Date(date).getFullYear()).get(date);
@@ -8829,7 +8937,12 @@
     const item={ id:moduleState.editingId || uuid(), date,time, customer:$("spAptCustomer").value.trim(), street:$("spAptStreet").value.trim(), house:$("spAptHouse").value.trim(), zip:$("spAptZip").value.trim(), city:$("spAptCity").value.trim(), duration:Number($("spAptDuration").value)||15, notes:$("spAptNotes").value.trim(), bossNote:$("spAptBossNote").value.trim(), travelBefore:clampTravel($("spAptTravelB").value), travelAfter:clampTravel($("spAptTravelA").value), wishFrom:$("spAptWishFrom").value || "", wishTo:$("spAptWishTo").value || "", works:selectedWorks(), workOther:$("spWorkOtherText").value.trim(), kid:moduleState.aptCustomer?.id||"", knr:moduleState.aptCustomer?.nr||"", ...(moduleState.pendingRetry && !moduleState.editingId ? { attempt: moduleState.pendingRetry.attempt, prevId: moduleState.pendingRetry.prevId } : {}), updatedAt:new Date().toISOString() };
     const list=appointments(); const idx=list.findIndex(x=>x.id===item.id); if(idx>=0) list[idx]={ ...list[idx], ...item }; else list.push(item);
     persist({appointments:list}); moduleState.selectedId=item.id; moduleState.date=fromIso(date); closeModal(); render();
-    if (doPrint) printAppointmentNow(item.id); else warnStale(item.id);
+    const wasNew = !moduleState.editingIdBeforeSave;
+    if (doPrint) printAppointmentNow(item.id);
+    else {
+      if ((wasNew && poolAutoOn()) || (opts && opts.pool)) { poolAdd([item.id]); render(); showNotice(`🗂 Der Termin liegt im Druckpool (${poolItems().length}).`); }
+      else warnStale(item.id);
+    }
   }
   /* Einzelnen Termin direkt drucken (A5 auf halber A4-Seite), ohne vorher auswählen zu müssen */
   function printAppointmentNow(id) {
