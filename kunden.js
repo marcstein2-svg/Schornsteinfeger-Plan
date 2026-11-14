@@ -168,6 +168,7 @@
       zip: String(k.zip || ""),
       city: String(k.city || ""),
       phone: String(k.phone || ""),
+      waReg: k.waReg === true || k.waReg === "true",
       ownerAddr: String(k.ownerAddr || ""),
       notes: String(k.notes || ""),
       hint: String(k.hint || ""),
@@ -418,6 +419,8 @@
     ".kv-form .wide{grid-column:1 / -1}" +
     ".kv-form input,.kv-form select,.kv-form textarea{font-size:16px}" +
     ".kv-hint{margin:4px 0 0;color:var(--muted);font-size:.78rem}" +
+    ".kv-wa{display:flex;align-items:center;gap:10px;font-weight:800;cursor:pointer}" +
+    ".kv-wa input{width:22px;height:22px;flex:0 0 22px}" +
     ".kv-chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}" +
     ".kv-chips .btn{min-height:38px;padding:6px 11px;font-size:.84rem}" +
     ".kv-hintbox{padding:10px 12px;border:1px solid #ecd9a8;border-radius:12px;background:#fffaf0}" +
@@ -621,6 +624,7 @@
         E(k.house || "–") +
         "</span>" +
         E(k.name || "(ohne Namen)") +
+        (k.waReg ? " 💬" : "") +
         "</strong>" +
         (cityLine(k) ? '<span class="kv-sub">' + E(cityLine(k)) + "</span>" : "") +
         '</span><span class="kv-nr">Kd-Nr ' +
@@ -637,6 +641,7 @@
         E(streetLine(k) || "(ohne Straße)") +
         "</strong> · " +
         E(k.name || "(ohne Namen)") +
+        (k.waReg ? " 💬" : "") +
         '<span class="kv-sub">' +
         E(cityLine(k) || NO_CITY) +
         '</span></span><span class="kv-nr">Kd-Nr ' +
@@ -962,6 +967,8 @@
       '<div class="field"><label for="kvZip">PLZ</label><input id="kvZip" type="text" inputmode="numeric" autocomplete="off"></div>' +
       '<div class="field"><label for="kvCity">Ort</label><input id="kvCity" type="text" autocomplete="off"></div>' +
       '<div class="field wide"><label for="kvPhone">Telefon / E-Mail</label><input id="kvPhone" type="text" autocomplete="off"></div>' +
+      '<div class="field wide kv-hintbox"><label class="kv-wa"><input type="checkbox" id="kvWa"><span>💬 Anmeldung immer per WhatsApp (statt Zettel)</span></label>' +
+      '<p class="kv-hint">Termine dieses Kunden kommen nicht in den Druckpool, sondern in den WhatsApp-Pool. Dafür oben die Handynummer eintragen.</p></div>' +
       '<div class="field wide"><label for="kvOwner">Abweichende Anschrift des Eigentümers (optional)</label>' +
       '<input id="kvOwner" type="text" placeholder="Straße, PLZ Ort" autocomplete="off">' +
       '<p class="kv-hint">Leer lassen, wenn der Eigentümer im Haus wohnt.</p></div>' +
@@ -1011,6 +1018,7 @@
     f("kvZip").value = k ? k.zip : "";
     f("kvCity").value = k ? k.city : "";
     f("kvPhone").value = k ? k.phone : "";
+    f("kvWa").checked = !!(k && k.waReg);
     f("kvOwner").value = k ? k.ownerAddr : "";
     f("kvNotes").value = k ? k.notes : "";
     f("kvHint").value = k ? k.hint || "" : "";
@@ -1216,6 +1224,7 @@
           zip: f("kvZip").value.trim(),
           city: f("kvCity").value.trim(),
           phone: f("kvPhone").value.trim(),
+          waReg: f("kvWa").checked,
           ownerAddr: f("kvOwner").value.trim(),
           notes: f("kvNotes").value.trim(),
           hint: f("kvHint").value.trim(),
@@ -1655,6 +1664,11 @@
     geocodeText: geocodeText,
     geocodeMissing: geocodeMissing,
     setLocation: setLocation,
-    setPhone: setPhone
+    setPhone: setPhone,
+    hasWa: function () {
+      return kunden.some(function (k) {
+        return k.waReg;
+      });
+    }
   };
 })();
