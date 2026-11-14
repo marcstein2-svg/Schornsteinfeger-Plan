@@ -42,7 +42,7 @@
     { id: 6, name: "Mansardendach" }
   ];
 
-  /* Zuschlag über First je Höhe über NN */
+  /* Zuschlag H_Ü je Nennwärmeleistung (kW): bis 400 kW 0,4 m, bis unter 1 MW 1,0 m, darüber 3,0 m */
   function huebernn(nn) {
     if (nn <= 400) return 0.4;
     if (nn < 1000) return 1.0;
@@ -326,8 +326,9 @@
     S.HFirst = S.ht + S.HDach;
   }
 
-  /* Fensterabstand nach § 19 Abs. 2 (Switch_OelGas_Fest) */
-  function fensterAbstand(nn, oelgas) {
+  /* Umkreis (m) und Mindestüberragung (m) von Fenstern/Lüftungsöffnungen je Nennwärmeleistung in kW
+     (Festbrennstoff: § 19 Abs. 1 Satz 5 der 1. BImSchV; Öl/Gas: Rechenverfahren des Programms) */
+  function fensterAbstand(nn /* Nennwärmeleistung in kW */, oelgas) {
     let meter = Math.trunc((nn - 1) / 50);
     let hoehe = 0;
     if (oelgas) {
@@ -510,7 +511,7 @@
     return {
       p: { n: "", kn: "", dt: today(), ers: "", en: "", ea: "", ga: "", bem: "" },
       g: {
-        vt: 2, fuel: "gas", kw: "", nn: "", b: "", len: "", a: "", ht: "",
+        vt: 2, fuel: "gas", nn: "", b: "", len: "", a: "", ht: "",
         al: "", al2: "", bo: "", att: "", sh: "", exist: "", bim: false
       },
       vn: 0,
@@ -533,7 +534,7 @@
   }
 
   /* ---------- Speicher ---------- */
-  let store = { v: 1, cur: null, list: [] };
+  let store = { v: 2, cur: null, list: [] };
 
   function load() {
     try {
@@ -543,6 +544,16 @@
         if (o && Array.isArray(o.list)) store = o;
       }
     } catch (e) {}
+
+    if (!store.v || store.v < 2) {
+      /* bis Version 1 war das Feld „Nennwärmeleistung“ getrennt und „NN“ irrtümlich als Höhe beschriftet */
+      store.list.forEach(it => {
+        const g = (it.D && it.D.g) || {};
+        g.nn = g.kw ? g.kw : "";
+        delete g.kw;
+      });
+      store.v = 2;
+    }
 
     if (!store.list.length) {
       const id = uid();
@@ -598,7 +609,7 @@
       if (!has(g[k])) errs.push(label + " fehlt.");
     };
 
-    need("nn", "Höhe über NN");
+    need("nn", "Nennwärmeleistung");
     need("b", "Gebäudelänge am Giebel (b)");
     need("len", "Andere Hausseite");
     need("ht", "Höhe Gelände bis " + (vt === 0 ? "Oberkante Dach" : vt === 1 ? "oberster Punkt" : "Traufe"));
@@ -641,7 +652,8 @@
     }
     if (vt === 6 && !(inp.bo > 0 && inp.bo < inp.b)) errs.push("bo (Abstand Knick zu Knick) muss größer als 0 und kleiner als b sein.");
     if (vt === 0 && inp.att < 0) errs.push("Die Attika darf nicht negativ sein.");
-    if (inp.nn < 0) errs.push("Die Höhe über NN darf nicht negativ sein.");
+    if (!(inp.nn > 0)) errs.push("Die Nennwärmeleistung muss größer als 0 kW sein.");
+    if (inp.nn >= 1000) warn.push("Die 1. BImSchV und die Rechenregeln gelten für kleine und mittlere Feuerungsanlagen (unter 1 MW) – bitte Nennwärmeleistung prüfen.");
     if (vt >= 2 && vt !== 3 && inp.a > inp.b / 2 + 0.001) {
       warn.push("Der Abstand zum First (a) ist größer als die halbe Gebäudelänge – bitte prüfen.");
     }
@@ -731,6 +743,33 @@
       L.bo = "Abstand Knick zu Knick – bo –";
     }
     return L;
+  }
+
+  /* Rechtsbezug Fenster / Lüftungsöffnungen / Türen und § 19 Abs. 1 Satz 1 bis 3 (1. BImSchV) – gemeinsam für Anzeige und PDF */
+  function fensterText(S, fest) {
+    const F = S.fenster;
+    if (fest) {
+      return (
+        "Hinweis zu Fenstern, Lüftungsöffnungen und Türen: Die Mündung muss die Oberkanten von Lüftungsöffnungen, Fenstern und Türen anderer Gebäude im Umkreis von " +
+        F.meter + " m um min. " + F.hoehe + " m überragen (§ 19 Abs. 1 Satz 5 der 1. BImSchV). " +
+        "Bei vor dem 1.1.2022 errichteten Gebäuden und schwingungsanfälliger Abgasanlage (freie Höhe über der obersten Halterung über 3 m) kann die Unverhältnismäßigkeit nach § 19 Abs. 1 Satz 7 geprüft und dann Absatz 2 angewandt werden, " +
+        "wenn alle Lüftungsöffnungen, Fenster und Türen anderer Gebäude weiter als " + fmt(F.radius, 1) +
+        " m entfernt sind (Länge der Rezirkulationszone " + fmt(F.lrz, 1) + " m plus Umkreis " + F.meter + " m; LAI-Auslegungsfragenkatalog zur 1. BImSchV, Frage 35)."
+      );
+    }
+    return (
+      "Hinweis zu Fenstern und Lüftungsöffnungen: Nach dem Rechenverfahren der VDI 3781 Blatt 4 sollen Fenster und Lüftungsöffnungen anderer Gebäude im Umkreis von " +
+      F.meter + " m um die Mündung mindestens " + F.hoehe + " m überragt werden. Für Öl- und Gasfeuerstätten gelten außerdem die Anforderungen des Landesrechts (Feuerungsverordnung)."
+    );
+  }
+  function bimschvText(S) {
+    const B = S.bimschv;
+    if (B.ok) return "Die Ableitbedingungen nach § 19 Abs. 1 Satz 1 bis 3 der 1. BImSchV (firstnahe Mündung, First um min. 40 cm überragt) werden eingehalten.";
+    const why = !B.abstandOk && !B.hoeheOk ? "zu weit vom First entfernt und zu niedrig" : !B.abstandOk ? "zu weit vom First entfernt" : "zu niedrig";
+    return (
+      "Die Anforderungen des § 19 Abs. 1 Satz 1 bis 3 der 1. BImSchV werden nicht eingehalten, weil der Schornstein " + why +
+      " ist. Unter Berücksichtigung der VDI 3781 Blatt 4 (§ 19 Abs. 1 Satz 4) kann dieser jedoch genutzt werden. Die Angaben gelten für nach dem 31.12.2021 errichtete Anlagen; für ältere Anlagen gilt § 19 Abs. 2."
+    );
   }
 
   function resultLabels(vt) {
@@ -873,7 +912,7 @@
     let more =
       '<details class="vd-more"><summary>Rechenweg anzeigen</summary><table class="vd-t">' +
       [
-        ["Höhe über NN → Zuschlag H<sub>Ü</sub>", fmt(S.nn, 0) + " m → " + fmt(S.HUe) + " m"],
+        ["Nennwärmeleistung → Zuschlag H<sub>Ü</sub>", fmt(S.nn, 0) + " kW → " + fmt(S.HUe) + " m"],
         ["Verwendetes Verfahren", "Dachform-Typ " + S.hausTyp + " (" + (S.unter20 ? "bis" : "über") + " 20° Dachneigung)"],
         ["Winkel γ / Faktor f", fmt(S.gamma, 3) + "° / " + fmt(S.f, 4)],
         ["H1 / H2", fmt(S.H1, 3) + " m / " + fmt(S.H2, 3) + " m"],
@@ -887,24 +926,9 @@
     if (S.walmFaktor) hints.push("Grundriss nahezu quadratisch (Seitenverhältnis bis 1 : 1,2): Beim Walmdach wird die Höhe H<sub>s1</sub> mit dem Faktor 0,6 verringert.");
     if (S.hausTyp === 5 && (vt === 3)) hints.push("Bei α2 über 75° wird das asymmetrische Dach wie ein Pultdach gerechnet.");
 
-    if (g.bim) {
-      const B = S.bimschv;
-      let t;
-      if (B.ok) t = "Ableitbedingungen nach 1. BImSchV (§ 19 Abs. 1 Satz 1 bis 3) werden eingehalten.";
-      else {
-        const why = !B.abstandOk && !B.hoeheOk ? "zu weit vom First entfernt und zu niedrig" : !B.abstandOk ? "zu weit vom First entfernt" : "zu niedrig";
-        t = "Die Anforderungen des § 19 Abs. 1 Satz 1 bis 3 der 1. BImSchV werden nicht eingehalten, weil der Schornstein " + why + " ist. Unter Berücksichtigung der VDI 3781 Blatt 4 kann dieser jedoch genutzt werden.";
-      }
-      hints.push(t);
-    }
-
-    const F = S.fenster;
-    hints.push(
-      "<strong>Hinweis zu Fenstern und Lüftungsöffnungen:</strong> Sind alle Fenster und Lüftungsöffnungen anderer Gebäude in einem Umkreis von min. " +
-        fmt(F.radius, 1) +
-        " Metern um dieses Haus herum entfernt, kann § 19 Absatz 2 der 1. BImSchV angewandt werden (LAI-Auslegungskatalog vom 15.05.2023). " +
-        "Abstand zu Fenstern oder Lüftungsöffnungen min. " + F.meter + " m oder diese um min. " + F.hoehe + " m überragen."
-    );
+    const fest = g.fuel === "fest";
+    if (fest && g.bim) hints.push(E(bimschvText(S)));
+    hints.push("<strong>" + E(fensterText(S, fest).split(":")[0]) + ":</strong>" + E(fensterText(S, fest).slice(fensterText(S, fest).indexOf(":") + 1)));
 
     let ex = "";
     if (R.exist) {
@@ -1048,8 +1072,7 @@
       '<div class="form-grid">' +
       sel("g.vt", "Dachform", ROOFS.map(r => [r.id, r.name])) +
       sel("g.fuel", "Feuerstätte", [["gas", "Öl- oder Gasfeuerstätte"], ["fest", "Festbrennstoff"]]) +
-      inp("g.kw", "Nennwärmeleistung in kW (optional)") +
-      inp("g.nn", "Höhe des Standorts über NN (m)", { im: "numeric" }) +
+      inp("g.nn", "Nennwärmeleistung der Feuerstätte in kW", { im: "numeric" }) +
       "</div>" +
       '<div class="form-grid vd-dim">' +
       inp("g.b", L.b) +
@@ -1068,7 +1091,9 @@
       (vt === 5
         ? '<p class="vd-note">Beim Walmdach ist b die schmale Seite. Bei annähernd quadratischem Grundriss (bis 1 : 1,2) wird ein Faktor von 0,6 angewendet.</p>'
         : "") +
-      '<label class="vd-chk"><input type="checkbox" data-k="g.bim"' + (d.g.bim ? " checked" : "") + '> Hinweis zu § 19 Abs. 1 Satz 1 bis 3 der 1. BImSchV mit ausgeben</label>';
+      (d.g.fuel === "fest"
+        ? '<label class="vd-chk"><input type="checkbox" data-k="g.bim"' + (d.g.bim ? " checked" : "") + '> Hinweis zu § 19 Abs. 1 Satz 1 bis 3 der 1. BImSchV (firstnahe Mündung, First um 40 cm überragen) mit ausgeben</label>'
+        : '<p class="vd-note">Die Ableitbedingungen des § 19 der 1. BImSchV gelten für Feuerungsanlagen für feste Brennstoffe. Für Öl- und Gasfeuerstätten sind die Feuerungsverordnung des Landes und die VDI 3781 Blatt 4 maßgeblich.</p>');
 
     return (
       projectBar() +
@@ -1167,7 +1192,7 @@
 
     save();
 
-    if (e.type === "change" && (k === "g.vt" || k === "vn")) {
+    if (e.type === "change" && (k === "g.vt" || k === "vn" || k === "g.fuel")) {
       saveNow();
       render();
       return;
@@ -1249,11 +1274,11 @@
       "Vorgelagerte Gebäude werden " + (R.A.vg && R.A.vg.rows.some(o => o.used) ? "" : "nicht ") + "berücksichtigt."
     );
     lines.push(
-      "Das Gebäude besitzt eine Breite von " + fmt(S.b) + " Meter und eine Länge von " + fmt(S.len) + " Meter. Standort: " + fmt(S.nn, 0) + " m über NN."
+      "Das Gebäude besitzt eine Breite von " + fmt(S.b) + " Meter und eine Länge von " + fmt(S.len) + " Meter."
     );
     lines.push(
       "Es soll eine " + (g.fuel === "gas" ? "Öl- oder Gasfeuerstätte" : "Feuerstätte für Festbrennstoff") +
-        (has(g.kw) ? " mit einer Nennwärmeleistung von " + fmt(numOrNaN(g.kw), 1) + " kW" : "") + " eingebaut werden."
+        " mit einer Nennwärmeleistung von " + fmt(S.nn, 0) + " kW eingebaut werden."
     );
     if (vt >= 2) {
       lines.push("Der Schornstein soll in einem Abstand von " + fmt(S.a) + " Meter vom First entfernt errichtet werden.");
@@ -1438,22 +1463,9 @@
 
     /* Hinweise */
     h2("Hinweise");
-    const F = S.fenster;
-    para(
-      "Sind alle Fenster und Lüftungsöffnungen anderer Gebäude in einem Umkreis von min. " + fmt(F.radius, 1) +
-        " Metern um dieses Haus herum entfernt, kann § 19 Absatz 2 der 1. BImSchV angewandt werden (LAI-Auslegungskatalog vom 15.05.2023). Abstand zu Fenstern oder Lüftungsöffnungen min. " +
-        F.meter + " Meter oder diese um min. " + F.hoehe + " Meter überragen."
-    );
-    if (g.bim) {
-      const B = S.bimschv;
-      para(
-        B.ok
-          ? "Ableitbedingungen nach 1. BImSchV (§ 19 Abs. 1 Satz 1 bis 3) werden eingehalten."
-          : "Die Anforderungen des § 19 Abs. 1 Satz 1 bis 3 der 1. BImSchV werden nicht eingehalten, weil der Schornstein " +
-              (!B.abstandOk && !B.hoeheOk ? "zu weit vom First entfernt und zu niedrig" : !B.abstandOk ? "zu weit vom First entfernt" : "zu niedrig") +
-              " ist. Unter Berücksichtigung der VDI 3781 Blatt 4 kann dieser jedoch genutzt werden."
-      );
-    }
+    const fest = g.fuel === "fest";
+    para(fensterText(S, fest));
+    if (fest && g.bim) para(bimschvText(S));
     if (p.bem) para("Bemerkungen: " + p.bem);
     para(
       "Die in der Berechnung aufgeführten und verwendeten Maße und Daten basieren auf den zur Verfügung gestellten Daten. Für fehlerhafte oder ungenaue Datenangaben kann keine Haftung übernommen werden. Sämtliche Maße sind vor Ort zu prüfen. Berechnung angelehnt an die VDI 3781-4:2017.",
