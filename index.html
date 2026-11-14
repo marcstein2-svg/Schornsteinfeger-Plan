@@ -3833,7 +3833,7 @@
     <details class="sp-fields" id="spMsgTplBox">
       <summary>Vorlage ändern <small>gilt für alle Nachrichten</small></summary>
       <div class="sp-fields-body">
-        <p class="sp-muted" style="margin:10px 0 6px;font-size:.82rem">Platzhalter: {Datum} {Uhrzeit} {Zeitfenster} {Arbeiten} {Adresse} {Name} {Absender} {Telefon} {Zusatz}. Zeilen, in denen ein Platzhalter leer bleibt (z. B. keine Telefonnummer eingetragen), werden weggelassen.</p>
+        <p class="sp-muted" style="margin:10px 0 6px;font-size:.82rem">Platzhalter: {Datum} {Uhrzeit} {Zeitfenster} {Arbeiten} {Adresse} {Name} {Mitarbeiter} {Betrieb} {Absender} {Telefon} {Zusatz}. Zeilen, in denen ein Platzhalter leer bleibt (z. B. keine Telefonnummer eingetragen), werden weggelassen.</p>
         <textarea id="spMsgTpl" rows="8" style="font-size:16px"></textarea>
         <div class="sp-btnrow"><button class="btn btn-light" type="button" id="spMsgTplSave">Vorlage speichern</button><button class="btn btn-light" type="button" id="spMsgTplReset">Standard-Vorlage</button></div>
       </div>
@@ -8221,17 +8221,19 @@
     poolAdd(ids); renderPool(); render();
   }
   /* ================= Termin per WhatsApp / SMS ansagen ================= */
-  const MSG_TPL_DEFAULT = "Guten Tag,\nhier ist {Absender}.\nIch komme am {Datum} zwischen {Zeitfenster} Uhr zu Ihnen.\nGeplant: {Arbeiten}.\n{Zusatz}\nPasst der Termin nicht? Dann rufen Sie mich bitte an: {Telefon}\nFreundliche Grüße";
+  const MSG_TPL_DEFAULT = "Guten Tag,\nich bin {Mitarbeiter}, der Mitarbeiter von {Betrieb}.\nIch komme am {Datum} zwischen {Zeitfenster} Uhr zu Ihnen.\n\nGeplant: {Arbeiten}.\n{Zusatz}\nPasst der Termin nicht? Dann rufen Sie mich bitte an: {Telefon}\nMit freundlichen Grüßen\n{Mitarbeiter}🎩";
   function msgTemplate() { const t = data().msgTemplate; return typeof t === "string" && t.trim() ? t : MSG_TPL_DEFAULT; }
   function msgVars(a) {
     const st = settings();
     return {
-      Datum: new Intl.DateTimeFormat("de-DE", { weekday: "long", day: "2-digit", month: "long", year: "numeric" }).format(fromIso(a.date)),
+      Datum: new Intl.DateTimeFormat("de-DE", { weekday: "long" }).format(fromIso(a.date)) + " den " + shortDate(a.date),
       Uhrzeit: a.time,
-      Zeitfenster: timeWindow(a.time).replace(" – ", " und "),
+      Zeitfenster: (h => Number.isFinite(h) ? `${h}-${h + 1}` : a.time)(Number(String(a.time).slice(0, 2))),
       Arbeiten: worksText(a).join(", "),
       Adresse: addrLine(a),
       Name: a.customer || "",
+      Mitarbeiter: st.employeeName || "",
+      Betrieb: st.businessName || "",
       Absender: [st.employeeName, st.businessName].filter(Boolean).join(", ") || "Ihr Schornsteinfeger",
       Telefon: st.phone || "",
       Zusatz: Array.isArray(a.works) && a.works.includes("feststoff") ? "Die Messung dauert ca. " + durText(workMinutesCfg().feststoff) + ". Bitte bereiten Sie Ihren Pelletkessel bzw. Scheitholzkessel dafür vor." : ""
