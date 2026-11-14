@@ -313,7 +313,7 @@ const f = ein ? 0.7 : 0.8;
         w.push(
           "Offene Kamine/dekorative Gasfeuer benötigen grundsätzlich " +
           "eine eigene Verbrennungsluftöffnung bzw. -leitung ins Freie " +
-          "(TRGI 9.2.2) – über Infiltration/ALD nicht nachweisbar."
+          "(TRGI 9.2 und Feuerungsverordnung des Landes) – über Infiltration/ALD nicht nachweisbar."
         );
       }
 
@@ -323,7 +323,7 @@ const f = ein ? 0.7 : 0.8;
         w.push(
           "Bedarf inkl. Abluft über 80 m³/h (≙ 50 kW): " +
           "Nachweis über Infiltration/ALD nicht zulässig, nur Öffnungen " +
-          "ins Freie (TRGI 8.3.2.3.2–4, 9.2.3.3)."
+          "ins Freie bzw. Verbrennungsluftleitung (TRGI 9.2.3.2 und 9.2.3.3, bei Abluft-Einrichtungen auch 8.3.2.3.2–4)."
         );
       }
 
@@ -2269,8 +2269,9 @@ const f = ein ? 0.7 : 0.8;
       `
         <p class="lv-mu">
           Berechnung nach DVGW-TRGI 2018
-          (G 600) Abschnitt 9.2 und Anhang D
-          sowie 8.3.2.4.2.1.
+          (G 600): Abschnitt 8.3.2.4.2.1
+          (Schutzziel 1), Abschnitt 9.2
+          (Schutzziel 2) und Anhang D.
           Planungshilfe – ersetzt keine Prüfung
           durch den Fachbetrieb bzw. den
           bevollmächtigten Bezirksschornsteinfeger.
@@ -3335,7 +3336,7 @@ const f = ein ? 0.7 : 0.8;
     });
 
     para(
-      "Berechnung nach DVGW-TRGI 2018 (G 600) Abschnitt 9.2 und Anhang D sowie 8.3.2.4.2.1. Planungshilfe – ersetzt keine Prüfung durch den Fachbetrieb bzw. den bevollmächtigten Bezirksschornsteinfeger.",
+      "Berechnung nach DVGW-TRGI 2018 (G 600): Abschnitt 8.3.2.4.2.1 (Schutzziel 1), Abschnitt 9.2 (Schutzziel 2) und Anhang D. Planungshilfe – ersetzt keine Prüfung durch den Fachbetrieb bzw. den bevollmächtigten Bezirksschornsteinfeger.",
       { size: 8.2, color: "#6c757d" }
     );
 
