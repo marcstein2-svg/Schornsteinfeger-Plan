@@ -170,6 +170,7 @@
       phone: String(k.phone || ""),
       ownerAddr: String(k.ownerAddr || ""),
       notes: String(k.notes || ""),
+      hint: String(k.hint || ""),
       bossNote: String(k.bossNote || ""),
       wishes: cleanWishes(k.wishes),
       lat: coord(k.lat, 90),
@@ -350,7 +351,7 @@
 
     if (!s) return true;
 
-    var hay = [k.name, k.street, k.house, k.city, k.zip, k.phone, k.nr]
+    var hay = [k.name, k.street, k.house, k.city, k.zip, k.phone, k.nr, k.hint]
       .join(" ")
       .toLowerCase();
 
@@ -417,6 +418,9 @@
     ".kv-form .wide{grid-column:1 / -1}" +
     ".kv-form input,.kv-form select,.kv-form textarea{font-size:16px}" +
     ".kv-hint{margin:4px 0 0;color:var(--muted);font-size:.78rem}" +
+    ".kv-chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}" +
+    ".kv-chips .btn{min-height:38px;padding:6px 11px;font-size:.84rem}" +
+    ".kv-hintbox{padding:10px 12px;border:1px solid #ecd9a8;border-radius:12px;background:#fffaf0}" +
     ".kv-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:16px}" +
     ".kv-pickbtn{display:inline-flex;align-items:center;gap:8px}" +
     ".kv-chk{flex:0 0 24px;width:24px;height:24px;margin-right:12px;border:2px solid #b7bec5;border-radius:7px;background:#fff;position:relative}" +
@@ -961,8 +965,16 @@
       '<div class="field wide"><label for="kvOwner">Abweichende Anschrift des Eigentümers (optional)</label>' +
       '<input id="kvOwner" type="text" placeholder="Straße, PLZ Ort" autocomplete="off">' +
       '<p class="kv-hint">Leer lassen, wenn der Eigentümer im Haus wohnt.</p></div>' +
-      '<div class="field wide"><label for="kvNotes">Besonderheiten</label>' +
-      '<textarea id="kvNotes" rows="3" placeholder="Zugang, Hinweise …"></textarea></div>' +
+      '<div class="field wide kv-hintbox"><label for="kvHint">💡 Hinweise für unterwegs <span class="kv-hint" style="font-weight:600">(nur für dich – erscheinen im Kalender und in der Tagesübersicht, nie auf dem Zettel)</span></label>' +
+      '<div class="kv-chips" id="kvHintChips">' +
+      '<button type="button" class="btn btn-light" data-chip="🔑 Schlüssel: ">🔑 Schlüssel</button>' +
+      '<button type="button" class="btn btn-light" data-chip="🐕 Hund vorhanden">🐕 Hund</button>' +
+      '<button type="button" class="btn btn-light" data-chip="📞 Vorher anrufen">📞 Vorher anrufen</button>' +
+      '<button type="button" class="btn btn-light" data-chip="🪜 Dachausstieg schwierig">🪜 Dachausstieg</button>' +
+      '<button type="button" class="btn btn-light" data-chip="🔔 Klingel defekt – bitte anrufen">🔔 Klingel defekt</button></div>' +
+      '<textarea id="kvHint" rows="3" placeholder="z. B. Schlüssel beim Nachbarn Nr. 12, Hund im Garten, Zugang über Hof …"></textarea></div>' +
+      '<div class="field wide"><label for="kvNotes">Besonderheiten <span class="kv-hint" style="font-weight:600">(erscheinen als „Hinweis“ auf dem Anmeldezettel für den Kunden)</span></label>' +
+      '<textarea id="kvNotes" rows="2" placeholder="Nur Dinge, die der Kunde auf dem Zettel lesen soll"></textarea></div>' +
       '<div class="field wide"><label>Wunschzeiten (wann ist der Kunde am besten erreichbar?)</label>' +
       '<div id="kvWishes"></div>' +
       '<button type="button" class="btn btn-light" data-x="wish" style="margin-top:6px">＋ Wunschzeit hinzufügen</button>' +
@@ -1001,6 +1013,7 @@
     f("kvPhone").value = k ? k.phone : "";
     f("kvOwner").value = k ? k.ownerAddr : "";
     f("kvNotes").value = k ? k.notes : "";
+    f("kvHint").value = k ? k.hint || "" : "";
     f("kvBoss").value = k ? k.bossNote || "" : "";
     /* Wunschzeiten: im Editor "" statt 00:00 / 23:59 anzeigen (offen) */
     var wishes = cleanWishes(k && k.wishes).map(function (r) {
@@ -1096,6 +1109,19 @@
     }
 
     ov.addEventListener("click", function (e) {
+      var chip = e.target.closest("[data-chip]");
+
+      if (chip) {
+        var hf = f("kvHint"),
+          add = chip.getAttribute("data-chip"),
+          cur = hf.value.replace(/\s+$/, "");
+
+        hf.value = cur ? cur + "\n" + add : add;
+        hf.focus();
+        hf.setSelectionRange(hf.value.length, hf.value.length);
+        return;
+      }
+
       var t = e.target.closest("[data-x]");
 
       if (!t) return;
@@ -1192,6 +1218,7 @@
           phone: f("kvPhone").value.trim(),
           ownerAddr: f("kvOwner").value.trim(),
           notes: f("kvNotes").value.trim(),
+          hint: f("kvHint").value.trim(),
           bossNote: f("kvBoss").value.trim(),
           wishes: cleanWishes(
             wishes.map(function (r) {
@@ -1443,6 +1470,20 @@
     refreshAll();
   }
 
+  /* Telefonnummer eines Kunden ergänzen/ändern (z. B. aus der Terminansage) */
+  function setPhone(id, phone) {
+    var c = byId(id);
+
+    if (!c) return false;
+
+    kunden = kunden.map(function (x) {
+      return x.id === id ? Object.assign({}, x, { phone: String(phone || "").trim(), updated: new Date().toISOString() }) : x;
+    });
+    persist();
+    refreshAll();
+    return true;
+  }
+
   /* Fehlende Standorte nacheinander suchen (höchstens eine Anfrage pro Sekunde, wie von OpenStreetMap verlangt) */
   async function geocodeMissing(list, onProgress) {
     var todo = list.filter(function (c) {
@@ -1613,6 +1654,7 @@
     geocodeAddress: geocodeAddress,
     geocodeText: geocodeText,
     geocodeMissing: geocodeMissing,
-    setLocation: setLocation
+    setLocation: setLocation,
+    setPhone: setPhone
   };
 })();
