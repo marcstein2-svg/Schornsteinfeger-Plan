@@ -1455,6 +1455,7 @@
       .sp-toolbar .sp-actions-row .btn-gold, .sp-toolbar .sp-actions-row .btn-primary { flex: 1 1 100%; }
       .sp-toolbar .sp-actions-row .sp-minor { flex: 1 1 calc(50% - 4px); }
       .sp-toolbar .sp-actions-row details.sp-toolmore > summary { width: 100%; }
+      .sp-tab { flex: 1 1 calc(50% - 6px); }
       .sp-btnrow { grid-template-columns: 1fr; }
     }
     .sp-search-old { margin-bottom: 12px; }
@@ -1560,6 +1561,13 @@
     .sp-inv.on { border-color: #3f8f5b; background: #e7f4ec; }
     .sp-cash { margin-top: 12px; padding: 12px 14px; border: 1px solid #3f8f5b; border-radius: 12px; background: #f3faf5; }
     .sp-modal-actions { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+    .sp-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .sp-tab { flex: 1 1 auto; min-height: 46px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 11px; background: #f7f8f9; color: var(--text); font: inherit; font-weight: 800; font-size: .92rem; cursor: pointer; }
+    .sp-tab:hover { background: #eef0f2; }
+    .sp-tab.is-on { background: #20252b; border-color: #20252b; color: #fff; }
+    [data-sp-ppanel][hidden], #spDayField[hidden], #spPrintDates[hidden] { display: none !important; }
+    .sp-done-row { margin-top: 12px; }
+    .sp-done-row > span { display: block; margin-bottom: 6px; font-weight: 800; font-size: .9rem; }
     .sp-hintline { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; margin-top: 4px; padding: 3px 8px; border-radius: 7px; background: #fff1c9; color: #7a5200; font-size: .78rem; font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; text-align: left; }
     .sp-modal-more[hidden], .sp-hint-cust[hidden], #spMsgModal [hidden] { display: none !important; }
     .sp-hintbox { margin-top: 12px; padding: 12px 14px; border: 1px solid #ecd9a8; border-radius: 12px; background: #fffaf0; }
@@ -2057,24 +2065,28 @@
         <details class="sp-collapse sp-collapse-inner" data-sp-collapse="print">
           <summary>
             <span aria-hidden="true">🖨</span>
-            <span>Drucken &amp; Listen</span>
-            <span class="sp-collapse-hint">Anmeldezettel · Tagesübersicht · Erledigt-Liste</span>
+            <span>Drucken, Listen &amp; Export</span>
+            <span class="sp-collapse-hint">Zettel · Tagesübersicht · Erledigt-Liste · Kalender</span>
             <span class="sp-chevron" aria-hidden="true"></span>
           </summary>
           <div class="sp-collapse-body">
-            <div class="sp-block sp-print-range">
-              <h4>Zeitraum und Tag wählen</h4>
+            <div class="sp-tabs" id="spPrintTabs" role="tablist">
+              <button type="button" class="sp-tab is-on" role="tab" data-sp-ptab="slip">🖨 Anmeldezettel</button>
+              <button type="button" class="sp-tab" role="tab" data-sp-ptab="day">📋 Tagesübersicht</button>
+              <button type="button" class="sp-tab" role="tab" data-sp-ptab="done">✅ Erledigt-Liste</button>
+              <button type="button" class="sp-tab" role="tab" data-sp-ptab="ics">📅 Kalender-Export</button>
+            </div>
+
+            <div class="sp-block sp-print-range" id="spPrintDates">
               <div class="sp-form-grid">
                 <div class="field"><label for="spProposalFrom">Von</label><input id="spProposalFrom" type="date"></div>
                 <div class="field"><label for="spProposalTo">Bis</label><input id="spProposalTo" type="date"></div>
-                <div class="field"><label for="spDayDate">Einzelner Tag</label><input id="spDayDate" type="date"></div>
+                <div class="field" id="spDayField" hidden><label for="spDayDate">Einzelner Tag</label><input id="spDayDate" type="date"></div>
               </div>
-              <p class="sp-muted" style="margin:8px 0 0">„Von / Bis“ gilt für alle Knöpfe mit „Zeitraum“, „Einzelner Tag“ für die Tages-Knöpfe.</p>
             </div>
 
-            <div class="sp-block">
-              <h4>🖨 Anmeldezettel für Kunden</h4>
-              <p class="sp-muted" style="margin:0 0 8px">Ein Termin als A5-Blatt (halbe A4-Seite im Querformat) oder alle Termine des Zeitraums, 2 pro A4-Seite. Einzelne Termine druckst du am schnellsten direkt im Kalender mit „🖨 Drucken“.</p>
+            <div class="sp-block" data-sp-ppanel="slip">
+              <p class="sp-muted" style="margin:0 0 8px">Ein Termin als A5-Blatt (halbe A4-Seite im Querformat) oder alle Termine des Zeitraums, 2 pro A4-Seite. Einzelne Termine druckst du am schnellsten direkt im Kalender mit „🖨 Drucken“, mehrere über den Druckpool.</p>
               <div id="spProposalList" class="sp-proposal-list"></div>
               <div class="sp-btnrow">
                 <button class="btn btn-primary" type="button" id="spPrintProposal" disabled>🖨 Ausgewählten Termin drucken</button>
@@ -2082,28 +2094,51 @@
               </div>
             </div>
 
-            <div class="sp-block">
-              <h4>📋 Tagesübersicht für dich</h4>
+            <div class="sp-block" data-sp-ppanel="day" hidden>
+              <p class="sp-muted" style="margin:0 0 8px">Deine Liste zum Abhaken, immer auf einer A4-Seite pro Tag, mit Hinweisen für unterwegs.</p>
               <div class="sp-btnrow">
-                <button class="btn btn-primary" type="button" id="spPrintDay">📋 Tagesübersicht drucken</button>
+                <button class="btn btn-primary" type="button" id="spPrintDay">📋 Einzelnen Tag drucken</button>
                 <button class="btn btn-light" type="button" id="spPrintDays">📋 Alle Tage im Zeitraum (je Tag ein Blatt)</button>
               </div>
             </div>
 
-            <div class="sp-block">
-              <h4>✅ Erledigt-Liste für den Chef</h4>
-              <div class="sp-btnrow">
-                <button class="btn btn-gold" type="button" id="spPrintDone">✅ Erledigt-Liste drucken</button>
-                <button class="btn btn-light" type="button" id="spPrintDoneRange">✅ Zeitraum drucken</button>
-                <button class="btn btn-primary" type="button" id="spMailDone">✉ Per E-Mail an den Chef</button>
-                <button class="btn btn-light" type="button" id="spMailDoneRange">✉ Zeitraum per E-Mail</button>
+            <div class="sp-block" data-sp-ppanel="done" hidden>
+              <p class="sp-muted" style="margin:0 0 4px">Liste der erledigten Termine für den Chef. „Einzelner Tag“ und „Zeitraum“ wählst du oben.</p>
+              <div class="sp-done-row"><span>Drucken</span>
+                <div class="sp-btnrow">
+                  <button class="btn btn-gold" type="button" id="spPrintDone">✅ Einzelnen Tag drucken</button>
+                  <button class="btn btn-light" type="button" id="spPrintDoneRange">✅ Zeitraum drucken</button>
+                </div>
+              </div>
+              <div class="sp-done-row"><span>Per E-Mail an den Chef</span>
+                <div class="sp-btnrow">
+                  <button class="btn btn-primary" type="button" id="spMailDone">✉ Einzelnen Tag per E-Mail</button>
+                  <button class="btn btn-light" type="button" id="spMailDoneRange">✉ Zeitraum per E-Mail</button>
+                </div>
               </div>
               <p class="sp-muted" id="spMailStatus" hidden style="margin:8px 0 0"></p>
-              <div class="field" style="margin-top:12px"><label for="spBossEmail">E-Mail-Adresse des Chefs</label><input id="spBossEmail" type="email" autocomplete="off" placeholder="chef@beispiel.de"></div>
-              <div class="sp-exp-box">
-                <div class="sp-works-title">Ausgaben aus den Bareinnahmen (z. B. Tanken) – werden in der Erledigt-Liste abgezogen</div>
-                <div id="spExpList"></div>
-                <button class="btn btn-light" type="button" id="spExpAdd" style="margin-top:8px">＋ Ausgabe eintragen</button>
+              <details class="sp-fields" id="spBossBox">
+                <summary>E-Mail-Adresse des Chefs &amp; Ausgaben <small>Tanken usw. von den Bareinnahmen abziehen</small></summary>
+                <div class="sp-fields-body">
+                  <div class="field" style="margin-top:12px"><label for="spBossEmail">E-Mail-Adresse des Chefs</label><input id="spBossEmail" type="email" autocomplete="off" placeholder="chef@beispiel.de"></div>
+                  <div class="sp-exp-box">
+                    <div class="sp-works-title">Ausgaben aus den Bareinnahmen (z. B. Tanken) – werden in der Erledigt-Liste abgezogen</div>
+                    <div id="spExpList"></div>
+                    <button class="btn btn-light" type="button" id="spExpAdd" style="margin-top:8px">＋ Ausgabe eintragen</button>
+                  </div>
+                </div>
+              </details>
+            </div>
+
+            <div class="sp-block" data-sp-ppanel="ics" hidden>
+              <p class="sp-muted" style="margin:0 0 8px">Exportiere einen einzelnen Termin oder alle Termine eines Zeitraums für Android, iOS und andere Kalenderprogramme.</p>
+              <div class="sp-form-grid">
+                <div class="field"><label for="spExportFrom">Von</label><input id="spExportFrom" type="date"></div>
+                <div class="field"><label for="spExportTo">Bis</label><input id="spExportTo" type="date"></div>
+              </div>
+              <div class="sp-btnrow" style="margin-top:10px">
+                <button class="btn btn-gold" type="button" id="spExportRangeIcs">📅 Zeitraum als Kalender exportieren</button>
+                <button class="btn btn-light" type="button" id="spExportSelectedIcs" disabled>📅 Ausgewählten Termin exportieren</button>
               </div>
             </div>
           </div>
@@ -2126,24 +2161,6 @@
           </div>
         </details>
 
-        <details class="sp-collapse sp-collapse-inner" data-sp-collapse="export">
-          <summary>
-            <span aria-hidden="true">📅</span>
-            <span>Kalender-Export</span>
-            <span class="sp-chevron" aria-hidden="true"></span>
-          </summary>
-          <div class="sp-collapse-body">
-            <p class="sp-muted">Exportiere einen einzelnen Termin oder alle Termine eines Zeitraums für Android, iOS und andere Kalenderprogramme.</p>
-            <div class="sp-form-grid">
-              <div class="field"><label for="spExportFrom">Von</label><input id="spExportFrom" type="date"></div>
-              <div class="field"><label for="spExportTo">Bis</label><input id="spExportTo" type="date"></div>
-            </div>
-            <div class="sp-btnrow" style="margin-top:10px">
-              <button class="btn btn-gold" type="button" id="spExportRangeIcs">📅 Zeitraum als Kalender exportieren</button>
-              <button class="btn btn-light" type="button" id="spExportSelectedIcs" disabled>📅 Ausgewählten Termin exportieren</button>
-            </div>
-          </div>
-        </details>
       </div>
 
     </section>
@@ -7127,6 +7144,7 @@
     $("spPoolClear").addEventListener("click", () => { if (confirm("Alle Termine aus dem Druckpool nehmen? Die Termine selbst bleiben erhalten.")) { persist({ printPool: [] }); renderPool(); render(); } });
     $("spPoolAddRange").addEventListener("click", poolAddRange);
     bindMsg();
+    bindPrintTabs();
     $("spPoolAuto").addEventListener("change", e => persist({ printPoolAuto: e.target.checked }));
     $("spDoneFromApt").addEventListener("click", () => { const id = moduleState.editingId; closeModal(); openDoneModal(id); });
     $("spPrintDone").addEventListener("click", () => printDone(false));
@@ -8428,6 +8446,17 @@
     if (!list.length) return alert("Für diesen Tag gibt es keine Termine zum Ansagen.");
     openMsgModal((list.find(x => annState(x) !== "ok") || list[0]).id);
   }
+  /* Druckbereich: Untermenü (Tabs) */
+  function showPrintTab(name) {
+    document.querySelectorAll("[data-sp-ptab]").forEach(b => { const on = b.dataset.spPtab === name; b.classList.toggle("is-on", on); b.setAttribute("aria-selected", on ? "true" : "false"); });
+    document.querySelectorAll("[data-sp-ppanel]").forEach(p => { p.hidden = p.dataset.spPpanel !== name; });
+    $("spPrintDates").hidden = name === "ics";
+    $("spDayField").hidden = !(name === "day" || name === "done");
+  }
+  function bindPrintTabs() {
+    $("spPrintTabs").addEventListener("click", e => { const t = e.target.closest("[data-sp-ptab]"); if (t) showPrintTab(t.dataset.spPtab); });
+    showPrintTab("slip");
+  }
   function bindMsg() {
     $("spMsgDay").addEventListener("click", msgOpenDay);
     $("spWaOpen").addEventListener("click", openWaModal);
@@ -9226,7 +9255,8 @@
   async function mailDone(range) {
     const to = ($("spBossEmail").value || "").trim();
     if (!/^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]{2,}$/.test(to)) {
-      alert("Bitte zuerst oben die E-Mail-Adresse des Chefs eintragen.");
+      alert("Bitte zuerst die E-Mail-Adresse des Chefs eintragen.");
+      $("spBossBox").open = true;
       $("spBossEmail").scrollIntoView({ block: "center" }); $("spBossEmail").focus();
       return;
     }
