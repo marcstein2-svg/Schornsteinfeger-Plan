@@ -424,6 +424,9 @@
     ".kv-wa input{width:22px;height:22px;flex:0 0 22px}" +
     ".kv-grpinfo{font-size:.86rem;font-weight:700;color:#7a5200;line-height:1.5}" +
     ".kv-grpinfo .btn{min-height:38px;padding:6px 12px;margin-top:6px}" +
+    ".kv-grppick{margin:8px 0 4px;min-height:44px}" +
+    ".kv-grpm{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;margin:2px 0}" +
+    ".kv-grpm .btn{min-height:30px;padding:2px 10px;margin:0}" +
     ".kv-chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}" +
     ".kv-chips .btn{min-height:38px;padding:6px 11px;font-size:.84rem}" +
     ".kv-hintbox{padding:10px 12px;border:1px solid #ecd9a8;border-radius:12px;background:#fffaf0}" +
@@ -978,6 +981,7 @@
       '<input id="kvGroup" type="text" list="kvGroupList" maxlength="60" autocomplete="off" placeholder="z. B. Müller Hof (bei allen Häusern gleich eintragen)">' +
       '<datalist id="kvGroupList"></datalist>' +
       '<p class="kv-hint">Häuser mit gleichem Gruppennamen werden am selben Tag direkt hintereinander eingeplant und zusammen angemeldet (ein Zettel / eine Nachricht).</p>' +
+      '<button type="button" class="btn btn-gold kv-grppick" data-x="grppick">👥 Kunden für die Gruppe auswählen</button>' +
       '<div id="kvGroupInfo" class="kv-grpinfo"></div></div>' +
       '<div class="field wide"><label for="kvOwner">Abweichende Anschrift des Eigentümers (optional)</label>' +
       '<input id="kvOwner" type="text" placeholder="Straße, PLZ Ort" autocomplete="off">' +
@@ -1031,8 +1035,11 @@
     f("kvWa").checked = !!(k && k.waReg);
     f("kvGroup").value = k ? k.group || "" : "";
 
-    var groupAlso = [],
-      groupSug = [];
+    /* groupSel = die ANDEREN Häuser dieser Gruppe (ids); groupManual = per Hand gewählt (dann nicht mehr automatisch aus dem Namen gefüllt) */
+    var me = k ? k.id : "",
+      groupSel = [],
+      groupSug = [],
+      groupManual = false;
 
     f("kvGroupList").innerHTML = groupNames()
       .map(function (g) {
@@ -1041,29 +1048,54 @@
       .join("");
 
     function addrText(x) {
-      return E([[x.street, x.house].filter(Boolean).join(" "), x.city].filter(Boolean).join(", ") || x.name);
+      return E(
+        x.name + ", " + ([[x.street, x.house].filter(Boolean).join(" "), x.city].filter(Boolean).join(", ") || "ohne Adresse")
+      );
+    }
+
+    function loadGroup() {
+      groupSel = groupMembers(f("kvGroup").value.trim())
+        .filter(function (x) {
+          return x.id !== me;
+        })
+        .map(function (x) {
+          return x.id;
+        });
+    }
+
+    function byId(id) {
+      return kunden.filter(function (x) {
+        return x.id === id;
+      })[0];
     }
 
     function groupInfo() {
       var g = f("kvGroup").value.trim(),
-        gl = g.toLowerCase(),
-        me = k ? k.id : "",
         nm = f("kvName").value.trim().toLowerCase(),
         html = "";
 
-      if (g) {
-        var others = kunden.filter(function (x) {
-          return x.id !== me && (x.group || "").trim().toLowerCase() === gl;
-        });
+      if (g || groupSel.length) {
+        html += groupSel.length
+          ? "🏘 Häuser in dieser Gruppe (zusammen auf einem Zettel):<br>" +
+            groupSel
+              .map(function (id) {
+                var x = byId(id);
 
-        html += others.length
-          ? "🏘 Weitere Häuser in dieser Gruppe: " + others.map(addrText).join(" · ")
+                return x
+                  ? '• <span class="kv-grpm">' +
+                      addrText(x) +
+                      ' <button type="button" class="btn btn-light" data-x="grpdel" data-id="' +
+                      E(id) +
+                      '" aria-label="Aus Gruppe entfernen">✕</button></span>'
+                  : "";
+              })
+              .join("<br>")
           : "Noch kein weiteres Haus in dieser Gruppe.";
       }
 
       groupSug = nm
         ? kunden.filter(function (x) {
-            return x.id !== me && x.name.trim().toLowerCase() === nm && !(gl && (x.group || "").trim().toLowerCase() === gl);
+            return x.id !== me && x.name.trim().toLowerCase() === nm && groupSel.indexOf(x.id) < 0;
           })
         : [];
 
@@ -1072,13 +1104,16 @@
           (html ? "<br>" : "") +
           "Gleicher Name gefunden: " +
           groupSug.map(addrText).join(" · ") +
-          '<br><button type="button" class="btn btn-light" data-x="grpsug">🏘 Zu einer Gruppe machen</button>';
+          '<br><button type="button" class="btn btn-light" data-x="grpsug">🏘 Zur Gruppe hinzufügen</button>';
       }
 
       f("kvGroupInfo").innerHTML = html;
     }
 
+    loadGroup();
+
     ov.addEventListener("input", function (e) {
+      if (e.target.id === "kvGroup" && !groupManual) loadGroup();
       if (e.target.id === "kvGroup" || e.target.id === "kvName") groupInfo();
     });
     groupInfo();
@@ -1153,6 +1188,10 @@
     }
 
     function onKey(e) {
+      var tops = document.querySelectorAll(".kv-overlay.top");
+
+      if (tops.length && tops[tops.length - 1] !== ov) return;   // darüber liegt die Kundenauswahl: dort schließen
+
       if (e.key === "Escape") {
         e.stopPropagation();
         close();
@@ -1181,13 +1220,46 @@
 
     ov.addEventListener("click", function (e) {
       if (e.target.closest('[data-x="grpsug"]')) {
-        var gname = f("kvGroup").value.trim() || f("kvName").value.trim();
+        if (!f("kvGroup").value.trim()) f("kvGroup").value = f("kvName").value.trim();
+        groupManual = true;
+        groupSel = groupSel.concat(
+          groupSug.map(function (x) {
+            return x.id;
+          })
+        );
+        groupInfo();
+        return;
+      }
 
-        f("kvGroup").value = gname;
-        groupAlso = groupSug.map(function (x) {
-          return x.id;
+      var gdel = e.target.closest('[data-x="grpdel"]');
+
+      if (gdel) {
+        groupManual = true;
+        groupSel = groupSel.filter(function (id) {
+          return id !== gdel.getAttribute("data-id");
         });
         groupInfo();
+        return;
+      }
+
+      if (e.target.closest('[data-x="grppick"]')) {
+        if (!f("kvGroup").value.trim()) f("kvGroup").value = f("kvName").value.trim() || "Gruppe";
+        pickMany(
+          function (chosen) {
+            groupManual = true;
+            groupSel = chosen
+              .map(function (x) {
+                return x.id;
+              })
+              .filter(function (id) {
+                return id !== me;
+              });
+            groupInfo();
+          },
+          groupSel,
+          null,
+          true
+        );
         return;
       }
 
@@ -1345,9 +1417,16 @@
           });
         }
 
-        if (rec.group && groupAlso.length) {
+        if (rec.group) {
+          var gl2 = rec.group.toLowerCase();
+
           kunden = kunden.map(function (x) {
-            return groupAlso.indexOf(x.id) >= 0 ? Object.assign({}, x, { group: rec.group, updated: new Date().toISOString() }) : x;
+            if (x.id === rec.id) return x;
+            if (groupSel.indexOf(x.id) >= 0 && (x.group || "").trim().toLowerCase() !== gl2)
+              return Object.assign({}, x, { group: rec.group, updated: new Date().toISOString() });
+            if (groupSel.indexOf(x.id) < 0 && (x.group || "").trim().toLowerCase() === gl2)
+              return Object.assign({}, x, { group: "", updated: new Date().toISOString() });   // aus der Gruppe entfernt
+            return x;
           });
         }
 
@@ -1405,11 +1484,11 @@
   }
 
   /* Mehrfachauswahl: cb(arrayVonKunden) – sortiert nach Ort, Straße, Hausnummer */
-  function pickMany(cb, preselected, work) {
+  function pickMany(cb, preselected, work, top) {
     var sel = new Set(preselected || []);
     var ov = document.createElement("div");
 
-    ov.className = "kv-overlay";
+    ov.className = "kv-overlay" + (top ? " top" : "");
 
     ov.innerHTML =
       '<div class="kv-sheet" role="dialog" aria-modal="true">' +
@@ -1455,7 +1534,7 @@
     }
 
     function onKey(e) {
-      if (e.key === "Escape" && !document.querySelector(".kv-overlay.top")) close();
+      if (e.key === "Escape" && (top || !document.querySelector(".kv-overlay.top"))) close();
     }
 
     document.addEventListener("keydown", onKey);
