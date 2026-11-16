@@ -3656,6 +3656,7 @@
       <button class="btn btn-light" type="button" id="spDoneCancel">Abbrechen</button>
       <button class="btn btn-light" type="button" id="spDoneNoteSave">Nur Bemerkung speichern</button>
       <button class="btn btn-gold" type="button" id="spReceiptOpen" hidden>🧾 Quittung erstellen</button>
+      <button class="btn btn-light" type="button" id="spSweepFromDone">🧹 Kehr-Zettel drucken</button>
       <button class="btn btn-danger" type="button" id="spDoneUndo" hidden>Als nicht erledigt markieren</button>
     </div>
   </div>
@@ -3713,6 +3714,21 @@
     <div class="sp-modal-actions">
       <button class="btn btn-light" type="button" id="spExpCancel">Abbrechen</button>
       <button class="btn btn-primary" type="button" id="spExpSave">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<div class="sp-modal-backdrop" id="spSweepModal" hidden>
+  <div class="sp-modal" role="dialog" aria-modal="true" aria-labelledby="spSweepTitle" style="max-width:520px">
+    <h3 id="spSweepTitle">🧹 Kehr-Zettel</h3>
+    <p class="sp-muted" style="margin:-4px 0 12px">Für Kunden, bei denen der Schornstein frei zugänglich ist und du ihn auch ohne sie kehren darfst. Auf dem Zettel stehen Datum und Uhrzeit der Kehrung, ein Dank für das Vertrauen und deine Telefonnummer.</p>
+    <div class="field"><label for="spSweepDate">Datum der Kehrung</label><input id="spSweepDate" type="date"></div>
+    <div class="sp-works-title" style="margin-top:12px">Häuser und Uhrzeit der Kehrung</div>
+    <div id="spSweepRows"></div>
+    <div style="margin-top:8px"><button type="button" class="btn btn-light" id="spSweepNow">🕐 Uhrzeit auf jetzt setzen</button></div>
+    <div class="sp-modal-actions">
+      <button class="btn btn-light" type="button" id="spSweepCancel">Abbrechen</button>
+      <button class="btn btn-gold" type="button" id="spSweepPrint">🖨 Kehr-Zettel drucken</button>
     </div>
   </div>
 </div>
@@ -3794,6 +3810,7 @@
     <div class="sp-muted" style="margin-top:10px;font-size:.84rem">Die Dauer je Kunde ergibt sich aus der gewählten Tätigkeit (mehrere = Summe). <button type="button" class="sp-linkbtn" id="spTimesOpenAuto">⏱ Zeiten je Tätigkeit anpassen</button></div>
     <label class="sp-work" style="margin-top:12px;display:flex"><input type="checkbox" id="spAutoBreak"><span>30 Minuten Pause berücksichtigen<br><small class="sp-muted" style="font-weight:600">Pause 12:30–13:00 Uhr – in dieser Zeit werden keine Termine vergeben (bei 15-Minuten-Terminen sind es zwischen 12 und 13 Uhr dann nur 2 statt 4).</small></span></label>
     <div class="sp-route-box">
+      <label class="sp-work" style="display:flex;margin-bottom:8px"><input type="checkbox" id="spAutoPool"><span>Termine in den Druckpool legen<br><small class="sp-muted" style="font-weight:600">Aus lassen = die Termine werden nur gespeichert, ohne Zettel.</small></span></label>
       <label class="sp-work" style="display:flex;margin-bottom:8px"><input type="checkbox" id="spAutoWish"><span>Wunschzeiten der Kunden beachten<br><small class="sp-muted" style="font-weight:600">Kunden mit Wunschzeiten (z. B. „Fr ab 14:00 Uhr“) werden nur in diesen Zeitfenstern eingeplant. Sie werden zuerst eingeplant, die übrigen Kunden füllen die Lücken.</small></span></label>
       <label class="sp-work" style="display:flex"><input type="checkbox" id="spAutoRoute"><span>Kürzeste Fahrroute berücksichtigen<br><small class="sp-muted" style="font-weight:600">Die Kunden werden nach ihrem Standort so geordnet, dass möglichst wenig gefahren wird. Kunden ohne Standort werden nach Ort und Straße einsortiert.</small></span></label>
       <label class="sp-work" style="display:flex;margin-top:8px"><input type="checkbox" id="spAutoDrive"><span>Fahrtzeit zwischen den Kunden aus der Entfernung berechnen<br><small class="sp-muted" style="font-weight:600">Wird als „Fahrtzeit vorher“ eingeplant (Luftlinie × 1,3, auf 5 Minuten aufgerundet). Eine größere eingetragene Fahrtzeit gilt weiterhin.</small></span></label>
@@ -3829,7 +3846,7 @@
       </div>
       <div class="sp-btnrow" style="margin-top:8px"><button class="btn btn-light" type="button" id="spPoolAddRange">＋ Alle Termine im Zeitraum hinzufügen</button></div>
     </div>
-    <label class="sp-work" style="display:flex;margin-top:12px"><input type="checkbox" id="spPoolAuto"><span>Neue und verschobene Termine automatisch in den Druckpool legen <small class="sp-muted">(Termine von WhatsApp-Kunden kommen stattdessen in den WhatsApp-Pool)</small></span></label>
+    <label class="sp-work" style="display:flex;margin-top:12px"><input type="checkbox" id="spPoolAuto"><span>Automatisch eingeplante und verschobene Termine automatisch in den Druckpool legen <small class="sp-muted">(Termine von WhatsApp-Kunden kommen stattdessen in den WhatsApp-Pool)</small></span></label>
     <div id="spPoolLast" style="margin-top:10px"></div>
     <div class="sp-modal-actions">
       <button class="btn btn-light" type="button" id="spPoolClose">Schließen</button>
@@ -3937,6 +3954,7 @@
     <div class="sp-modal-more" id="spAptMoreActions" hidden>
       <button class="btn btn-light" type="button" id="spMoveFromApt">⇄ Verschieben</button>
       <button class="btn btn-light" type="button" id="spDoneFromApt">✔ Erledigt …</button>
+      <button class="btn btn-light" type="button" id="spSweepFromApt">🧹 Kehr-Zettel</button>
       <button class="btn btn-light" type="button" id="spMissFromApt">🚪 Nicht angetroffen …</button>
       <button class="btn btn-light" type="button" id="spMsgFromApt">📲 Termin ansagen</button>
     </div>
@@ -3945,7 +3963,7 @@
       <button class="btn btn-danger" type="button" id="spDeleteAppointment" hidden>Löschen</button>
       <button class="btn btn-light" type="button" id="spPoolFromApt">🗂 Speichern &amp; in Druckpool</button>
       <button class="btn btn-gold" type="button" id="spPrintFromApt">🖨 Speichern &amp; drucken</button>
-      <button class="btn btn-primary" type="button" id="spSaveAppointment">Termin speichern</button>
+      <button class="btn btn-primary" type="button" id="spSaveAppointment" title="Speichert den Termin, ohne zu drucken und ohne ihn in den Druckpool zu legen">💾 Nur speichern</button>
     </div>
   </div>
 </div>
@@ -7147,6 +7165,12 @@
     bindPrintTabs();
     $("spPoolAuto").addEventListener("change", e => persist({ printPoolAuto: e.target.checked }));
     $("spDoneFromApt").addEventListener("click", () => { const id = moduleState.editingId; closeModal(); openDoneModal(id); });
+    $("spSweepFromApt").addEventListener("click", () => { const id = moduleState.editingId; closeModal(); openSweepModal(id); });
+    $("spSweepFromDone").addEventListener("click", () => { const id = moduleState.doneId; closeDoneModal(); openSweepModal(id); });
+    $("spSweepCancel").addEventListener("click", closeSweepModal);
+    $("spSweepPrint").addEventListener("click", printSweep);
+    $("spSweepNow").addEventListener("click", () => { const n = new Date(); document.querySelectorAll("#spSweepRows .sp-sweep-time").forEach(i => { i.value = pad(n.getHours()) + ":" + pad(n.getMinutes()); }); $("spSweepDate").value = iso(n); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("spSweepModal").hidden) closeSweepModal(); });
     $("spPrintDone").addEventListener("click", () => printDone(false));
     $("spPrintDoneRange").addEventListener("click", () => printDone(true));
     $("spMailDone").addEventListener("click", () => mailDone(false));
@@ -7185,7 +7209,7 @@
     $("spTimesSave").addEventListener("click", saveTimes);
     $("spTimesReset").addEventListener("click", () => { Object.keys(WORK_DEFAULT_MIN).forEach(k => { $("spTime_" + k).value = WORK_DEFAULT_MIN[k]; }); });
     $("spWorkOther").addEventListener("change", () => { syncWorkOther(); if ($("spWorkOther").checked) $("spWorkOtherText").focus(); });
-    $("spSaveAppointment").addEventListener("click", saveAppointment);
+    $("spSaveAppointment").addEventListener("click", () => saveAppointment({ plain: true }));
     $("spCancelAppointment").addEventListener("click", closeModal);
     $("spDeleteAppointment").addEventListener("click", deleteAppointment);
     $("spPrintProposal").addEventListener("click", printProposal);
@@ -7199,6 +7223,7 @@
     document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("spAppointmentModal").hidden) closeModal(); if (e.key === "Escape" && !$("spAutoModal").hidden && !document.querySelector(".kv-overlay")) closeAutoModal(); if (e.key === "Escape" && !$("spDoneModal").hidden) closeDoneModal(); if (e.key === "Escape" && !$("spMoveModal").hidden) closeMoveModal(); if (e.key === "Escape" && !$("spMissModal").hidden) closeMissModal(); if (e.key === "Escape" && !$("spExpModal").hidden) closeExpModal(); if (e.key === "Escape" && !$("spReceiptModal").hidden) closeReceiptModal(); if (e.key === "Escape" && !$("spPoolModal").hidden) closePoolModal(); if (e.key === "Escape" && !$("spMsgModal").hidden) closeMsgModal(); else if (e.key === "Escape" && !$("spWaModal").hidden) closeWaModal(); });
     document.addEventListener("click", e => {
       const dayBtn = e.target.closest("[data-sp-day]"); if (dayBtn) { moduleState.date = fromIso(dayBtn.dataset.spDay); moduleState.view = "day"; render(); return; }
+      const sw = e.target.closest("[data-sp-sweep]"); if (sw) { openSweepModal(sw.dataset.spSweep); return; }
       const dn = e.target.closest("[data-sp-done]"); if (dn) { openDoneModal(dn.dataset.spDone); return; }
       const xd = e.target.closest("[data-sp-exp-del]"); if (xd) { deleteExp(xd.dataset.spExpDel); return; }
       const ms = e.target.closest("[data-sp-miss]"); if (ms) { openMissModal(ms.dataset.spMiss); return; }
@@ -7296,14 +7321,15 @@
     const pooled = inPool(a.id);
     const grpN = slipUnit(a).length;
     const grpBadge = grpN > 1 && !compact ? `<span class="sp-badge sp-badge-line sp-badge-time">🏘 ${grpN} Häuser zusammen</span>` : "";
-    const badgeLine = wishBadge + grpBadge + (pooled && !compact ? `<span class="sp-badge sp-badge-line sp-badge-time">🗂 im Druckpool</span>` : "") + (waOpen && !compact ? `<span class="sp-badge sp-badge-line sp-badge-time">💬 per WhatsApp anmelden</span>` : "") + (ann === "ok" && !compact ? `<span class="sp-badge sp-badge-line sp-badge-ann">📲 angesagt</span>` : ann === "stale" && !compact ? `<span class="sp-badge sp-badge-line sp-badge-ann stale">📲 neu ansagen – Termin geändert</span>` : "") + (att > 1 && !compact ? `<span class="sp-badge sp-badge-line">${attemptLabel(att)}</span>` : "") + (stale && !compact ? `<span class="sp-badge sp-badge-line sp-badge-warn">⚠ Zettel neu drucken</span>` : "");
+    const sweepBadge = a.sweepSlip ? `<span class="sp-badge sp-badge-line">🧹 Kehr-Zettel ${esc(a.sweepSlip.time || "")}</span>` : "";
+    const badgeLine = wishBadge + grpBadge + sweepBadge + (pooled && !compact ? `<span class="sp-badge sp-badge-line sp-badge-time">🗂 im Druckpool</span>` : "") + (waOpen && !compact ? `<span class="sp-badge sp-badge-line sp-badge-time">💬 per WhatsApp anmelden</span>` : "") + (ann === "ok" && !compact ? `<span class="sp-badge sp-badge-line sp-badge-ann">📲 angesagt</span>` : ann === "stale" && !compact ? `<span class="sp-badge sp-badge-line sp-badge-ann stale">📲 neu ansagen – Termin geändert</span>` : "") + (att > 1 && !compact ? `<span class="sp-badge sp-badge-line">${attemptLabel(att)}</span>` : "") + (stale && !compact ? `<span class="sp-badge sp-badge-line sp-badge-warn">⚠ Zettel neu drucken</span>` : "");
     const mark = (a.done ? "✔ " : a.missed ? "🚪 " : "") + (grpN > 1 && compact ? "🏘 " : "") + (pooled && compact ? "🗂 " : "") + (waOpen && compact ? "💬 " : "") + (hl && compact ? "💡 " : "") + (stale && compact ? "⚠ " : "") + ((tbm || tam) && compact ? "🚗 " : "") + (wt && compact ? (wbad ? "⚠⏰ " : "⏰ ") : "");
     const btn = `<button type="button" class="sp-appt${compact ? " compact" : ""}${a.id === moduleState.selectedId ? " selected" : ""}${a.done ? " done" : ""}${a.missed ? " missed" : ""}" data-sp-open="${esc(a.id)}" data-date="${esc(a.date)}" data-time="${esc(a.time)}" title="${esc(title)}"><span class="sp-appt-time">${mark}${esc(a.time)}${badgeTime}${compact ? codeHtml : ""}</span>${compact ? "" : codeHtml}<span class="sp-appt-main"><strong>${esc(a.customer || "Ohne Kundennamen")}</strong>${badgeLine}${compact || !addr ? "" : `<small>${esc(addr)}</small>`}${hl && !compact ? `<span class="sp-hintline">💡 ${esc(hl)}</span>` : ""}${compact || !(tbm || tam) ? "" : `<small>🚗 ${tbm} Min. vorher · ${tam} Min. nachher</small>`}</span></button>`;
     if (compact) return btn;
     const inv = a.done && a.invoice ? ` · ${INV_SHORT[a.invoice] || ""}${a.invoice === "bar" && a.amount > 0 ? " " + fmtEUR(a.amount) : ""}` : "";
     const fu = a.missed ? followUpOf(a) : null;
     const missLabel = a.missed ? (fu ? `🚪 Nicht angetroffen · ${esc(attemptLabel(attemptOf(fu)))} am ${esc(shortDate(fu.date))}` : (attemptOf(a) >= 3 ? "🚪 Nicht angetroffen – letzte Anmeldung" : "🚪 Nicht angetroffen – neu anmelden")) : "🚪 Nicht angetroffen";
-    return `<div class="sp-appt-wrap">${btn}<div class="sp-appt-actions"><button type="button" class="sp-act${a.done ? " done" : ""}" data-sp-done="${esc(a.id)}">${a.done ? "✔ Erledigt" + esc(inv) : "☐ Erledigt?"}</button><button type="button" class="sp-act" data-sp-print="${esc(a.id)}">🖨 Drucken</button><details class="sp-more"><summary class="sp-act${a.missed ? " missed" : ""}">${a.missed ? "🚪 " : ""}⋯ Mehr</summary><div class="sp-more-menu"><button type="button" class="sp-act" data-sp-msg="${esc(a.id)}">📲 Termin ansagen</button><button type="button" class="sp-act" data-sp-pool="${esc(a.id)}">🗂 ${pooled ? "Aus Druckpool nehmen" : "In Druckpool legen"}</button><button type="button" class="sp-act${a.missed ? " missed" : ""}" data-sp-miss="${esc(a.id)}">${missLabel}</button><button type="button" class="sp-act" data-sp-move="${esc(a.id)}">⇄ Verschieben</button></div></details></div></div>`;
+    return `<div class="sp-appt-wrap">${btn}<div class="sp-appt-actions"><button type="button" class="sp-act${a.done ? " done" : ""}" data-sp-done="${esc(a.id)}">${a.done ? "✔ Erledigt" + esc(inv) : "☐ Erledigt?"}</button><button type="button" class="sp-act" data-sp-print="${esc(a.id)}">🖨 Drucken</button><details class="sp-more"><summary class="sp-act${a.missed ? " missed" : ""}">${a.missed ? "🚪 " : ""}⋯ Mehr</summary><div class="sp-more-menu"><button type="button" class="sp-act" data-sp-sweep="${esc(a.id)}">🧹 Kehr-Zettel</button><button type="button" class="sp-act" data-sp-msg="${esc(a.id)}">📲 Termin ansagen</button><button type="button" class="sp-act" data-sp-pool="${esc(a.id)}">🗂 ${pooled ? "Aus Druckpool nehmen" : "In Druckpool legen"}</button><button type="button" class="sp-act${a.missed ? " missed" : ""}" data-sp-miss="${esc(a.id)}">${missLabel}</button><button type="button" class="sp-act" data-sp-move="${esc(a.id)}">⇄ Verschieben</button></div></details></div></div>`;
   }
   function freeTimeIn(day, hour) {
     const used = appointments().filter(a => a.date === day && Number(a.time.slice(0, 2)) === hour).map(a => a.time);
@@ -7736,6 +7762,7 @@
 
   function openAutoModal() {
     const p = autoPrefs();
+    $("spAutoPool").checked = poolAutoOn();
     const from = addDays(new Date(), 1);
     $("spAutoFrom").value = iso(from);
     $("spAutoTo").value = iso(addDays(from, 13));
@@ -8053,7 +8080,7 @@
       return { id: uuid(), date, time, customer: k.name, street: k.street, house: k.house, zip: k.zip, city: k.city, duration: p.dur || dur, notes: k.notes || "", works: autoWorkList(w), workOther: w.other ? w.text.trim() : "", kid: k.id, knr: k.nr, ...(k.bossNote ? { bossNote: k.bossNote } : {}), ...(p.tb ? { travelBefore: p.tb } : {}), ...(p.ta ? { travelAfter: p.ta } : {}), ...(p.retry ? { attempt: p.retry.attempt, prevId: p.retry.prevId } : {}), auto: batch, updatedAt: now };
     });
     persist({ appointments: appointments().concat(items) });
-    if (poolAutoOn()) poolAdd(items.map(a => a.id));
+    if ($("spAutoPool").checked) poolAdd(items.map(a => a.id));
     autoSavePrefs({ lastBatch: batch, start: $("spAutoStart").value, end: $("spAutoEnd").value, duration: String(dur), pause: $("spAutoBreak").checked, max: plan.maxDay || "", wish: $("spAutoWish").checked, route: $("spAutoRoute").checked, drive: $("spAutoDrive").checked, speed: Number($("spAutoSpeed").value) || 40 });
     moduleState.date = fromIso(items[0].date);
     moduleState.view = "week";
@@ -9313,6 +9340,128 @@
     return new Blob([bytes], { type: "application/pdf" });
   }
 
+  /* ================= Kehr-Zettel: "Ich habe Ihren Schornstein gekehrt" (mit Datum und Uhrzeit) ================= */
+  function openSweepModal(id) {
+    const a = appointments().find(x => x.id === id);
+    if (!a) return;
+    moduleState.sweepId = id;
+    const u = slipUnit(a).filter(x => !x.missed);
+    $("spSweepDate").value = a.sweepSlip && a.sweepSlip.date ? a.sweepSlip.date : a.date;
+    $("spSweepRows").innerHTML = u.map(x => `<label class="sp-sweep-row" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:6px 0;font-weight:700"><input type="checkbox" class="sp-sweep-on" data-id="${esc(x.id)}" ${x.id === id || u.length === 1 ? "checked" : (x.done ? "" : "checked")} style="width:22px;height:22px"><span style="flex:1;min-width:150px">${esc(x.customer || "Ohne Namen")}<small class="sp-muted" style="display:block;font-weight:600">${esc(addrLine(x))}</small></span><input type="time" class="sp-sweep-time" data-id="${esc(x.id)}" value="${esc((x.sweepSlip && x.sweepSlip.time) || x.time || "")}" aria-label="Uhrzeit der Kehrung" style="min-height:44px"></label>`).join("");
+    $("spSweepModal").hidden = false;
+  }
+  function closeSweepModal() { $("spSweepModal").hidden = true; moduleState.sweepId = null; }
+  function printSweep() {
+    const date = $("spSweepDate").value;
+    if (!date) return alert("Bitte das Datum der Kehrung eintragen.");
+    const picked = [];
+    document.querySelectorAll("#spSweepRows .sp-sweep-on").forEach(c => {
+      if (!c.checked) return;
+      const a = appointments().find(x => x.id === c.dataset.id), t = document.querySelector(`#spSweepRows .sp-sweep-time[data-id="${CSS.escape(c.dataset.id)}"]`).value;
+      if (a) picked.push({ a, time: t });
+    });
+    if (!picked.length) return alert("Bitte mindestens ein Haus auswählen.");
+    if (picked.some(p => !p.time)) return alert("Bitte bei jedem Haus die Uhrzeit der Kehrung eintragen – sie steht auf dem Zettel.");
+    const items = picked.map(p => ({ customer: p.a.customer || "", addr: addrLine(p.a), date, time: p.time }));
+    const st = settings();
+    const blob = buildSweepPdf(items, st);
+    const name = "Kehr-Zettel_" + (items.length === 1 ? (items[0].customer || "Kunde").replace(/[^\wäöüÄÖÜß-]+/g, "_") + "_" : items.length + "_Haeuser_") + date + ".pdf";
+    const ids = new Map(picked.map(p => [p.a.id, p.time])), now = new Date().toISOString();
+    persist({ appointments: appointments().map(a => ids.has(a.id) ? { ...a, sweepSlip: { date, time: ids.get(a.id), at: now } } : a) });
+    closeSweepModal(); render();
+    if (window.navigator.standalone === true || isIOSDevice()) sharePdf(blob, name); else openPdfTab(blob, name);
+  }
+  /* PDF: je Haus ein Zettel, zwei Zettel pro A4-Seite (oben/unten, Schnittlinie) */
+  function buildSweepPdf(items, s) {
+    const W = 595.28, H = 841.89, ML = 44, CW = W - 2 * ML, HALF = H / 2;
+    const cpMap = { "€": 0x80, "„": 0x84, "…": 0x85, "‘": 0x91, "’": 0x92, "“": 0x93, "”": 0x94, "•": 0x95, "–": 0x96, "—": 0x97 };
+    const nz = str => { let o = ""; for (const ch of String(str ?? "")) { const c = ch.codePointAt(0); if (c < 32) o += " "; else if (c < 128 || (c >= 160 && c <= 255) || cpMap[ch]) o += ch; else { const d = ch.normalize("NFKD").replace(/[^\x20-\x7e]/g, ""); o += d || "?"; } } return o; };
+    const enc = str => { let o = ""; for (const ch of str) o += cpMap[ch] ? String.fromCharCode(cpMap[ch]) : ch; return o.replace(/([\\()])/g, "\\$1"); };
+    const cv = document.createElement("canvas").getContext("2d");
+    const wid = (str, bold, size) => { cv.font = (bold ? "bold " : "") + "100px Helvetica, Arial, sans-serif"; return cv.measureText(nz(str)).width * size / 100 * 1.02; };
+    const col = hex => { const n = parseInt(hex.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(v => (v / 255).toFixed(3)).join(" "); };
+    const f = v => Number(v).toFixed(2);
+    const wrap = (str, size, bold, maxW) => { const out = []; String(str ?? "").split(/\r?\n/).forEach(par => { let ln = ""; par.split(/\s+/).filter(Boolean).forEach(w => { const t = ln ? ln + " " + w : w; if (!ln || wid(t, bold, size) <= maxW) ln = t; else { out.push(ln); ln = w; } }); out.push(ln); }); return out; };
+    let ops = [];
+    const T = (x, y, str, o = {}) => { const size = o.size || 10, bold = !!o.bold; let px = x; if (o.align === "right") px = x - wid(str, bold, size); if (o.align === "center") px = x - wid(str, bold, size) / 2; ops.push("BT /" + (bold ? "F2" : "F1") + " " + size + " Tf " + col(o.color || "#22272d") + " rg " + f(px) + " " + f(H - y) + " Td (" + enc(nz(str)) + ") Tj ET"); };
+    const R = (x, y, w, h, o = {}) => { const fill = o.fill ? col(o.fill) + " rg " : "", stroke = o.stroke ? col(o.stroke) + " RG " + (o.lw || 0.8) + " w " : ""; ops.push(fill + stroke + f(x) + " " + f(H - y - h) + " " + f(w) + " " + f(h) + " re " + (o.fill && o.stroke ? "B" : o.fill ? "f" : "S")); };
+    const L = (x1, y1, x2, y2, color, lw, dash) => ops.push((dash ? "[" + dash + "] 0 d " : "[] 0 d ") + col(color) + " RG " + lw + " w " + f(x1) + " " + f(H - y1) + " m " + f(x2) + " " + f(H - y2) + " l S");
+    const longDate = v => { const d = new Date(v + "T12:00:00"); return isNaN(d) ? v : d.toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long", year: "numeric" }); };
+    const biz = s.businessName || "", emp = s.employeeName || "";
+
+    const block = (top, it) => {
+      let y = top + 6;
+      T(ML, y + 12, biz || emp || "Schornsteinfeger", { size: 14, bold: true });
+      T(ML, y + 25, "Schornsteinfegerbetrieb", { size: 8.5, color: "#6c757d" });
+      if (s.businessAddress) T(ML, y + 37, s.businessAddress, { size: 8.5, color: "#6c757d" });
+      y += 46;
+      L(ML, y, ML + CW, y, "#c79a42", 1.4);
+      y += 26;
+      T(ML, y, "Ihr Schornstein wurde gekehrt", { size: 20, bold: true });
+      y += 24;
+      T(ML, y, "Sehr geehrte Kundin, sehr geehrter Kunde,", { size: 10.5 });
+      y += 18;
+      const intro = (biz ? "als Schornsteinfegergeselle im Auftrag von " + biz + ", Schornsteinfegermeister, " : "") + "habe ich Ihren Schornstein gekehrt. Da er frei zugänglich ist, konnte ich die Kehrung auch ohne Ihre Anwesenheit durchführen.";
+      wrap(intro, 10.5, false, CW).forEach(t => { T(ML, y, t, { size: 10.5 }); y += 14.5; });
+      y += 6;
+      /* Kasten mit Datum, Uhrzeit, Objekt */
+      const addr = [it.customer, it.addr].filter(Boolean);
+      const addrLines = []; addr.forEach(a => wrap(a, 10.5, true, CW - 24).forEach(t => addrLines.push(t)));
+      const boxH = 22 + 44 + 14 + addrLines.length * 14 + 8;
+      R(ML, y, CW, boxH, { stroke: "#22272d", lw: 1.1 });
+      R(ML, y, CW, 20, { fill: "#22272d" });
+      T(ML + 12, y + 14, "Kehrung durchgeführt", { size: 10, bold: true, color: "#ffffff" });
+      let by = y + 20;
+      T(ML + 12, by + 14, "Datum", { size: 8, color: "#6c757d" });
+      T(ML + CW / 2 + 6, by + 14, "Uhrzeit der Kehrung", { size: 8, color: "#6c757d" });
+      T(ML + 12, by + 34, longDate(it.date), { size: 12.5, bold: true });
+      T(ML + CW / 2 + 6, by + 34, it.time + " Uhr", { size: 15, bold: true });
+      by += 44;
+      L(ML + 12, by + 6, ML + CW - 12, by + 6, "#d5d9dd", 0.6);
+      T(ML + 12, by + 18, "Objekt", { size: 8, color: "#6c757d" });
+      addrLines.forEach((t, i) => T(ML + 12, by + 32 + i * 14, t, { size: 10.5, bold: true }));
+      y += boxH + 18;
+      wrap("Für Ihr Vertrauen möchte ich mich herzlich bedanken. Bei Rückfragen erreichen Sie mich gerne telefonisch:", 10.5, false, CW).forEach(t => { T(ML, y, t, { size: 10.5 }); y += 14.5; });
+      y += 4;
+      if (s.phone) {
+        R(ML, y, CW, 28, { fill: "#faf3e3", stroke: "#c79a42", lw: 0.8 });
+        T(ML + 12, y + 18, "Telefon", { size: 8.5, color: "#6c757d" });
+        T(ML + 70, y + 19, s.phone, { size: 14, bold: true });
+        y += 28;
+      }
+      y += 20;
+      T(ML, y, "Mit freundlichen Grüßen", { size: 10.5 });
+      y += 18;
+      T(ML, y, emp || biz, { size: 10.5, bold: true });
+    };
+
+    const pages = [];
+    for (let i = 0; i < items.length; i += 2) {
+      ops = [];
+      block(20, items[i]);
+      if (items[i + 1]) {
+        L(ML - 20, HALF, W - ML + 20, HALF, "#9aa1a8", 0.6, "4 3");
+        T(W - ML, HALF - 3, "Hier abtrennen", { size: 7.5, color: "#9aa1a8", align: "right" });
+        block(HALF + 20, items[i + 1]);
+      }
+      pages.push(ops.join("\n"));
+    }
+    const objs = ["<< /Type /Catalog /Pages 2 0 R >>", "<< /Type /Pages /Kids [" + pages.map((_, i) => (5 + 2 * i) + " 0 R").join(" ") + "] /Count " + pages.length + " >>",
+      "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>", "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>"];
+    pages.forEach((st, i) => {
+      objs.push("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + W + " " + H + "] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents " + (6 + 2 * i) + " 0 R >>");
+      objs.push("<< /Length " + st.length + " >>\nstream\n" + st + "\nendstream");
+    });
+    let pdf = "%PDF-1.4\n%âãÏÓ\n";
+    const offs = [];
+    objs.forEach((o, i) => { offs.push(pdf.length); pdf += (i + 1) + " 0 obj\n" + o + "\nendobj\n"; });
+    const xr = pdf.length;
+    pdf += "xref\n0 " + (objs.length + 1) + "\n0000000000 65535 f \n" + offs.map(o => String(o).padStart(10, "0") + " 00000 n \n").join("") + "trailer\n<< /Size " + (objs.length + 1) + " /Root 1 0 R >>\nstartxref\n" + xr + "\n%%EOF";
+    const bytes = new Uint8Array(pdf.length);
+    for (let i = 0; i < pdf.length; i++) bytes[i] = pdf.charCodeAt(i) & 255;
+    return new Blob([bytes], { type: "application/pdf" });
+  }
+
   function openPdfTab(blob, name) {
     const url = URL.createObjectURL(blob);
     const w = window.open(url, "_blank");
@@ -9459,7 +9608,7 @@
     if (doPrint) printAppointmentNow(item.id);
     else {
       if (isWa(item) && !(opts && opts.pool)) { render(); showNotice(waPending().some(x => slipUnit(item).some(m => m.id === x.id)) ? `💬 ${item.customer || "Der Kunde"} wird per WhatsApp angemeldet${sibs.length ? " (" + (sibs.length + 1) + " Häuser zusammen)" : ""} – der Termin liegt im WhatsApp-Pool (${waPending().length}), kein Zettel nötig.` : ""); }
-      else if ((wasNew && poolAutoOn()) || (opts && opts.pool)) { poolAdd([item.id], true); render(); showNotice(`🗂 ${sibs.length ? (sibs.length + 1) + " Häuser liegen" : "Der Termin liegt"} als ein Zettel im Druckpool (${poolItems().length}).`); }
+      else if ((wasNew && poolAutoOn() && !(opts && opts.plain)) || (opts && opts.pool)) { poolAdd([item.id], true); render(); showNotice(`🗂 ${sibs.length ? (sibs.length + 1) + " Häuser liegen" : "Der Termin liegt"} als ein Zettel im Druckpool (${poolItems().length}).`); }
       else warnStale(item.id);
     }
   }
