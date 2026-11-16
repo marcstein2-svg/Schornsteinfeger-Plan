@@ -169,6 +169,7 @@
       city: String(k.city || ""),
       phone: String(k.phone || ""),
       waReg: k.waReg === true || k.waReg === "true",
+      group: String(k.group || "").trim().slice(0, 60),
       ownerAddr: String(k.ownerAddr || ""),
       notes: String(k.notes || ""),
       hint: String(k.hint || ""),
@@ -421,6 +422,8 @@
     ".kv-hint{margin:4px 0 0;color:var(--muted);font-size:.78rem}" +
     ".kv-wa{display:flex;align-items:center;gap:10px;font-weight:800;cursor:pointer}" +
     ".kv-wa input{width:22px;height:22px;flex:0 0 22px}" +
+    ".kv-grpinfo{font-size:.86rem;font-weight:700;color:#7a5200;line-height:1.5}" +
+    ".kv-grpinfo .btn{min-height:38px;padding:6px 12px;margin-top:6px}" +
     ".kv-chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}" +
     ".kv-chips .btn{min-height:38px;padding:6px 11px;font-size:.84rem}" +
     ".kv-hintbox{padding:10px 12px;border:1px solid #ecd9a8;border-radius:12px;background:#fffaf0}" +
@@ -625,6 +628,7 @@
         "</span>" +
         E(k.name || "(ohne Namen)") +
         (k.waReg ? " 💬" : "") +
+        (k.group ? " 🏘" : "") +
         "</strong>" +
         (cityLine(k) ? '<span class="kv-sub">' + E(cityLine(k)) + "</span>" : "") +
         '</span><span class="kv-nr">Kd-Nr ' +
@@ -642,6 +646,7 @@
         "</strong> · " +
         E(k.name || "(ohne Namen)") +
         (k.waReg ? " 💬" : "") +
+        (k.group ? " 🏘" : "") +
         '<span class="kv-sub">' +
         E(cityLine(k) || NO_CITY) +
         '</span></span><span class="kv-nr">Kd-Nr ' +
@@ -969,6 +974,11 @@
       '<div class="field wide"><label for="kvPhone">Telefon / E-Mail</label><input id="kvPhone" type="text" autocomplete="off"></div>' +
       '<div class="field wide kv-hintbox"><label class="kv-wa"><input type="checkbox" id="kvWa"><span>💬 Anmeldung immer per WhatsApp (statt Zettel)</span></label>' +
       '<p class="kv-hint">Termine dieses Kunden kommen nicht in den Druckpool, sondern in den WhatsApp-Pool. Dafür oben die Handynummer eintragen.</p></div>' +
+      '<div class="field wide kv-hintbox"><label for="kvGroup">🏘 Gruppe – mehrere Häuser desselben Kunden</label>' +
+      '<input id="kvGroup" type="text" list="kvGroupList" maxlength="60" autocomplete="off" placeholder="z. B. Müller Hof (bei allen Häusern gleich eintragen)">' +
+      '<datalist id="kvGroupList"></datalist>' +
+      '<p class="kv-hint">Häuser mit gleichem Gruppennamen werden am selben Tag direkt hintereinander eingeplant und zusammen angemeldet (ein Zettel / eine Nachricht).</p>' +
+      '<div id="kvGroupInfo" class="kv-grpinfo"></div></div>' +
       '<div class="field wide"><label for="kvOwner">Abweichende Anschrift des Eigentümers (optional)</label>' +
       '<input id="kvOwner" type="text" placeholder="Straße, PLZ Ort" autocomplete="off">' +
       '<p class="kv-hint">Leer lassen, wenn der Eigentümer im Haus wohnt.</p></div>' +
@@ -1019,6 +1029,59 @@
     f("kvCity").value = k ? k.city : "";
     f("kvPhone").value = k ? k.phone : "";
     f("kvWa").checked = !!(k && k.waReg);
+    f("kvGroup").value = k ? k.group || "" : "";
+
+    var groupAlso = [],
+      groupSug = [];
+
+    f("kvGroupList").innerHTML = groupNames()
+      .map(function (g) {
+        return '<option value="' + E(g) + '"></option>';
+      })
+      .join("");
+
+    function addrText(x) {
+      return E([[x.street, x.house].filter(Boolean).join(" "), x.city].filter(Boolean).join(", ") || x.name);
+    }
+
+    function groupInfo() {
+      var g = f("kvGroup").value.trim(),
+        gl = g.toLowerCase(),
+        me = k ? k.id : "",
+        nm = f("kvName").value.trim().toLowerCase(),
+        html = "";
+
+      if (g) {
+        var others = kunden.filter(function (x) {
+          return x.id !== me && (x.group || "").trim().toLowerCase() === gl;
+        });
+
+        html += others.length
+          ? "🏘 Weitere Häuser in dieser Gruppe: " + others.map(addrText).join(" · ")
+          : "Noch kein weiteres Haus in dieser Gruppe.";
+      }
+
+      groupSug = nm
+        ? kunden.filter(function (x) {
+            return x.id !== me && x.name.trim().toLowerCase() === nm && !(gl && (x.group || "").trim().toLowerCase() === gl);
+          })
+        : [];
+
+      if (groupSug.length) {
+        html +=
+          (html ? "<br>" : "") +
+          "Gleicher Name gefunden: " +
+          groupSug.map(addrText).join(" · ") +
+          '<br><button type="button" class="btn btn-light" data-x="grpsug">🏘 Zu einer Gruppe machen</button>';
+      }
+
+      f("kvGroupInfo").innerHTML = html;
+    }
+
+    ov.addEventListener("input", function (e) {
+      if (e.target.id === "kvGroup" || e.target.id === "kvName") groupInfo();
+    });
+    groupInfo();
     f("kvOwner").value = k ? k.ownerAddr : "";
     f("kvNotes").value = k ? k.notes : "";
     f("kvHint").value = k ? k.hint || "" : "";
@@ -1117,6 +1180,17 @@
     }
 
     ov.addEventListener("click", function (e) {
+      if (e.target.closest('[data-x="grpsug"]')) {
+        var gname = f("kvGroup").value.trim() || f("kvName").value.trim();
+
+        f("kvGroup").value = gname;
+        groupAlso = groupSug.map(function (x) {
+          return x.id;
+        });
+        groupInfo();
+        return;
+      }
+
       var chip = e.target.closest("[data-chip]");
 
       if (chip) {
@@ -1225,6 +1299,7 @@
           city: f("kvCity").value.trim(),
           phone: f("kvPhone").value.trim(),
           waReg: f("kvWa").checked,
+          group: f("kvGroup").value.trim(),
           ownerAddr: f("kvOwner").value.trim(),
           notes: f("kvNotes").value.trim(),
           hint: f("kvHint").value.trim(),
@@ -1267,6 +1342,12 @@
         } else {
           kunden = kunden.map(function (x) {
             return x.id === rec.id ? rec : x;
+          });
+        }
+
+        if (rec.group && groupAlso.length) {
+          kunden = kunden.map(function (x) {
+            return groupAlso.indexOf(x.id) >= 0 ? Object.assign({}, x, { group: rec.group, updated: new Date().toISOString() }) : x;
           });
         }
 
@@ -1479,6 +1560,34 @@
     refreshAll();
   }
 
+  /* Gruppen: mehrere Häuser desselben Kunden (gleicher Gruppenname) */
+  function groupMembers(name) {
+    var g = String(name || "").trim().toLowerCase();
+
+    if (!g) return [];
+
+    return kunden.filter(function (x) {
+      return (x.group || "").trim().toLowerCase() === g;
+    });
+  }
+
+  function groupNames() {
+    var seen = {},
+      out = [];
+
+    kunden.forEach(function (x) {
+      var g = (x.group || "").trim();
+
+      if (g && !seen[g.toLowerCase()]) {
+        seen[g.toLowerCase()] = 1;
+        out.push(g);
+      }
+    });
+    return out.sort(function (a, b) {
+      return a.localeCompare(b, "de");
+    });
+  }
+
   /* Telefonnummer eines Kunden ergänzen/ändern (z. B. aus der Terminansage) */
   function setPhone(id, phone) {
     var c = byId(id);
@@ -1665,6 +1774,8 @@
     geocodeMissing: geocodeMissing,
     setLocation: setLocation,
     setPhone: setPhone,
+    groupMembers: groupMembers,
+    groupNames: groupNames,
     hasWa: function () {
       return kunden.some(function (k) {
         return k.waReg;
