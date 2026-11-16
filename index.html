@@ -3728,7 +3728,8 @@
     <div style="margin-top:8px"><button type="button" class="btn btn-light" id="spSweepNow">🕐 Uhrzeit auf jetzt setzen</button></div>
     <div class="sp-modal-actions">
       <button class="btn btn-light" type="button" id="spSweepCancel">Abbrechen</button>
-      <button class="btn btn-gold" type="button" id="spSweepPrint">🖨 Kehr-Zettel drucken</button>
+      <button class="btn btn-light" type="button" id="spSweepPool">🗂 In den Druckpool</button>
+      <button class="btn btn-gold" type="button" id="spSweepPrint">🖨 Jetzt drucken</button>
     </div>
   </div>
 </div>
@@ -7159,7 +7160,7 @@
     $("spPoolOpen").addEventListener("click", openPoolModal);
     $("spPoolClose").addEventListener("click", closePoolModal);
     $("spPoolPrint").addEventListener("click", () => poolPrint());
-    $("spPoolClear").addEventListener("click", () => { if (confirm("Alle Termine aus dem Druckpool nehmen? Die Termine selbst bleiben erhalten.")) { persist({ printPool: [] }); renderPool(); render(); } });
+    $("spPoolClear").addEventListener("click", () => { if (confirm("Alle Termine aus dem Druckpool nehmen? Die Termine selbst bleiben erhalten.")) { persist({ printPool: [], sweepPool: [] }); renderPool(); render(); } });
     $("spPoolAddRange").addEventListener("click", poolAddRange);
     bindMsg();
     bindPrintTabs();
@@ -7168,7 +7169,8 @@
     $("spSweepFromApt").addEventListener("click", () => { const id = moduleState.editingId; closeModal(); openSweepModal(id); });
     $("spSweepFromDone").addEventListener("click", () => { const id = moduleState.doneId; closeDoneModal(); openSweepModal(id); });
     $("spSweepCancel").addEventListener("click", closeSweepModal);
-    $("spSweepPrint").addEventListener("click", printSweep);
+    $("spSweepPrint").addEventListener("click", () => printSweep(false));
+    $("spSweepPool").addEventListener("click", () => printSweep(true));
     $("spSweepNow").addEventListener("click", () => { const n = new Date(); document.querySelectorAll("#spSweepRows .sp-sweep-time").forEach(i => { i.value = pad(n.getHours()) + ":" + pad(n.getMinutes()); }); $("spSweepDate").value = iso(n); });
     document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("spSweepModal").hidden) closeSweepModal(); });
     $("spPrintDone").addEventListener("click", () => printDone(false));
@@ -7231,6 +7233,7 @@
       const pr = e.target.closest("[data-sp-print]"); if (pr) { printAppointmentNow(pr.dataset.spPrint); return; }
       const mg = e.target.closest("[data-sp-msg]"); if (mg) { openMsgModal(mg.dataset.spMsg); return; }
       const pl = e.target.closest("[data-sp-pool]"); if (pl) { const id = pl.dataset.spPool; if (inPool(id)) poolRemove([id]); else poolAdd([id], true); render(); return; }
+      const sd = e.target.closest("[data-sp-sweep-del]"); if (sd) { persist({ sweepPool: sweepPoolList().filter(x => x.id !== sd.dataset.spSweepDel) }); renderPool(); render(); return; }
       const pd = e.target.closest("[data-sp-pool-del]"); if (pd) { poolRemove([pd.dataset.spPoolDel]); renderPool(); render(); return; }
       const open = e.target.closest("[data-sp-open]"); if (open) openModal(open.dataset.date, open.dataset.time, open.dataset.spOpen);
       const select = e.target.closest("[data-sp-select]"); if (select) { moduleState.selectedId = select.dataset.spSelect; renderProposalList(); updateActionState(); }
@@ -7321,7 +7324,8 @@
     const pooled = inPool(a.id);
     const grpN = slipUnit(a).length;
     const grpBadge = grpN > 1 && !compact ? `<span class="sp-badge sp-badge-line sp-badge-time">🏘 ${grpN} Häuser zusammen</span>` : "";
-    const sweepBadge = a.sweepSlip ? `<span class="sp-badge sp-badge-line">🧹 Kehr-Zettel ${esc(a.sweepSlip.time || "")}</span>` : "";
+    const sweepQ = sweepPoolList().find(e => e.id === a.id);
+    const sweepBadge = sweepQ ? `<span class="sp-badge sp-badge-line">🧹 Kehr-Zettel im Druckpool ${esc(sweepQ.time || "")}</span>` : a.sweepSlip ? `<span class="sp-badge sp-badge-line">🧹 Kehr-Zettel ${esc(a.sweepSlip.time || "")}</span>` : "";
     const badgeLine = wishBadge + grpBadge + sweepBadge + (pooled && !compact ? `<span class="sp-badge sp-badge-line sp-badge-time">🗂 im Druckpool</span>` : "") + (waOpen && !compact ? `<span class="sp-badge sp-badge-line sp-badge-time">💬 per WhatsApp anmelden</span>` : "") + (ann === "ok" && !compact ? `<span class="sp-badge sp-badge-line sp-badge-ann">📲 angesagt</span>` : ann === "stale" && !compact ? `<span class="sp-badge sp-badge-line sp-badge-ann stale">📲 neu ansagen – Termin geändert</span>` : "") + (att > 1 && !compact ? `<span class="sp-badge sp-badge-line">${attemptLabel(att)}</span>` : "") + (stale && !compact ? `<span class="sp-badge sp-badge-line sp-badge-warn">⚠ Zettel neu drucken</span>` : "");
     const mark = (a.done ? "✔ " : a.missed ? "🚪 " : "") + (grpN > 1 && compact ? "🏘 " : "") + (pooled && compact ? "🗂 " : "") + (waOpen && compact ? "💬 " : "") + (hl && compact ? "💡 " : "") + (stale && compact ? "⚠ " : "") + ((tbm || tam) && compact ? "🚗 " : "") + (wt && compact ? (wbad ? "⚠⏰ " : "⏰ ") : "");
     const btn = `<button type="button" class="sp-appt${compact ? " compact" : ""}${a.id === moduleState.selectedId ? " selected" : ""}${a.done ? " done" : ""}${a.missed ? " missed" : ""}" data-sp-open="${esc(a.id)}" data-date="${esc(a.date)}" data-time="${esc(a.time)}" title="${esc(title)}"><span class="sp-appt-time">${mark}${esc(a.time)}${badgeTime}${compact ? codeHtml : ""}</span>${compact ? "" : codeHtml}<span class="sp-appt-main"><strong>${esc(a.customer || "Ohne Kundennamen")}</strong>${badgeLine}${compact || !addr ? "" : `<small>${esc(addr)}</small>`}${hl && !compact ? `<span class="sp-hintline">💡 ${esc(hl)}</span>` : ""}${compact || !(tbm || tam) ? "" : `<small>🚗 ${tbm} Min. vorher · ${tam} Min. nachher</small>`}</span></button>`;
@@ -8320,7 +8324,7 @@
   }
   const inPool = id => poolIds().includes(id);
   function updatePoolButton() {
-    const n = poolItems().length, c = $("spPoolCount"), b = $("spPoolOpen");
+    const n = poolItems().length + sweepPoolItems().length, c = $("spPoolCount"), b = $("spPoolOpen");
     if (c) { c.textContent = String(n); c.hidden = !n; }
     if (b) b.classList.toggle("has-items", n > 0);
   }
@@ -8331,14 +8335,14 @@
   }
   function poolReason(a) { return !slipUnit(a).some(x => x.slip) ? ["neu", ""] : slipStale(a) ? ["verschoben", "moved"] : ["Zettel erneut", "moved"]; }
   function renderPool() {
-    const items = poolItems(), n = items.length, pages = Math.ceil(n / 2);
+    const items = poolItems(), sw = sweepPoolItems(), n = items.length + sw.length, pages = Math.ceil(n / 2);
     $("spPoolInfo").innerHTML = n
       ? `${n} ${n === 1 ? "Zettel" : "Zettel"} = ${pages} A4-${pages === 1 ? "Seite" : "Seiten"}` + (n % 2 ? ` <span style="color:#8a5a00">· auf der letzten Seite ist noch Platz für 1 Zettel</span>` : ` <span style="color:#2e6f45">· Seiten voll belegt</span>`)
       : "Der Druckpool ist leer.";
     $("spPoolList").innerHTML = items.map(a => {
       const [why, cls] = poolReason(a);
       return `<div class="sp-pool-row"><div><strong>${esc(fmtDate(a.date))} · ${esc(a.time)} Uhr</strong><span class="sp-pool-why ${cls}">${esc(why)}</span><small>${esc(a.customer || "Ohne Kundennamen")}${unitAddrText(a)}</small></div><button type="button" class="sp-pool-x" data-sp-pool-del="${esc(a.id)}" title="Aus dem Druckpool nehmen" aria-label="Aus dem Druckpool nehmen">✕</button></div>`;
-    }).join("");
+    }).join("") + sw.map(({ e, a }) => `<div class="sp-pool-row"><div><strong>${esc(fmtDate(e.date))} · ${esc(e.time)} Uhr</strong><span class="sp-pool-why">🧹 Kehr-Zettel</span><small>${esc(a.customer || "Ohne Kundennamen")}${addrLine(a) ? " – " + esc(addrLine(a)) : ""}</small></div><button type="button" class="sp-pool-x" data-sp-sweep-del="${esc(a.id)}" title="Aus dem Druckpool nehmen" aria-label="Kehr-Zettel aus dem Druckpool nehmen">✕</button></div>`).join("");
     $("spPoolPrint").disabled = !n; $("spPoolClear").disabled = !n;
     $("spPoolAuto").checked = poolAutoOn();
     const last = (Array.isArray(data().printLast) ? data().printLast : []).filter(id => appointments().some(a => a.id === id));
@@ -8353,9 +8357,10 @@
   function poolPrint(ids) {
     const byId = new Map(appointments().map(a => [a.id, a]));
     const list = (ids || poolItems().map(a => a.id)).map(id => byId.get(id)).filter(Boolean).sort((x, y) => (x.date + " " + x.time).localeCompare(y.date + " " + y.time));
-    if (!list.length) return alert("Der Druckpool ist leer.");
+    const sweeps = ids ? [] : sweepPoolItems().map(({ e, a }) => sweepData(a, e.date, e.time));   // Kehr-Zettel nur beim normalen Pool-Druck (nicht beim "nochmal drucken")
+    if (!list.length && !sweeps.length) return alert("Der Druckpool ist leer.");
     const keep = list.map(a => a.id);
-    printProposals(list, true, `Anmeldezettel_Druckpool_${iso(new Date())}.pdf`);
+    printProposals(list, true, `Anmeldezettel_Druckpool_${iso(new Date())}.pdf`, sweeps);
     setTimeout(() => { persist({ printLast: keep }); if (!$("spPoolModal").hidden) renderPool(); }, 600);
     closePoolModal();
   }
@@ -9351,7 +9356,25 @@
     $("spSweepModal").hidden = false;
   }
   function closeSweepModal() { $("spSweepModal").hidden = true; moduleState.sweepId = null; }
-  function printSweep() {
+  /* Daten eines Kehr-Zettels (A5, wie die Anmeldezettel) */
+  function sweepData(a, date, time) {
+    const base = proposalData({ ...a, date }, settings(), true);
+    return { ...base, kind: "sweep", multi: false, aptId: a.id, rawDate: date, rawTime: time, time, hint: "", last: false, notes: "" };
+  }
+  function sweepPoolList() { const p = data().sweepPool; return Array.isArray(p) ? p : []; }
+  function sweepPoolItems() {
+    const byId = new Map(appointments().map(a => [a.id, a]));
+    return sweepPoolList().map(e => ({ e, a: byId.get(e.id) })).filter(x => x.a).sort((x, y) => (x.e.date + " " + x.e.time).localeCompare(y.e.date + " " + y.e.time));
+  }
+  function markSweepsPrinted(sweeps) {
+    const m = new Map(sweeps.map(d => [d.aptId, d])), now = new Date().toISOString();
+    persist({
+      appointments: appointments().map(a => m.has(a.id) ? { ...a, sweepSlip: { date: m.get(a.id).rawDate, time: m.get(a.id).rawTime, at: now } } : a),
+      sweepPool: sweepPoolList().filter(e => !m.has(e.id))
+    });
+    render(); updatePoolButton(); if ($("spPoolModal") && !$("spPoolModal").hidden) renderPool();
+  }
+  function printSweep(toPool) {
     const date = $("spSweepDate").value;
     if (!date) return alert("Bitte das Datum der Kehrung eintragen.");
     const picked = [];
@@ -9362,104 +9385,16 @@
     });
     if (!picked.length) return alert("Bitte mindestens ein Haus auswählen.");
     if (picked.some(p => !p.time)) return alert("Bitte bei jedem Haus die Uhrzeit der Kehrung eintragen – sie steht auf dem Zettel.");
-    const items = picked.map(p => ({ customer: p.a.customer || "", addr: addrLine(p.a), date, time: p.time }));
-    const st = settings();
-    const blob = buildSweepPdf(items, st);
-    const name = "Kehr-Zettel_" + (items.length === 1 ? (items[0].customer || "Kunde").replace(/[^\wäöüÄÖÜß-]+/g, "_") + "_" : items.length + "_Haeuser_") + date + ".pdf";
-    const ids = new Map(picked.map(p => [p.a.id, p.time])), now = new Date().toISOString();
-    persist({ appointments: appointments().map(a => ids.has(a.id) ? { ...a, sweepSlip: { date, time: ids.get(a.id), at: now } } : a) });
-    closeSweepModal(); render();
-    if (window.navigator.standalone === true || isIOSDevice()) sharePdf(blob, name); else openPdfTab(blob, name);
-  }
-  /* PDF: je Haus ein Zettel, zwei Zettel pro A4-Seite (oben/unten, Schnittlinie) */
-  function buildSweepPdf(items, s) {
-    const W = 595.28, H = 841.89, ML = 44, CW = W - 2 * ML, HALF = H / 2;
-    const cpMap = { "€": 0x80, "„": 0x84, "…": 0x85, "‘": 0x91, "’": 0x92, "“": 0x93, "”": 0x94, "•": 0x95, "–": 0x96, "—": 0x97 };
-    const nz = str => { let o = ""; for (const ch of String(str ?? "")) { const c = ch.codePointAt(0); if (c < 32) o += " "; else if (c < 128 || (c >= 160 && c <= 255) || cpMap[ch]) o += ch; else { const d = ch.normalize("NFKD").replace(/[^\x20-\x7e]/g, ""); o += d || "?"; } } return o; };
-    const enc = str => { let o = ""; for (const ch of str) o += cpMap[ch] ? String.fromCharCode(cpMap[ch]) : ch; return o.replace(/([\\()])/g, "\\$1"); };
-    const cv = document.createElement("canvas").getContext("2d");
-    const wid = (str, bold, size) => { cv.font = (bold ? "bold " : "") + "100px Helvetica, Arial, sans-serif"; return cv.measureText(nz(str)).width * size / 100 * 1.02; };
-    const col = hex => { const n = parseInt(hex.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(v => (v / 255).toFixed(3)).join(" "); };
-    const f = v => Number(v).toFixed(2);
-    const wrap = (str, size, bold, maxW) => { const out = []; String(str ?? "").split(/\r?\n/).forEach(par => { let ln = ""; par.split(/\s+/).filter(Boolean).forEach(w => { const t = ln ? ln + " " + w : w; if (!ln || wid(t, bold, size) <= maxW) ln = t; else { out.push(ln); ln = w; } }); out.push(ln); }); return out; };
-    let ops = [];
-    const T = (x, y, str, o = {}) => { const size = o.size || 10, bold = !!o.bold; let px = x; if (o.align === "right") px = x - wid(str, bold, size); if (o.align === "center") px = x - wid(str, bold, size) / 2; ops.push("BT /" + (bold ? "F2" : "F1") + " " + size + " Tf " + col(o.color || "#22272d") + " rg " + f(px) + " " + f(H - y) + " Td (" + enc(nz(str)) + ") Tj ET"); };
-    const R = (x, y, w, h, o = {}) => { const fill = o.fill ? col(o.fill) + " rg " : "", stroke = o.stroke ? col(o.stroke) + " RG " + (o.lw || 0.8) + " w " : ""; ops.push(fill + stroke + f(x) + " " + f(H - y - h) + " " + f(w) + " " + f(h) + " re " + (o.fill && o.stroke ? "B" : o.fill ? "f" : "S")); };
-    const L = (x1, y1, x2, y2, color, lw, dash) => ops.push((dash ? "[" + dash + "] 0 d " : "[] 0 d ") + col(color) + " RG " + lw + " w " + f(x1) + " " + f(H - y1) + " m " + f(x2) + " " + f(H - y2) + " l S");
-    const longDate = v => { const d = new Date(v + "T12:00:00"); return isNaN(d) ? v : d.toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long", year: "numeric" }); };
-    const biz = s.businessName || "", emp = s.employeeName || "";
-
-    const block = (top, it) => {
-      let y = top + 6;
-      T(ML, y + 12, biz || emp || "Schornsteinfeger", { size: 14, bold: true });
-      T(ML, y + 25, "Schornsteinfegerbetrieb", { size: 8.5, color: "#6c757d" });
-      if (s.businessAddress) T(ML, y + 37, s.businessAddress, { size: 8.5, color: "#6c757d" });
-      y += 46;
-      L(ML, y, ML + CW, y, "#c79a42", 1.4);
-      y += 26;
-      T(ML, y, "Ihr Schornstein wurde gekehrt", { size: 20, bold: true });
-      y += 24;
-      T(ML, y, "Sehr geehrte Kundin, sehr geehrter Kunde,", { size: 10.5 });
-      y += 18;
-      const intro = (biz ? "als Schornsteinfegergeselle im Auftrag von " + biz + ", Schornsteinfegermeister, " : "") + "habe ich Ihren Schornstein gekehrt. Da er frei zugänglich ist, konnte ich die Kehrung auch ohne Ihre Anwesenheit durchführen.";
-      wrap(intro, 10.5, false, CW).forEach(t => { T(ML, y, t, { size: 10.5 }); y += 14.5; });
-      y += 6;
-      /* Kasten mit Datum, Uhrzeit, Objekt */
-      const addr = [it.customer, it.addr].filter(Boolean);
-      const addrLines = []; addr.forEach(a => wrap(a, 10.5, true, CW - 24).forEach(t => addrLines.push(t)));
-      const boxH = 22 + 44 + 14 + addrLines.length * 14 + 8;
-      R(ML, y, CW, boxH, { stroke: "#22272d", lw: 1.1 });
-      R(ML, y, CW, 20, { fill: "#22272d" });
-      T(ML + 12, y + 14, "Kehrung durchgeführt", { size: 10, bold: true, color: "#ffffff" });
-      let by = y + 20;
-      T(ML + 12, by + 14, "Datum", { size: 8, color: "#6c757d" });
-      T(ML + CW / 2 + 6, by + 14, "Uhrzeit der Kehrung", { size: 8, color: "#6c757d" });
-      T(ML + 12, by + 34, longDate(it.date), { size: 12.5, bold: true });
-      T(ML + CW / 2 + 6, by + 34, it.time + " Uhr", { size: 15, bold: true });
-      by += 44;
-      L(ML + 12, by + 6, ML + CW - 12, by + 6, "#d5d9dd", 0.6);
-      T(ML + 12, by + 18, "Objekt", { size: 8, color: "#6c757d" });
-      addrLines.forEach((t, i) => T(ML + 12, by + 32 + i * 14, t, { size: 10.5, bold: true }));
-      y += boxH + 18;
-      wrap("Für Ihr Vertrauen möchte ich mich herzlich bedanken. Bei Rückfragen erreichen Sie mich gerne telefonisch:", 10.5, false, CW).forEach(t => { T(ML, y, t, { size: 10.5 }); y += 14.5; });
-      y += 4;
-      if (s.phone) {
-        R(ML, y, CW, 28, { fill: "#faf3e3", stroke: "#c79a42", lw: 0.8 });
-        T(ML + 12, y + 18, "Telefon", { size: 8.5, color: "#6c757d" });
-        T(ML + 70, y + 19, s.phone, { size: 14, bold: true });
-        y += 28;
-      }
-      y += 20;
-      T(ML, y, "Mit freundlichen Grüßen", { size: 10.5 });
-      y += 18;
-      T(ML, y, emp || biz, { size: 10.5, bold: true });
-    };
-
-    const pages = [];
-    for (let i = 0; i < items.length; i += 2) {
-      ops = [];
-      block(20, items[i]);
-      if (items[i + 1]) {
-        L(ML - 20, HALF, W - ML + 20, HALF, "#9aa1a8", 0.6, "4 3");
-        T(W - ML, HALF - 3, "Hier abtrennen", { size: 7.5, color: "#9aa1a8", align: "right" });
-        block(HALF + 20, items[i + 1]);
-      }
-      pages.push(ops.join("\n"));
+    closeSweepModal();
+    if (toPool) {
+      const ids = new Set(picked.map(p => p.a.id));
+      persist({ sweepPool: sweepPoolList().filter(e => !ids.has(e.id)).concat(picked.map(p => ({ id: p.a.id, date, time: p.time }))) });
+      render(); updatePoolButton();
+      showNotice(`🧹 ${picked.length === 1 ? "Der Kehr-Zettel liegt" : picked.length + " Kehr-Zettel liegen"} im Druckpool (${poolItems().length + sweepPoolItems().length}) und ${picked.length === 1 ? "wird" : "werden"} mit den Anmeldezetteln gedruckt.`);
+      return;
     }
-    const objs = ["<< /Type /Catalog /Pages 2 0 R >>", "<< /Type /Pages /Kids [" + pages.map((_, i) => (5 + 2 * i) + " 0 R").join(" ") + "] /Count " + pages.length + " >>",
-      "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>", "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>"];
-    pages.forEach((st, i) => {
-      objs.push("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + W + " " + H + "] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents " + (6 + 2 * i) + " 0 R >>");
-      objs.push("<< /Length " + st.length + " >>\nstream\n" + st + "\nendstream");
-    });
-    let pdf = "%PDF-1.4\n%âãÏÓ\n";
-    const offs = [];
-    objs.forEach((o, i) => { offs.push(pdf.length); pdf += (i + 1) + " 0 obj\n" + o + "\nendobj\n"; });
-    const xr = pdf.length;
-    pdf += "xref\n0 " + (objs.length + 1) + "\n0000000000 65535 f \n" + offs.map(o => String(o).padStart(10, "0") + " 00000 n \n").join("") + "trailer\n<< /Size " + (objs.length + 1) + " /Root 1 0 R >>\nstartxref\n" + xr + "\n%%EOF";
-    const bytes = new Uint8Array(pdf.length);
-    for (let i = 0; i < pdf.length; i++) bytes[i] = pdf.charCodeAt(i) & 255;
-    return new Blob([bytes], { type: "application/pdf" });
+    const sweeps = picked.map(p => sweepData(p.a, date, p.time));
+    printProposals([], true, "Kehr-Zettel_" + date + ".pdf", sweeps);
   }
 
   function openPdfTab(blob, name) {
@@ -9855,7 +9790,48 @@
     };
 
     /* sp = Abstandsfaktor: bei viel Inhalt wird enger gesetzt, damit alles auf eine Seite passt */
+    const drawSweep = (d, sp = 1) => {
+      const g = v => v * sp;
+      let y = 44;
+      T(ML, y, d.business, { size: 13, bold: true });
+      y += 13; T(ML, y, "Schornsteinfegerbetrieb", { size: 8.5, color: "#6c757d" });
+      d.bizAddr.split(/\r?\n/).filter(Boolean).forEach((ln, i) => { y += i ? 11 : 15; T(ML, y, ln, { size: 8.5, color: "#444444" }); });
+      y += 10; L(ML, y, ML + CW, y, "#c79a42", 1.4);
+      y += g(26); T(ML, y, "Hinweis zur Kehrung", { size: 9.5, bold: true, color: "#9a7220" });
+      y += g(25); T(ML, y, "Ihr Schornstein wurde gekehrt", { size: 19, bold: true });
+      y += g(30); T(ML, y, "Sehr geehrte Kundin, sehr geehrter Kunde,");
+      y += g(17);
+      const toks = [];
+      if (d.business) { const biz = words(d.business, true); biz[biz.length - 1].t += ","; toks.push(...words("als Schornsteinfegergeselle im Auftrag von"), ...biz, ...words("Schornsteinfegermeister, habe")); } else toks.push(...words("habe"));
+      toks.push(...words("ich Ihren Schornstein gekehrt. Da er frei zugänglich ist, konnte ich die Kehrung auch ohne Ihre Anwesenheit durchführen."));
+      y = flow(toks, ML, y, CW, 9.5, 14) + 3;
+      const top = y + g(12);
+      R(ML, top, CW, 19, { fill: "#22272d" });
+      T(ML + 12, top + 13, "Kehrung durchgeführt", { size: 10, bold: true, color: "#ffffff" });
+      y = top + 19 + g(15);
+      const xR = ML + CW * 0.55;
+      T(ML + 12, y, "Datum", { size: 8, color: "#6c757d" }); T(xR, y, "Uhrzeit der Kehrung", { size: 8, color: "#6c757d" });
+      let vs = 13; while (vs > 9 && wid(d.dateStr, true, vs) > xR - ML - 24) vs -= 0.5;
+      y += g(17); T(ML + 12, y, d.dateStr, { size: vs, bold: true });
+      let ts = 14; while (ts > 8 && wid(d.time + " Uhr", true, ts) > ML + CW - 12 - xR) ts -= 0.5;
+      T(xR, y, d.time + " Uhr", { size: ts, bold: true });
+      y += g(11); L(ML + 12, y, ML + CW - 12, y, "#d5d9dd", 0.6);
+      y += g(15); T(ML + 12, y, "Objekt", { size: 8, color: "#6c757d" });
+      [d.customer, ...d.addrLines].filter(Boolean).forEach(ln => wrap(ln, 10.5, true, CW - 24).forEach(w => { y += g(15); T(ML + 12, y, w, { size: 10.5, bold: true }); }));
+      y += g(12); R(ML, top, CW, y - top, { stroke: "#22272d", lw: 1.1 });
+      y += g(22);
+      wrap("Für Ihr Vertrauen möchte ich mich herzlich bedanken. Bei Rückfragen erreichen Sie mich gerne unter:", 9.5, false, CW).forEach((ln, i) => { if (i) y += 14; T(ML, y, ln); });
+      y += g(12); R(ML, y, CW, 30, { fill: "#fbf5e7", stroke: "#c79a42", lw: 0.9 });
+      T(ML + 14, y + 19, "Telefon", { size: 9, color: "#6c757d" });
+      T(ML + CW / 2 + 16, y + 20, d.phone, { size: 15, bold: true, align: "center" });
+      y += 30;
+      const sy = Math.max(y + g(26), H - 46 - 44);
+      T(ML, sy, "Mit freundlichen Grüßen");
+      T(ML, sy + g(30), d.employee, { bold: true });
+      return sy + g(30) + 4;
+    };
     const drawSheet = (d, sp = 1) => {
+    if (d.kind === "sweep") return drawSweep(d, sp);
     const g = v => v * sp;
     const notesTxt = sp < 0.6 && d.notes.length > 140 ? d.notes.slice(0, 140).trim() + "…" : d.notes;
     let y = 44;
@@ -10048,7 +10024,39 @@
 
   const CHECK_SVG = '<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1.6 5.4 4 7.8 8.5 2.2" fill="none" stroke="#22272d" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
+  function sweepSheetHtml(d) {
+    const business = esc(d.business), employee = esc(d.employee), phone = esc(d.phone);
+    const bizAddr = d.bizAddr ? `<div class="biz-addr">${esc(d.bizAddr)}</div>` : "";
+    const obj = [d.customer, ...d.addrLines].filter(Boolean).map(esc).join("<br>");
+    return `
+      <div class="sheet">
+        <div class="head"><div><div class="biz-name">${business}</div><div class="biz-role">Schornsteinfegerbetrieb</div>${bizAddr}</div></div>
+        <div class="kicker">Hinweis zur Kehrung</div>
+        <h1>Ihr Schornstein wurde gekehrt</h1>
+        <div class="letter">
+          <p>Sehr geehrte Kundin, sehr geehrter Kunde,</p>
+          <p>${d.business ? `als Schornsteinfegergeselle im Auftrag von <strong>${business}</strong>, Schornsteinfegermeister, habe` : "habe"} ich Ihren Schornstein gekehrt. Da er frei zugänglich ist, konnte ich die Kehrung auch ohne Ihre Anwesenheit durchführen.</p>
+        </div>
+        <div class="appt">
+          <div class="appt-title">Kehrung durchgeführt</div>
+          <div class="appt-body">
+            <div class="when">
+              <div><div class="k">Datum</div><div class="v">${esc(d.dateStr)}</div></div>
+              <div><div class="k">Uhrzeit der Kehrung</div><div class="v">${esc(d.time)} Uhr</div></div>
+            </div>
+            ${obj ? `<div class="where"><div class="k">Objekt</div><div class="v">${obj}</div></div>` : ""}
+          </div>
+        </div>
+        <div class="contact">Für Ihr Vertrauen möchte ich mich herzlich bedanken. Bei Rückfragen erreichen Sie mich gerne unter:</div>
+        <div class="phone"><span class="lbl">Telefon</span><span class="num">${phone}</span></div>
+        <div class="sign">
+          Mit freundlichen Grüßen
+          <div class="name">${employee}</div>
+        </div>
+      </div>`;
+  }
   function sheetHtml(d) {
+    if (d.kind === "sweep") return sweepSheetHtml(d);
     const business = esc(d.business), employee = esc(d.employee), phone = esc(d.phone);
     const nA = d.multi ? d.addrLines.length : 0, fsA = nA > 3 ? Math.max(7.2, 10.5 - (nA - 3) * 0.45) : 0;   // viele Häuser: Schrift verkleinern, damit alles auf eine Seite passt
     const addr = fsA ? `<span style="font-size:${fsA}pt;line-height:1.3;display:block">${d.addrLines.map(esc).join("<br>")}</span>` : d.addrLines.map(esc).join("<br>");
@@ -10106,12 +10114,14 @@
     return /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   }
 
-  function printProposals(list, twoUp, fname) {
-    if (!list.length) return;
+  function printProposals(list, twoUp, fname, sweeps) {
+    sweeps = sweeps || [];
+    if (!list.length && !sweeps.length) return;
     cleanupPrint();
     list = leadsOf(list);   // zusammengehörige Häuser: ein Zettel für die ganze Gruppe
-    const items = list.map(a => proposalData(a, settings()));
-    setTimeout(() => markSlipPrinted(list), 400);   // gedruckten Stand merken (für den Abgleich Kalender ↔ Zettel)
+    const items = list.map(a => proposalData(a, settings())).concat(sweeps);   // Kehr-Zettel stehen hinter den Anmeldezetteln
+    if (list.length) setTimeout(() => markSlipPrinted(list), 400);   // gedruckten Stand merken (für den Abgleich Kalender ↔ Zettel)
+    if (sweeps.length) setTimeout(() => markSweepsPrinted(sweeps), 700);
 
     // iPhone/iPad (Home-Bildschirm-App: window.print() gesperrt; Safari: Seitengröße unzuverlässig)
     // -> PDF erzeugen und über das Teilen-Menü drucken
