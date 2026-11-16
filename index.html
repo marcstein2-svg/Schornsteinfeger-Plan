@@ -9742,7 +9742,8 @@
     y += g(11); L(ML + 12, y, ML + CW - 12, y, "#d5d9dd", 0.6);
     if (d.customer || d.addrLines.length) {
       y += g(15); T(ML + 12, y, d.multi ? "Terminadressen" : "Terminadresse", { size: 8, color: "#6c757d" });
-      [d.customer, ...d.addrLines].filter(Boolean).forEach(ln => wrap(ln, 10.5, true, CW - 24).forEach(w => { y += g(15); T(ML + 12, y, w, { size: 10.5, bold: true }); }));
+      const nA = d.multi ? d.addrLines.length : 0, fsA = nA > 3 ? Math.max(7.2, 10.5 - (nA - 3) * 0.45) : 10.5;   // viele Häuser: kleinere Schrift
+      [d.customer, ...d.addrLines].filter(Boolean).forEach(ln => wrap(ln, fsA, true, CW - 24).forEach(w => { y += g(fsA > 10 ? 15 : fsA * 1.55); T(ML + 12, y, w, { size: fsA, bold: true }); }));
     }
     if (notesTxt) {
       y += g(16);
@@ -9854,12 +9855,13 @@
       /* Zusammengehörige Häuser: ein Zettel, Zeitfenster über alle Häuser, je Haus eine Zeile mit Arbeiten */
       const [h1, h2] = unitHours(u), merged = [];
       u.forEach(x => proposalWorks(x).forEach(w => { const f = merged.find(m => m.t === w.t); if (f) f.on = f.on || w.on; else merged.push({ ...w }); }));
-      const notes = u.map(x => x.notes ? `${[x.street, x.house].filter(Boolean).join(" ") || x.customer || "Haus"}: ${x.notes}` : "").filter(Boolean).join(" · ");
+      const notes = u.map(x => x.notes ? `${[x.customer, [x.street, x.house].filter(Boolean).join(" ")].filter(Boolean).join(", ") || "Haus"}: ${x.notes}` : "").filter(Boolean).join(" · ");
       return {
         ...proposalData({ ...a, notes: "" }, s, true),
         time: `${pad(h1)}:00 – ${pad(h2 % 24)}:00`,
         multi: true,
-        addrLines: u.map(x => (x.customer && x.customer !== a.customer ? x.customer + ": " : "") + addrLine(x) + " – " + proposalWorks(x).filter(w => w.on).map(w => w.t).join(", ")).map(t => t.replace(/ – $/, "")),
+        customer: "",   // jedes Haus nennt seinen eigenen Namen
+        addrLines: u.map(x => [x.customer, addrLine(x)].filter(Boolean).join(", ") + (proposalWorks(x).some(w => w.on) ? " (" + proposalWorks(x).filter(w => w.on).map(w => w.t).join(", ") + ")" : "")),
         works: merged,
         notes,
         hint: u.some(x => Array.isArray(x.works) && x.works.includes("feststoff")) ? "Die Messung dauert ca. " + durText(workMinutesCfg().feststoff) + ". Bitte bereiten Sie Ihren Pelletkessel bzw. Scheitholzkessel für die Messung vor." : ""
@@ -9899,7 +9901,8 @@
 
   function sheetHtml(d) {
     const business = esc(d.business), employee = esc(d.employee), phone = esc(d.phone);
-    const addr = d.addrLines.map(esc).join("<br>");
+    const nA = d.multi ? d.addrLines.length : 0, fsA = nA > 3 ? Math.max(7.2, 10.5 - (nA - 3) * 0.45) : 0;   // viele Häuser: Schrift verkleinern, damit alles auf eine Seite passt
+    const addr = fsA ? `<span style="font-size:${fsA}pt;line-height:1.3;display:block">${d.addrLines.map(esc).join("<br>")}</span>` : d.addrLines.map(esc).join("<br>");
     const where = (d.customer || addr)
       ? `<div class="where"><div class="k">${d.multi ? "Terminadressen" : "Terminadresse"}</div><div class="v">${d.customer ? esc(d.customer) + (addr ? "<br>" : "") : ""}${addr}</div></div>`
       : "";
