@@ -9066,7 +9066,7 @@
         T(ML + 10, ly, "Rechnung:  per Post " + cnt.post + "  ·  hinterlegt (Kunde überweist) " + cnt.hinterlegt + "  ·  per E-Mail " + cnt.mail + "  ·  bar " + cnt.bar + (cnt.none ? "  ·  nicht angegeben " + cnt.none : ""), { size: 8.8, bold: true });
         ly += 15;
         const open = (day.total || day.items.length) - day.items.length;
-        T(ML + 10, ly, "Erledigt: " + day.items.length + " von " + (day.total || day.items.length) + " Terminen" + (open > 0 ? "   ·   noch offen: " + open + (day.missed ? " (davon nicht angetroffen: " + day.missed + ")" : "") : "   ·   alle Termine erledigt"), { size: 9, color: "#4f5962" });
+        T(ML + 10, ly, "Erledigt: " + day.items.length + " von " + (day.total || day.items.length) + " Terminen" + (open > 0 ? "   ·   noch offen: " + open : "   ·   alle Termine erledigt") + (day.missed ? "   ·   nicht angetroffen: " + day.missed + " (nicht mitgezählt)" : ""), { size: 9, color: "#4f5962" });
         if (showCash) {
           ly += 15;
           T(ML + 10, ly, "Bar kassiert: " + fmtEUR(barSum) + (barMissing ? "   (bei " + barMissing + " Termin" + (barMissing > 1 ? "en" : "") + " fehlt der Betrag)" : ""), { size: 10.5, bold: true, color: "#2e6f45" });
@@ -9510,7 +9510,7 @@
       const dayAll = all.filter(a => a.date === date);
       return {
         date,
-        total: dayAll.length,
+        total: dayAll.filter(a => !a.missed).length,
         expenses: done ? expensesOn(date) : [],
         missed: dayAll.filter(a => a.missed).length,
         missedItems: done ? dayAll.filter(a => a.missed).sort((a, b) => (a.time || "").localeCompare(b.time || "")) : [],
