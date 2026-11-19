@@ -1516,6 +1516,16 @@
     .sp-linkbtn { border: 0; background: none; padding: 0; font: inherit; font-weight: 800; color: #7d5b20; text-decoration: underline; cursor: pointer; }
     .sp-hour-body > .sp-add { align-self: start; min-height: 40px; }
     .sp-exp-box { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--border); }
+    .sp-stats { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 2px 0 10px; }
+    .sp-stat { display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1px solid #d5d9dd; border-radius: 999px; padding: 6px 14px; min-height: 40px; font: inherit; font-size: .95rem; font-weight: 700; color: #22272d; }
+    .sp-stat strong { font-size: 1.05rem; }
+    .sp-stat.all-done { background: #f3faf5; border-color: #b9dcc6; }
+    button.sp-stat { cursor: pointer; }
+    button.sp-stat:hover { border-color: #c79a42; background: #fbf5e7; }
+    .sp-stat.neg strong { color: #a02f2f; }
+    .sp-cash-big { font-size: 2rem; font-weight: 900; line-height: 1.1; }
+    .sp-cash-lines { margin: 10px 0; font-size: .92rem; }
+    .sp-cash-lines div { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; border-bottom: 1px solid #eceff1; }
     .sp-exp-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid #eceff1; }
     .sp-exp-row span { flex: 1; min-width: 0; }
     .sp-exp-row button { border: 0; background: #fdecec; color: #a02f2f; border-radius: 8px; min-height: 34px; min-width: 38px; font-weight: 800; cursor: pointer; }
@@ -2010,6 +2020,11 @@
           <button class="btn btn-light" type="button" id="spSearchClear" hidden>✕ Leeren</button>
         </div>
         <div class="sp-search-results" id="spSearchResults" hidden></div>
+      </div>
+
+      <div class="sp-stats" id="spStats">
+        <span class="sp-stat" id="spStatDone" title="Erledigte Termine / alle Termine im angezeigten Zeitraum">✔ <strong id="spStatDoneNum">0/0</strong> Häuser</span>
+        <button type="button" class="sp-stat" id="spCashOpen" title="Bargeld: so viel muss in der Kasse sein – hier trägst du ein, wann du dem Chef Geld gegeben hast">💶 Kasse <strong id="spCashNum">0,00 €</strong></button>
       </div>
 
       <div class="sp-toolbar">
@@ -3693,6 +3708,27 @@
       <button class="btn btn-light" type="button" id="spRcvToApt">📅 Zum Termin</button>
       <button class="btn btn-primary" type="button" id="spRcvPdf">🖨 Als PDF öffnen / drucken</button>
     </div>
+  </div>
+</div>
+
+<div class="sp-modal-backdrop" id="spCashModal" hidden>
+  <div class="sp-modal" role="dialog" aria-modal="true" aria-labelledby="spCashTitle" style="max-width:520px">
+    <h3 id="spCashTitle">💶 Kasse – Bargeld</h3>
+    <div class="sp-muted">In der Kasse müssen jetzt sein:</div>
+    <div class="sp-cash-big" id="spCashBig">0,00 €</div>
+    <div class="sp-cash-lines" id="spCashLines"></div>
+    <div class="sp-works-title" style="margin-top:12px">Geld an den Chef übergeben</div>
+    <div class="sp-form-grid">
+      <div class="field"><label for="spHandDate">Datum</label><input id="spHandDate" type="date"></div>
+      <div class="field"><label for="spHandAmount">Betrag (€)</label><input id="spHandAmount" type="text" inputmode="decimal" autocomplete="off" placeholder="z. B. 250,00"></div>
+    </div>
+    <div style="margin-top:10px"><button type="button" class="btn btn-gold" id="spCashHand">✔ Übergeben eintragen</button></div>
+    <div id="spCashHist" style="margin-top:12px"></div>
+    <details class="sp-fields" style="margin-top:12px"><summary>Zählung ab <small>nur Bareinnahmen ab diesem Tag zählen</small></summary>
+      <div class="field" style="margin-top:8px"><label for="spCashStart">Bareinnahmen zählen ab</label><input id="spCashStart" type="date"></div>
+      <p class="sp-muted" style="margin:6px 0 0">Leer lassen = alle bar kassierten, erledigten Termine zählen. Praktisch, wenn du nach einer Abrechnung neu anfangen willst.</p>
+    </details>
+    <div class="sp-modal-actions"><button class="btn btn-light" type="button" id="spCashClose">Schließen</button></div>
   </div>
 </div>
 
@@ -7181,6 +7217,13 @@
     $("spPrintDays").addEventListener("click", printDayRange);
     $("spDayDate").addEventListener("change", () => { moduleState.dayManual = true; renderExpenses(); });
     $("spExpAdd").addEventListener("click", openExpModal);
+    $("spCashOpen").addEventListener("click", openCashModal);
+    $("spCashClose").addEventListener("click", closeCashModal);
+    $("spCashHand").addEventListener("click", saveHandover);
+    $("spCashStart").addEventListener("change", () => { persist({ cashStart: $("spCashStart").value || "" }); renderCash(); render(); });
+    $("spHandAmount").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); saveHandover(); } });
+    $("spCashModal").addEventListener("click", e => { if (e.target === $("spCashModal")) closeCashModal(); const d = e.target.closest("[data-sp-cash-del]"); if (d) deleteHandover(d.dataset.spCashDel); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("spCashModal").hidden) closeCashModal(); });
     $("spExpCancel").addEventListener("click", closeExpModal);
     $("spExpSave").addEventListener("click", saveExp);
     $("spExpAmount").addEventListener("keydown", e => { if (e.key === "Enter") saveExp(); });
@@ -7478,6 +7521,8 @@
     const toggle = $("spToggleEmpty");
     if (toggle) { toggle.hidden = week; toggle.textContent = moduleState.showEmpty ? "Freie Stunden ausblenden" : "Freie Stunden zeigen"; }
     $("spCalendar").innerHTML = week ? renderWeek(days, holidayOf) : renderDay(days[0], holidayOf);
+    renderStats(days);
+    if ($("spCashModal") && !$("spCashModal").hidden) renderCash();
     { const hol = days.map(d => holidayOf(d) ? `${shortDate(iso(d))}: ${holidayOf(d)}` : "").filter(Boolean); showNotice(hol.length ? `Feiertag – an Feiertagen kann kein neuer Termin angelegt werden (${hol.join(", ")}).` : ""); }
     renderProposalList();
     updateActionState();
@@ -8107,6 +8152,60 @@
     render();
     renderProposalList();
     updateAuto();
+  }
+
+  /* ================= Zähler: erledigte Häuser (x/y) und Kasse (Bargeld) ================= */
+  function cashStart() { const v = data().cashStart; return typeof v === "string" ? v : ""; }
+  function handovers() { const h = data().cashHandovers; return Array.isArray(h) ? h : []; }
+  function cashFigures() {
+    const from = cashStart(), ok = d => !from || d >= from;
+    const bar = appointments().filter(a => a.done && a.invoice === "bar" && a.amount > 0 && ok(a.date)).reduce((n, a) => n + a.amount, 0);
+    const exp = expenses().filter(x => ok(x.date)).reduce((n, x) => n + x.amount, 0);
+    const give = handovers().filter(x => ok(x.date)).reduce((n, x) => n + x.amount, 0);
+    return { bar, exp, give, soll: Math.round((bar - exp - give) * 100) / 100 };
+  }
+  function renderStats(days) {
+    const from = iso(days[0]), to = iso(days[days.length - 1]);
+    const list = appointments().filter(a => a.date >= from && a.date <= to && !a.missed);
+    const done = list.filter(a => a.done).length, el = $("spStatDone");
+    if (el) { $("spStatDoneNum").textContent = `${done}/${list.length}`; el.classList.toggle("all-done", list.length > 0 && done === list.length); }
+    const c = cashFigures(), b = $("spCashNum");
+    if (b) { b.textContent = fmtEUR(c.soll); b.parentElement.classList.toggle("neg", c.soll < 0); }
+  }
+  function renderCash() {
+    const c = cashFigures(), h = handovers().slice().sort((x, y) => (y.date + y.createdAt).localeCompare(x.date + x.createdAt));
+    $("spCashBig").textContent = fmtEUR(c.soll);
+    $("spCashBig").style.color = c.soll < 0 ? "#a02f2f" : "";
+    $("spCashLines").innerHTML = `<div><span>Bar kassiert</span><strong>${esc(fmtEUR(c.bar))}</strong></div>` +
+      `<div><span>− Ausgaben (Tanken usw.)</span><strong>${esc(fmtEUR(c.exp))}</strong></div>` +
+      `<div><span>− Dem Chef übergeben</span><strong>${esc(fmtEUR(c.give))}</strong></div>` +
+      (c.soll < 0 ? `<div style="color:#a02f2f"><span>Mehr übergeben als kassiert</span><strong>${esc(fmtEUR(-c.soll))}</strong></div>` : "");
+    $("spCashHist").innerHTML = h.length
+      ? `<div class="sp-works-title">Übergaben an den Chef</div>` + h.map(x => `<div class="sp-exp-row"><span>${esc(fmtDate(x.date))}</span><strong>${esc(fmtEUR(x.amount))}</strong><button type="button" data-sp-cash-del="${esc(x.id)}" aria-label="Übergabe löschen" title="Löschen">✕</button></div>`).join("")
+      : `<div class="sp-muted">Noch keine Übergabe eingetragen.</div>`;
+    $("spCashStart").value = cashStart();
+  }
+  function openCashModal() {
+    renderCash();
+    $("spHandDate").value = iso(new Date());
+    const soll = cashFigures().soll;
+    $("spHandAmount").value = soll > 0 ? String(soll.toFixed(2)).replace(".", ",") : "";
+    $("spCashModal").hidden = false;
+  }
+  function closeCashModal() { $("spCashModal").hidden = true; }
+  function saveHandover() {
+    const date = $("spHandDate").value, amount = parseAmount($("spHandAmount").value);
+    if (!date) return alert("Bitte das Datum der Übergabe wählen.");
+    if (amount === null || Number.isNaN(amount) || !(amount > 0)) return alert("Bitte den übergebenen Betrag eingeben, z. B. 250,00.");
+    persist({ cashHandovers: handovers().concat([{ id: uuid(), date, amount, createdAt: new Date().toISOString() }]) });
+    renderCash(); render();
+    $("spHandAmount").value = "";
+  }
+  function deleteHandover(id) {
+    const x = handovers().find(h => h.id === id);
+    if (!x || !confirm(`Übergabe vom ${fmtDate(x.date)} (${fmtEUR(x.amount)}) löschen?`)) return;
+    persist({ cashHandovers: handovers().filter(h => h.id !== id) });
+    renderCash(); render();
   }
 
   /* ================= Ausgaben aus den Bareinnahmen ================= */
