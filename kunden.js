@@ -2,7 +2,11 @@
  *
  * Gemeinsame Kundenliste für Terminplaner und Luftverbund-Rechner.
  *
- * Kundennummern:  HHHH.ZZZ   (0001.000 bis 9999.999)
+ * Programme (Auswahl oben in der Kundenverwaltung):
+ *   Hottgenroth:  HHHH.ZZZ   (0001.000 bis 9999.999)
+ *   Dexheimer:    OO-SSS-HHHH (Ortschaft – Straße – Hausnummer, z. B. 02-001-0001)
+ *
+ * Kundennummern Hottgenroth:  HHHH.ZZZ   (0001.000 bis 9999.999)
  *   HHHH = laufende Nummer des Hauses (1 bis 9999)
  *   ZZZ  = Zusatz für Einschübe (000 bis 999)
  *   Anzeige ohne führende Nullen: 1.000 · 2.000 · 10.000 · 1000.000
@@ -29,6 +33,10 @@
     });
   }
 
+  function pad2(n) {
+    return String(n).padStart(2, "0");
+  }
+
   function pad3(n) {
     return String(n).padStart(3, "0");
   }
@@ -42,8 +50,60 @@
      ============================================================ */
 
   /* "2.001" / "2001" / "0002.001" -> { haus: 2, zus: 1 } oder null */
+  var PROG_KEY = "schornstein-planer-kunden-programm";
+  var PROGS = {
+    hottgenroth: { name: "Hottgenroth", ex: "2.001" },
+    dexheimer: { name: "Dexheimer", ex: "02-001-0001" }
+  };
+
+  function getProg() {
+    try {
+      var v = localStorage.getItem(PROG_KEY);
+
+      return PROGS[v] ? v : "hottgenroth";
+    } catch (e) {
+      return "hottgenroth";
+    }
+  }
+
+  function setProg(v) {
+    if (!PROGS[v]) return;
+
+    try {
+      localStorage.setItem(PROG_KEY, v);
+    } catch (e) {}
+  }
+
+  /* "02-001-0001" / "2-1-1" / "020010001" -> { dex:true, ort, str, haus } */
+  function parseDex(t) {
+    var m = /^(\d{1,2})-(\d{1,3})-(\d{1,4})$/.exec(t);
+
+    if (!m && /^\d{9}$/.test(t)) m = [0, t.slice(0, 2), t.slice(2, 5), t.slice(5)];
+
+    if (!m) return null;
+
+    var o = parseInt(m[1], 10);
+    var sr = parseInt(m[2], 10);
+    var h = parseInt(m[3], 10);
+
+    if (o < 1 || sr < 1 || h < 1) return null;
+
+    return { dex: true, ort: o, str: sr, haus: h };
+  }
+
+  function progOfNr(nr) {
+    var p = parseNr(nr);
+
+    return p && p.dex ? "dexheimer" : "hottgenroth";
+  }
+
   function parseNr(s) {
-    var t = String(s == null ? "" : s).trim().replace(",", ".").replace(/\s+/g, "");
+    var t0 = String(s == null ? "" : s).trim().replace(/\s+/g, "");
+    var dx = parseDex(t0);
+
+    if (dx) return dx;
+
+    var t = t0.replace(",", ".");
     var m = /^(\d{1,4})(?:\.(\d{3}))?$/.exec(t);
 
     if (!m) return null;
@@ -57,11 +117,15 @@
   }
 
   function fmtNr(p) {
+    if (p.dex) return String(p.ort).padStart(2, "0") + "-" + pad3(p.str) + "-" + String(p.haus).padStart(4, "0");
+
     return p.haus + "." + pad3(p.zus);
   }
 
   function nrSort(k) {
     var p = parseNr(k.nr);
+
+    if (p && p.dex) return 1e10 + p.ort * 1e7 + p.str * 1e4 + p.haus;
 
     return p ? p.haus * 1000 + p.zus : Infinity;
   }
@@ -228,7 +292,7 @@
     kunden.forEach(function (k) {
       var p = parseNr(k.nr);
 
-      if (!p) return;
+      if (!p || p.dex) return;
 
       used[p.haus] = true;
 
@@ -242,6 +306,64 @@
     }
 
     return null;
+  }
+
+  /* Dexheimer: nächste Nummer OO-SSS-HHHH – Ort und Straße von vorhandenen Kunden übernehmen, sonst die nächste freie */
+  function nextDexNr(ctx) {
+    ctx = ctx || {};
+
+    var city = String(ctx.city || "").trim().toLowerCase();
+    var street = String(ctx.street || "").trim().toLowerCase();
+    var list = [];
+
+    kunden.forEach(function (k) {
+      var p = parseNr(k.nr);
+
+      if (p && p.dex) list.push({ k: k, p: p });
+    });
+
+    var ort = 0;
+    var maxOrt = 0;
+
+    list.forEach(function (x) {
+      if (x.p.ort > maxOrt) maxOrt = x.p.ort;
+
+      if (!ort && city && String(x.k.city || "").trim().toLowerCase() === city) ort = x.p.ort;
+    });
+
+    if (!ort) ort = maxOrt ? (city ? maxOrt + 1 : maxOrt) : 1;
+
+    var inOrt = list.filter(function (x) {
+      return x.p.ort === ort;
+    });
+    var str = 0;
+    var maxStr = 0;
+
+    inOrt.forEach(function (x) {
+      if (x.p.str > maxStr) maxStr = x.p.str;
+
+      if (!str && street && String(x.k.street || "").trim().toLowerCase() === street) str = x.p.str;
+    });
+
+    if (!str) str = maxStr ? (street ? maxStr + 1 : maxStr) : 1;
+
+    var used = {};
+    var maxH = 0;
+
+    inOrt.forEach(function (x) {
+      if (x.p.str !== str) return;
+
+      used[x.p.haus] = true;
+
+      if (x.p.haus > maxH) maxH = x.p.haus;
+    });
+
+    var hn = parseInt(String(ctx.house || "").replace(/^\D+/, ""), 10);
+    var haus = hn >= 1 && hn <= 9999 && !used[hn] ? hn : maxH + 1;
+
+    if (ort > 99 || str > 999 || haus > 9999) return null;
+
+    return fmtNr({ dex: true, ort: ort, str: str, haus: haus });
   }
 
   /* Einschub nach einem vorhandenen Kunden: gleiche Hausnummer, nächster freier Zusatz */
@@ -263,13 +385,16 @@
     return fmtNr({ haus: base.haus, zus: maxZus + 1 });
   }
 
-  function checkNr(input, ownId) {
+  function checkNr(input, ownId, prog) {
     var p = parseNr(input);
+    var want = prog || getProg();
 
-    if (!p) {
+    if (!p || (p.dex ? "dexheimer" : "hottgenroth") !== want) {
       return {
         error:
-          "Bitte eine Kundennummer von 1.000 bis 9999.999 eingeben (drei Stellen nach dem Punkt, z. B. 2.001)."
+          want === "dexheimer"
+            ? "Bitte eine Kundennummer im Dexheimer-Format eingeben: Ortschaft-Straße-Hausnummer, z. B. 02-001-0001."
+            : "Bitte eine Kundennummer von 1.000 bis 9999.999 eingeben (drei Stellen nach dem Punkt, z. B. 2.001)."
       };
     }
 
@@ -365,7 +490,9 @@
     if (digits && /^[\d.,\s]+$/.test(s)) {
       var p = parseNr(k.nr);
 
-      if (p && (p.haus + pad3(p.zus)).indexOf(digits) === 0) return true;
+      if (p && p.dex && (pad2(p.ort) + pad3(p.str) + String(p.haus).padStart(4, "0")).indexOf(digits) === 0) return true;
+
+      if (p && !p.dex && (p.haus + pad3(p.zus)).indexOf(digits) === 0) return true;
     }
 
     return false;
@@ -402,6 +529,13 @@
     ".kv-list{display:flex;flex-direction:column;gap:8px}" +
     ".kv-row{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;text-align:left;padding:12px 14px;min-height:54px;border:1px solid var(--border);border-left:4px solid var(--gold);border-radius:12px;background:#fff;color:var(--text);cursor:pointer;font:inherit}" +
     ".kv-row:hover,.kv-row:focus-visible{background:#fffaf0;outline:none}" +
+    ".kv-prog{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 14px}" +
+    ".kv-prog-l{font-size:.78rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-right:2px}" +
+    ".kv-progb{display:flex;align-items:center;justify-content:center;width:170px;border:1px solid #d5d9dd;background:#fff;border-radius:12px;padding:8px 14px;min-height:44px;font:inherit;color:var(--text);cursor:pointer;text-align:center}" +
+    ".kv-progb strong{font-size:.95rem}" +
+    ".kv-progb:hover{border-color:var(--gold)}" +
+    "@media (max-width:600px){.kv-prog-l{flex:0 0 100%}.kv-progb{flex:1 1 0;width:auto;min-width:0}}" +
+    ".kv-progb.on{background:var(--dark);border-color:var(--dark);color:#fff}" +
     ".kv-apt{display:inline-block;margin-left:8px;padding:1px 8px;border-radius:999px;background:#f1f3f5;color:#7a6a45;font-size:.72rem;font-weight:700;line-height:1.5;vertical-align:1px;cursor:pointer;white-space:nowrap}" +
     ".kv-apt:hover,.kv-apt:focus-visible{background:#f7ecd2;color:#4d3d17;outline:none}" +
     ".kv-popbg{position:fixed;inset:0;z-index:10000;background:rgba(20,25,30,.4);display:flex;align-items:center;justify-content:center;padding:16px}" +
@@ -715,14 +849,28 @@
       );
     }
 
+    function shown() {
+      var a = kunden.slice().sort(custCmp);
+
+      if (mode !== "manage") return a;
+
+      var pr = getProg();
+
+      return a.filter(function (k) {
+        return progOfNr(k.nr) === pr;
+      });
+    }
+
     function update() {
-      var all = kunden.slice().sort(custCmp);
+      var all = shown();
       var html = "";
       var q = st.q.trim();
 
       if (!all.length) {
         body.innerHTML =
-          '<div class="kv-empty">Noch keine Kunden angelegt.<br>Mit „+ Neuer Kunde“ den ersten Kunden anlegen.</div>';
+          '<div class="kv-empty">' +
+          (mode === "manage" ? "Noch keine Kunden im Programm " + PROGS[getProg()].name + " angelegt." : "Noch keine Kunden angelegt.") +
+          "<br>Mit „+ Neuer Kunde“ den ersten Kunden anlegen.</div>";
         return;
       }
 
@@ -735,7 +883,7 @@
           '<div class="kv-list">' +
           (found.length
             ? found.map(searchRow).join("")
-            : '<div class="kv-empty">Kein Kunde gefunden.</div>') +
+            : '<div class="kv-empty">Kein Kunde gefunden.' + otherHit(q) + "</div>") +
           "</div>" +
           '<div class="kv-foot">' +
           found.length +
@@ -784,14 +932,32 @@
         html = crumbs() + '<div class="kv-list">' + inStreet.map(houseRow).join("") + "</div>";
       }
 
-      html += '<div class="kv-foot">' + all.length + (all.length === 1 ? " Kunde" : " Kunden") + " insgesamt</div>";
+      html +=
+        '<div class="kv-foot">' + all.length + (all.length === 1 ? " Kunde" : " Kunden") +
+        (mode === "manage" ? " im Programm " + E(PROGS[getProg()].name) : " insgesamt") + "</div>";
 
       body.innerHTML = html;
     }
 
+    /* Treffer im anderen Programm anzeigen (nur Verwaltung) */
+    function otherHit(q) {
+      if (mode !== "manage") return "";
+
+      var pr = getProg();
+      var other = pr === "dexheimer" ? "hottgenroth" : "dexheimer";
+      var n = kunden.filter(function (k) {
+        return progOfNr(k.nr) === other && matches(k, q);
+      }).length;
+
+      return n
+        ? '<br><button type="button" class="btn btn-light" style="margin-top:8px" data-kv="swprog" data-v="' + other + '">' +
+            n + (n === 1 ? " Treffer" : " Treffer") + " im Programm " + E(PROGS[other].name) + " ansehen</button>"
+        : "";
+    }
+
     /* Kunden der aktuellen Ansicht (Suchergebnis, Straße, Ort oder alle) */
     function visibleList() {
-      var all = kunden.slice().sort(custCmp);
+      var all = shown();
       var q = st.q.trim();
 
       if (q) {
@@ -819,6 +985,12 @@
       if (!t || !host.contains(t)) return;
 
       var a = t.getAttribute("data-kv");
+
+      if (a === "swprog") {
+        setProg(t.getAttribute("data-v"));
+        refreshAll();
+        return;
+      }
 
       if (a === "new") {
         openEditor(null, {
@@ -994,6 +1166,8 @@
     browsers.forEach(function (b) {
       b.update();
     });
+
+    if (typeof renderProg === "function") renderProg();
   }
 
   /* ============================================================
@@ -1006,8 +1180,13 @@
 
     ov.className = "kv-overlay top";
 
+    var formProg = k ? progOfNr(k.nr) : getProg();
+    var dexForm = formProg === "dexheimer";
+
     var insertOptions = kunden
-      .slice()
+      .filter(function (c) {
+        return progOfNr(c.nr) === "hottgenroth";
+      })
       .sort(function (a, b) {
         return nrSort(a) - nrSort(b);
       })
@@ -1029,9 +1208,13 @@
       '</h3><button type="button" class="btn btn-light" data-x="close">Schließen</button></div>' +
       '<div class="kv-sheet-body"><div class="kv-form">' +
       '<div class="field"><label for="kvNr">Kundennummer</label>' +
-      '<input id="kvNr" type="text" inputmode="decimal" autocomplete="off">' +
-      '<p class="kv-hint">Format 1.000 bis 9999.999</p></div>' +
-      (isNew
+      '<input id="kvNr" type="text" inputmode="' + (dexForm ? "text" : "decimal") + '" autocomplete="off">' +
+      '<p class="kv-hint">' +
+      (dexForm
+        ? "Dexheimer: Ortschaft-Straße-Hausnummer, z. B. 02-001-0001"
+        : "Format 1.000 bis 9999.999") +
+      "</p></div>" +
+      (isNew && !dexForm
         ? '<div class="field"><label for="kvIns">Einschub nach Kunde</label>' +
           '<select id="kvIns"><option value="">– nein, neuer Kunde am Ende –</option>' +
           insertOptions +
@@ -1094,7 +1277,26 @@
       return ov.querySelector("#" + id);
     }
 
-    f("kvNr").value = k ? k.nr : nextMainNr() || "";
+    f("kvNr").value = k ? k.nr : (dexForm ? nextDexNr({}) : nextMainNr()) || "";
+
+    /* Dexheimer: Nummer-Vorschlag folgt Ort / Straße / Hausnummer, solange die Nummer nicht von Hand geändert wurde */
+    if (isNew && dexForm) {
+      var nrTouched = false;
+
+      f("kvNr").addEventListener("input", function () {
+        nrTouched = true;
+      });
+
+      ["kvCity", "kvStreet", "kvHouse"].forEach(function (id) {
+        f(id).addEventListener("input", function () {
+          if (nrTouched) return;
+
+          var sug = nextDexNr({ city: f("kvCity").value, street: f("kvStreet").value, house: f("kvHouse").value });
+
+          if (sug) f("kvNr").value = sug;
+        });
+      });
+    }
     f("kvName").value = k ? k.name : "";
     f("kvStreet").value = k ? k.street : "";
     f("kvHouse").value = k ? k.house : "";
@@ -1269,7 +1471,7 @@
 
     document.addEventListener("keydown", onKey, true);
 
-    if (isNew) {
+    if (isNew && f("kvIns")) {
       f("kvIns").addEventListener("change", function () {
         var v = f("kvIns").value;
         var nr = v ? nextInsertNr(v) : nextMainNr();
@@ -1422,7 +1624,7 @@
           return;
         }
 
-        var chk = checkNr(f("kvNr").value, k && k.id);
+        var chk = checkNr(f("kvNr").value, k && k.id, formProg);
 
         if (chk.error) {
           alert(chk.error);
@@ -1899,9 +2101,40 @@
     '<label class="btn btn-light" for="kvImport" style="cursor:pointer" title="Kundenliste aus einer Datei übernehmen (die Gesamtsicherung findest du oben im Menü „Datensicherung“)">Kundenliste importieren</label>' +
     '<input id="kvImport" type="file" accept="application/json,.json" hidden>' +
     "</div></div>" +
+    '<div class="kv-prog" id="kvProg" role="group" aria-label="Programm"></div>' +
     '<div id="kvManage"></div></div>';
 
+  function renderProg() {
+    if (typeof view === "undefined" || !view) return;
+
+    var box = view.querySelector("#kvProg");
+
+    if (!box) return;
+
+    var cur = getProg();
+    box.innerHTML =
+      '<span class="kv-prog-l">Programm</span>' +
+      Object.keys(PROGS)
+        .map(function (key) {
+          return (
+            '<button type="button" class="kv-progb' + (key === cur ? " on" : "") + '" data-prog="' + key + '" aria-pressed="' + (key === cur) + '">' +
+            "<strong>" + E(PROGS[key].name) + "</strong></button>"
+          );
+        })
+        .join("");
+  }
+
+  view.querySelector("#kvProg").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-prog]");
+
+    if (!b) return;
+
+    setProg(b.getAttribute("data-prog"));
+    refreshAll();
+  });
+
   mountBrowser(view.querySelector("#kvManage"), "manage", null);
+  renderProg();
 
   try {
     new MutationObserver(flushApts).observe(view, { attributes: true, attributeFilter: ["style", "hidden", "class"] });
@@ -1965,6 +2198,9 @@
     exportData: exportData,
     importData: importData,
     nextNumber: nextMainNr,
+    nextDexNumber: nextDexNr,
+    getProgram: getProg,
+    setProgram: function (v) { setProg(v); refreshAll(); },
     nextInsertNumber: nextInsertNr,
     parseNr: parseNr,
     wishText: wishText,
