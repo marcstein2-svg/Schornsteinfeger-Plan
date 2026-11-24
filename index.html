@@ -7522,6 +7522,7 @@
     if (toggle) { toggle.hidden = week; toggle.textContent = moduleState.showEmpty ? "Freie Stunden ausblenden" : "Freie Stunden zeigen"; }
     $("spCalendar").innerHTML = week ? renderWeek(days, holidayOf) : renderDay(days[0], holidayOf);
     renderStats(days);
+    if (window.SPKunden && window.SPKunden.setAptProvider) { window.SPKunden.setAptProvider(openAptList); window.SPKunden.aptsChanged(); }
     if ($("spCashModal") && !$("spCashModal").hidden) renderCash();
     { const hol = days.map(d => holidayOf(d) ? `${shortDate(iso(d))}: ${holidayOf(d)}` : "").filter(Boolean); showNotice(hol.length ? `Feiertag – an Feiertagen kann kein neuer Termin angelegt werden (${hol.join(", ")}).` : ""); }
     renderProposalList();
@@ -8154,6 +8155,15 @@
     updateAuto();
   }
 
+  /* Offene Termine für die Kundenübersicht: weder erledigt noch „nicht angetroffen“ (Löschen/Erledigen lässt den Eintrag verschwinden) */
+  function openAptList() {
+    return appointments().filter(a => !a.done && !a.missed && (a.kid || a.knr)).sort((x, y) => (x.date + (x.time || "")).localeCompare(y.date + (y.time || ""))).map(a => {
+      const att = attemptOf(a), hint = aptHintLines(a).join(" · ");
+      return { id: a.id, kid: a.kid || "", knr: a.kid ? "" : String(a.knr || ""), date: a.date, dateText: fmtDate(a.date), time: a.time || "",
+        label: att > 1 ? attemptLabel(att) : "", works: worksText(a), notes: a.notes || "", hint,
+        status: annState(a) === "ok" ? "✔ Termin ist dem Kunden angesagt" : annState(a) === "stale" ? "⚠ Termin geändert – neu ansagen" : "" };
+    });
+  }
   /* ================= Zähler: erledigte Häuser (x/y) und Kasse (Bargeld) ================= */
   function cashStart() { const v = data().cashStart; return typeof v === "string" ? v : ""; }
   function handovers() { const h = data().cashHandovers; return Array.isArray(h) ? h : []; }
