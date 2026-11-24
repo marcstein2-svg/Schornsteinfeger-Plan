@@ -402,15 +402,18 @@
     ".kv-list{display:flex;flex-direction:column;gap:8px}" +
     ".kv-row{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;text-align:left;padding:12px 14px;min-height:54px;border:1px solid var(--border);border-left:4px solid var(--gold);border-radius:12px;background:#fff;color:var(--text);cursor:pointer;font:inherit}" +
     ".kv-row:hover,.kv-row:focus-visible{background:#fffaf0;outline:none}" +
-    ".kv-aptwrap{display:flex;align-items:stretch;gap:8px}" +
-    ".kv-aptwrap>.kv-row{flex:1 1 auto;width:auto;min-width:0}" +
-    ".kv-apt{flex:0 0 auto;align-self:center;border:1px solid #d5d9dd;background:#fff;color:#5c6670;border-radius:999px;padding:6px 12px;min-height:38px;font:inherit;font-size:.82rem;font-weight:700;cursor:pointer;white-space:nowrap}" +
-    ".kv-apt:hover,.kv-apt:focus-visible{border-color:var(--gold);background:#fffaf0;color:var(--text);outline:none}" +
-    ".kv-aptlist{display:flex;flex-direction:column;gap:10px}" +
-    ".kv-aptcard{border:1px solid var(--border);border-left:4px solid var(--gold);border-radius:12px;padding:12px 14px;background:#fff}" +
-    ".kv-aptcard b{display:block;font-size:1.02rem}" +
-    ".kv-aptcard div{margin-top:4px;font-size:.92rem}" +
-    ".kv-aptcard small{color:var(--muted)}" +
+    ".kv-apt{display:inline-block;margin-left:8px;padding:1px 8px;border-radius:999px;background:#f1f3f5;color:#7a6a45;font-size:.72rem;font-weight:700;line-height:1.5;vertical-align:1px;cursor:pointer;white-space:nowrap}" +
+    ".kv-apt:hover,.kv-apt:focus-visible{background:#f7ecd2;color:#4d3d17;outline:none}" +
+    ".kv-popbg{position:fixed;inset:0;z-index:10000;background:rgba(20,25,30,.4);display:flex;align-items:center;justify-content:center;padding:16px}" +
+    ".kv-pop{background:#fff;border-radius:16px;padding:14px 16px 16px;width:100%;max-width:350px;max-height:80vh;overflow:auto;box-shadow:0 12px 40px rgba(0,0,0,.28)}" +
+    ".kv-pop-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}" +
+    ".kv-pop-head strong{font-size:.95rem;color:var(--text)}" +
+    ".kv-pop-x{border:0;background:#f1f3f5;border-radius:50%;width:30px;height:30px;font:inherit;font-size:.95rem;line-height:1;color:#5c6670;cursor:pointer}" +
+    ".kv-pop-it{padding:10px 0;border-top:1px solid #eceff1}" +
+    ".kv-pop-it:first-of-type{border-top:0}" +
+    ".kv-pop-when{font-weight:800;font-size:1.05rem}" +
+    ".kv-pop-line{margin-top:3px;font-size:.88rem;color:var(--text)}" +
+    ".kv-pop-line.m{color:var(--muted);font-size:.8rem}" +
     ".kv-main{min-width:0;display:block}" +
     ".kv-main strong{font-size:1rem}" +
     ".kv-hn{display:inline-block;min-width:3.2ch;margin-right:8px;font-weight:850}" +
@@ -547,15 +550,6 @@
     }
 
     function item(k, rowHtml) {
-      if (mode === "manage") {
-        var n = aptsOf(k).length;
-
-        return n
-          ? '<div class="kv-aptwrap">' + rowHtml +
-              '<button type="button" class="kv-apt" data-kv="apt" data-id="' + E(k.id) + '" title="Dieser Kunde ist angemeldet – Termin ansehen">📅 Termin' + (n > 1 ? " ×" + n : "") + "</button></div>"
-          : rowHtml;
-      }
-
       if (!wk) return rowHtml;
 
       var on = sel.has(k.id);
@@ -662,6 +656,19 @@
       return multi ? '<span class="kv-chk' + (sel.has(k.id) ? " on" : "") + '"></span>' : "";
     }
 
+    function aptTag(k) {
+      if (mode !== "manage") return "";
+
+      var l = aptsOf(k);
+
+      if (!l.length) return "";
+
+      return (
+        ' <span class="kv-apt" role="button" tabindex="0" data-kv="apt" data-id="' + E(k.id) + '" title="Angemeldet – Termin ansehen">📅 ' +
+        E(l[0].dateShort || l[0].date) + (l.length > 1 ? " +" + (l.length - 1) : "") + "</span>"
+      );
+    }
+
     function houseRow(k) {
       return item(k, houseButton(k));
     }
@@ -680,6 +687,7 @@
         E(k.name || "(ohne Namen)") +
         (k.waReg ? " 💬" : "") +
         (k.group ? " 🏘" : "") +
+        aptTag(k) +
         "</strong>" +
         (cityLine(k) ? '<span class="kv-sub">' + E(cityLine(k)) + "</span>" : "") +
         '</span><span class="kv-nr">Kd-Nr ' +
@@ -698,6 +706,7 @@
         E(k.name || "(ohne Namen)") +
         (k.waReg ? " 💬" : "") +
         (k.group ? " 🏘" : "") +
+        aptTag(k) +
         '<span class="kv-sub">' +
         E(cityLine(k) || NO_CITY) +
         '</span></span><span class="kv-nr">Kd-Nr ' +
@@ -885,6 +894,16 @@
         } else {
           openEditor(k, {});
         }
+      }
+    });
+
+    host.addEventListener("keydown", function (e) {
+      var ap = e.target.closest && e.target.closest('[data-kv="apt"]');
+
+      if (ap && (e.key === "Enter" || e.key === " ")) {
+        e.preventDefault();
+        e.stopPropagation();
+        showApts(byId(ap.getAttribute("data-id")));
       }
     });
 
@@ -1503,29 +1522,27 @@
     var list = aptsOf(k);
     var ov = document.createElement("div");
 
-    ov.className = "kv-overlay";
+    ov.className = "kv-popbg";
 
     ov.innerHTML =
-      '<div class="kv-sheet" role="dialog" aria-modal="true" style="max-width:480px;height:auto">' +
-      '<div class="kv-sheet-head"><h3>📅 Termin · ' + E(k.name || "Kunde") + "</h3>" +
-      '<button type="button" class="btn btn-light" data-x="close">Schließen</button></div>' +
-      '<div class="kv-sheet-body"><div class="kv-aptlist">' +
+      '<div class="kv-pop" role="dialog" aria-modal="true">' +
+      '<div class="kv-pop-head"><strong>' + E(k.name || "Kunde") + '</strong>' +
+      '<button type="button" class="kv-pop-x" data-x="close" aria-label="Schließen">✕</button></div>' +
       (list.length
         ? list
             .map(function (a) {
               return (
-                '<div class="kv-aptcard"><b>' + E(a.dateText || a.date) + (a.time ? " · " + E(a.time) + " Uhr" : "") + "</b>" +
-                (a.label ? "<div><small>" + E(a.label) + "</small></div>" : "") +
-                "<div><strong>Zu tun:</strong> " + E(a.works && a.works.length ? a.works.join(", ") : "–") + "</div>" +
-                (a.notes ? "<div><strong>Anmerkung:</strong> " + E(a.notes) + "</div>" : "") +
-                (a.hint ? "<div><strong>Hinweis:</strong> " + E(a.hint) + "</div>" : "") +
-                (a.status ? "<div><small>" + E(a.status) + "</small></div>" : "") +
+                '<div class="kv-pop-it"><div class="kv-pop-when">' + E(a.dateText || a.date) + (a.time ? " · " + E(a.time) + " Uhr" : "") + "</div>" +
+                '<div class="kv-pop-line">' + E(a.works && a.works.length ? a.works.join(" · ") : "–") + (a.label ? " · " + E(a.label) : "") + "</div>" +
+                (a.notes ? '<div class="kv-pop-line m">' + E(a.notes) + "</div>" : "") +
+                (a.hint ? '<div class="kv-pop-line m">' + E(a.hint) + "</div>" : "") +
+                (a.status ? '<div class="kv-pop-line m">' + E(a.status) + "</div>" : "") +
                 "</div>"
               );
             })
             .join("")
-        : '<div class="kv-empty">Kein offener Termin.</div>') +
-      "</div></div></div>";
+        : '<div class="kv-pop-line m">Kein offener Termin.</div>') +
+      "</div>";
 
     document.body.appendChild(ov);
 
