@@ -8159,7 +8159,7 @@
   function openAptList() {
     return appointments().filter(a => !a.done && !a.missed && (a.kid || a.knr)).sort((x, y) => (x.date + (x.time || "")).localeCompare(y.date + (y.time || ""))).map(a => {
       const att = attemptOf(a), hint = aptHintLines(a).join(" · ");
-      return { id: a.id, kid: a.kid || "", knr: a.kid ? "" : String(a.knr || ""), date: a.date, dateText: fmtDate(a.date), time: a.time || "",
+      return { id: a.id, kid: a.kid || "", knr: a.kid ? "" : String(a.knr || ""), date: a.date, dateText: new Intl.DateTimeFormat("de-DE", { weekday: "short", day: "2-digit", month: "2-digit" }).format(fromIso(a.date)), dateShort: new Intl.DateTimeFormat("de-DE", { day: "2-digit", month: "2-digit" }).format(fromIso(a.date)).replace(/\.?$/, "."), time: a.time || "",
         label: att > 1 ? attemptLabel(att) : "", works: worksText(a), notes: a.notes || "", hint,
         status: annState(a) === "ok" ? "✔ Termin ist dem Kunden angesagt" : annState(a) === "stale" ? "⚠ Termin geändert – neu ansagen" : "" };
     });
