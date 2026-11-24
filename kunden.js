@@ -402,6 +402,15 @@
     ".kv-list{display:flex;flex-direction:column;gap:8px}" +
     ".kv-row{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;text-align:left;padding:12px 14px;min-height:54px;border:1px solid var(--border);border-left:4px solid var(--gold);border-radius:12px;background:#fff;color:var(--text);cursor:pointer;font:inherit}" +
     ".kv-row:hover,.kv-row:focus-visible{background:#fffaf0;outline:none}" +
+    ".kv-aptwrap{display:flex;align-items:stretch;gap:8px}" +
+    ".kv-aptwrap>.kv-row{flex:1 1 auto;width:auto;min-width:0}" +
+    ".kv-apt{flex:0 0 auto;align-self:center;border:1px solid #d5d9dd;background:#fff;color:#5c6670;border-radius:999px;padding:6px 12px;min-height:38px;font:inherit;font-size:.82rem;font-weight:700;cursor:pointer;white-space:nowrap}" +
+    ".kv-apt:hover,.kv-apt:focus-visible{border-color:var(--gold);background:#fffaf0;color:var(--text);outline:none}" +
+    ".kv-aptlist{display:flex;flex-direction:column;gap:10px}" +
+    ".kv-aptcard{border:1px solid var(--border);border-left:4px solid var(--gold);border-radius:12px;padding:12px 14px;background:#fff}" +
+    ".kv-aptcard b{display:block;font-size:1.02rem}" +
+    ".kv-aptcard div{margin-top:4px;font-size:.92rem}" +
+    ".kv-aptcard small{color:var(--muted)}" +
     ".kv-main{min-width:0;display:block}" +
     ".kv-main strong{font-size:1rem}" +
     ".kv-hn{display:inline-block;min-width:3.2ch;margin-right:8px;font-weight:850}" +
@@ -470,6 +479,36 @@
 
   var browsers = [];
 
+  /* Offene Termine (vom Terminplaner geliefert): Kunden mit Termin bekommen einen dezenten „Termin“-Button */
+  var aptFn = null, aptCache = null, aptDirty = false;
+  function aptIndex() {
+    if (aptCache) return aptCache;
+    var byId = {}, byNr = {}, list = [];
+    try { list = aptFn ? aptFn() || [] : []; } catch (e) { list = []; }
+    list.forEach(function (a) {
+      if (a.kid) (byId[a.kid] = byId[a.kid] || []).push(a);
+      else if (a.knr) (byNr[a.knr] = byNr[a.knr] || []).push(a);
+    });
+    aptCache = { byId: byId, byNr: byNr };
+    return aptCache;
+  }
+  function aptsOf(k) {
+    var ix = aptIndex();
+    return (ix.byId[k.id] || []).concat(k.nr && ix.byNr[k.nr] ? ix.byNr[k.nr] : []);
+  }
+  function aptsChanged() {
+    aptCache = null;
+    aptDirty = true;
+    flushApts();
+  }
+  function flushApts() {
+    var v = document.getElementById("kundenView");
+    if (aptDirty && v && v.offsetParent !== null) {
+      aptDirty = false;
+      refreshAll();
+    }
+  }
+
   /* mode: "manage" (Kundenverwaltung) oder "pick" (Auswahl) */
   function mountBrowser(host, mode, onPick, opts) {
     var st = { q: "", ort: null, str: null };
@@ -508,6 +547,15 @@
     }
 
     function item(k, rowHtml) {
+      if (mode === "manage") {
+        var n = aptsOf(k).length;
+
+        return n
+          ? '<div class="kv-aptwrap">' + rowHtml +
+              '<button type="button" class="kv-apt" data-kv="apt" data-id="' + E(k.id) + '" title="Dieser Kunde ist angemeldet – Termin ansehen">📅 Termin' + (n > 1 ? " ×" + n : "") + "</button></div>"
+          : rowHtml;
+      }
+
       if (!wk) return rowHtml;
 
       var on = sel.has(k.id);
@@ -775,6 +823,8 @@
             }
           }
         });
+      } else if (a === "apt") {
+        showApts(byId(t.getAttribute("data-id")));
       } else if (a === "selall") {
         visibleList().forEach(function (k) {
           sel.add(k.id);
@@ -1447,6 +1497,54 @@
      AUSWAHL-DIALOG (für Terminplaner und Rechner)
      ============================================================ */
 
+  function showApts(k) {
+    if (!k) return;
+
+    var list = aptsOf(k);
+    var ov = document.createElement("div");
+
+    ov.className = "kv-overlay";
+
+    ov.innerHTML =
+      '<div class="kv-sheet" role="dialog" aria-modal="true" style="max-width:480px;height:auto">' +
+      '<div class="kv-sheet-head"><h3>📅 Termin · ' + E(k.name || "Kunde") + "</h3>" +
+      '<button type="button" class="btn btn-light" data-x="close">Schließen</button></div>' +
+      '<div class="kv-sheet-body"><div class="kv-aptlist">' +
+      (list.length
+        ? list
+            .map(function (a) {
+              return (
+                '<div class="kv-aptcard"><b>' + E(a.dateText || a.date) + (a.time ? " · " + E(a.time) + " Uhr" : "") + "</b>" +
+                (a.label ? "<div><small>" + E(a.label) + "</small></div>" : "") +
+                "<div><strong>Zu tun:</strong> " + E(a.works && a.works.length ? a.works.join(", ") : "–") + "</div>" +
+                (a.notes ? "<div><strong>Anmerkung:</strong> " + E(a.notes) + "</div>" : "") +
+                (a.hint ? "<div><strong>Hinweis:</strong> " + E(a.hint) + "</div>" : "") +
+                (a.status ? "<div><small>" + E(a.status) + "</small></div>" : "") +
+                "</div>"
+              );
+            })
+            .join("")
+        : '<div class="kv-empty">Kein offener Termin.</div>') +
+      "</div></div></div>";
+
+    document.body.appendChild(ov);
+
+    function close() {
+      document.removeEventListener("keydown", onKey);
+      ov.remove();
+    }
+
+    function onKey(e) {
+      if (e.key === "Escape") close();
+    }
+
+    document.addEventListener("keydown", onKey);
+
+    ov.addEventListener("click", function (e) {
+      if (e.target === ov || e.target.closest('[data-x="close"]')) close();
+    });
+  }
+
   function pick(cb) {
     var ov = document.createElement("div");
 
@@ -1788,6 +1886,11 @@
 
   mountBrowser(view.querySelector("#kvManage"), "manage", null);
 
+  try {
+    new MutationObserver(flushApts).observe(view, { attributes: true, attributeFilter: ["style", "hidden", "class"] });
+    new MutationObserver(flushApts).observe(home, { attributes: true, subtree: true, attributeFilter: ["style", "hidden", "class"] });
+  } catch (e) {}
+
   view.querySelector("#kvImport").addEventListener("change", function (e) {
     var file = e.target.files && e.target.files[0];
 
@@ -1831,6 +1934,8 @@
      ============================================================ */
 
   window.SPKunden = {
+    setAptProvider: function (fn) { aptFn = typeof fn === "function" ? fn : null; },
+    aptsChanged: aptsChanged,
     pick: pick,
     pickMany: pickMany,
     list: function () {
