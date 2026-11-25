@@ -3672,6 +3672,7 @@
       <button class="btn btn-light" type="button" id="spDoneNoteSave">Nur Bemerkung speichern</button>
       <button class="btn btn-gold" type="button" id="spReceiptOpen" hidden>🧾 Quittung erstellen</button>
       <button class="btn btn-light" type="button" id="spSweepFromDone">🧹 Kehr-Zettel drucken</button>
+      <button class="btn btn-light" type="button" id="spMeasFromDone">📏 Mess-Zettel drucken</button>
       <button class="btn btn-danger" type="button" id="spDoneUndo" hidden>Als nicht erledigt markieren</button>
     </div>
   </div>
@@ -3689,9 +3690,10 @@
       <div class="field"><label for="spRcDate">Datum der Quittung</label><input id="spRcDate" type="date"></div>
       <div class="field"><label for="spRcTaxNo">Steuernummer des Betriebs</label><input id="spRcTaxNo" type="text" autocomplete="off" placeholder="z. B. 12/345/67890"></div>
       <div class="field"><label for="spRcVatId">USt-IdNr. (optional)</label><input id="spRcVatId" type="text" autocomplete="off" placeholder="DE123456789"></div>
+      <div class="field"><label for="spRcFormat">Papierformat</label><select id="spRcFormat"><option value="a4">A4 – Original oben, Durchschrift unten</option><option value="a5">A5 hochkant – eine Quittung pro Blatt</option><option value="a5x2">2 × A5 auf A4 quer – Original links, Durchschrift rechts</option></select></div>
     </div>
     <div class="field" style="margin-top:10px"><label for="spRcWork">Leistung (erscheint auf der Quittung)</label><textarea id="spRcWork" rows="2"></textarea></div>
-    <label style="display:flex;gap:8px;align-items:center;margin-top:10px"><input type="checkbox" id="spRcCopy" checked> Durchschrift für den Betrieb mitdrucken (zweites Exemplar auf demselben Blatt)</label>
+    <label style="display:flex;gap:8px;align-items:center;margin-top:10px"><input type="checkbox" id="spRcCopy" checked> Durchschrift für den Betrieb mitdrucken (zweites Exemplar)</label>
     <p class="sp-muted" id="spRcWarn" style="margin:10px 0 0;color:#a02f2f" hidden></p>
     <div class="sp-modal-actions">
       <button class="btn btn-light" type="button" id="spRcCancel">Abbrechen</button>
@@ -3757,9 +3759,9 @@
 <div class="sp-modal-backdrop" id="spSweepModal" hidden>
   <div class="sp-modal" role="dialog" aria-modal="true" aria-labelledby="spSweepTitle" style="max-width:520px">
     <h3 id="spSweepTitle">🧹 Kehr-Zettel</h3>
-    <p class="sp-muted" style="margin:-4px 0 12px">Für Kunden, bei denen der Schornstein frei zugänglich ist und du ihn auch ohne sie kehren darfst. Auf dem Zettel stehen Datum und Uhrzeit der Kehrung, ein Dank für das Vertrauen und deine Telefonnummer.</p>
-    <div class="field"><label for="spSweepDate">Datum der Kehrung</label><input id="spSweepDate" type="date"></div>
-    <div class="sp-works-title" style="margin-top:12px">Häuser und Uhrzeit der Kehrung</div>
+    <p class="sp-muted" id="spSweepDesc" style="margin:-4px 0 12px">Für Kunden, bei denen der Schornstein frei zugänglich ist und du ihn auch ohne sie kehren darfst. Auf dem Zettel stehen Datum und Uhrzeit der Kehrung, ein Dank für das Vertrauen und deine Telefonnummer.</p>
+    <div class="field"><label for="spSweepDate" id="spSweepDateLbl">Datum der Kehrung</label><input id="spSweepDate" type="date"></div>
+    <div class="sp-works-title" id="spSweepRowsTitle" style="margin-top:12px">Häuser und Uhrzeit der Kehrung</div>
     <div id="spSweepRows"></div>
     <div style="margin-top:8px"><button type="button" class="btn btn-light" id="spSweepNow">🕐 Uhrzeit auf jetzt setzen</button></div>
     <div class="sp-modal-actions">
@@ -3992,6 +3994,7 @@
       <button class="btn btn-light" type="button" id="spMoveFromApt">⇄ Verschieben</button>
       <button class="btn btn-light" type="button" id="spDoneFromApt">✔ Erledigt …</button>
       <button class="btn btn-light" type="button" id="spSweepFromApt">🧹 Kehr-Zettel</button>
+      <button class="btn btn-light" type="button" id="spMeasFromApt">📏 Mess-Zettel</button>
       <button class="btn btn-light" type="button" id="spMissFromApt">🚪 Nicht angetroffen …</button>
       <button class="btn btn-light" type="button" id="spMsgFromApt">📲 Termin ansagen</button>
     </div>
@@ -7204,6 +7207,8 @@
     $("spDoneFromApt").addEventListener("click", () => { const id = moduleState.editingId; closeModal(); openDoneModal(id); });
     $("spSweepFromApt").addEventListener("click", () => { const id = moduleState.editingId; closeModal(); openSweepModal(id); });
     $("spSweepFromDone").addEventListener("click", () => { const id = moduleState.doneId; closeDoneModal(); openSweepModal(id); });
+    $("spMeasFromApt").addEventListener("click", () => { const id = moduleState.editingId; closeModal(); openSweepModal(id, "mess"); });
+    $("spMeasFromDone").addEventListener("click", () => { const id = moduleState.doneId; closeDoneModal(); openSweepModal(id, "mess"); });
     $("spSweepCancel").addEventListener("click", closeSweepModal);
     $("spSweepPrint").addEventListener("click", () => printSweep(false));
     $("spSweepPool").addEventListener("click", () => printSweep(true));
@@ -7269,6 +7274,7 @@
     document.addEventListener("click", e => {
       const dayBtn = e.target.closest("[data-sp-day]"); if (dayBtn) { moduleState.date = fromIso(dayBtn.dataset.spDay); moduleState.view = "day"; render(); return; }
       const sw = e.target.closest("[data-sp-sweep]"); if (sw) { openSweepModal(sw.dataset.spSweep); return; }
+      const sm = e.target.closest("[data-sp-meas]"); if (sm) { openSweepModal(sm.dataset.spMeas, "mess"); return; }
       const dn = e.target.closest("[data-sp-done]"); if (dn) { openDoneModal(dn.dataset.spDone); return; }
       const xd = e.target.closest("[data-sp-exp-del]"); if (xd) { deleteExp(xd.dataset.spExpDel); return; }
       const ms = e.target.closest("[data-sp-miss]"); if (ms) { openMissModal(ms.dataset.spMiss); return; }
@@ -7276,7 +7282,7 @@
       const pr = e.target.closest("[data-sp-print]"); if (pr) { printAppointmentNow(pr.dataset.spPrint); return; }
       const mg = e.target.closest("[data-sp-msg]"); if (mg) { openMsgModal(mg.dataset.spMsg); return; }
       const pl = e.target.closest("[data-sp-pool]"); if (pl) { const id = pl.dataset.spPool; if (inPool(id)) poolRemove([id]); else poolAdd([id], true); render(); return; }
-      const sd = e.target.closest("[data-sp-sweep-del]"); if (sd) { persist({ sweepPool: sweepPoolList().filter(x => x.id !== sd.dataset.spSweepDel) }); renderPool(); render(); return; }
+      const sd = e.target.closest("[data-sp-sweep-del]"); if (sd) { persist({ sweepPool: sweepPoolList().filter(x => !(x.id === sd.dataset.spSweepDel && (x.type || "kehr") === (sd.dataset.type || "kehr"))) }); renderPool(); render(); return; }
       const pd = e.target.closest("[data-sp-pool-del]"); if (pd) { poolRemove([pd.dataset.spPoolDel]); renderPool(); render(); return; }
       const open = e.target.closest("[data-sp-open]"); if (open) openModal(open.dataset.date, open.dataset.time, open.dataset.spOpen);
       const select = e.target.closest("[data-sp-select]"); if (select) { moduleState.selectedId = select.dataset.spSelect; renderProposalList(); updateActionState(); }
@@ -7367,8 +7373,10 @@
     const pooled = inPool(a.id);
     const grpN = slipUnit(a).length;
     const grpBadge = grpN > 1 && !compact ? `<span class="sp-badge sp-badge-line sp-badge-time">🏘 ${grpN} Häuser zusammen</span>` : "";
-    const sweepQ = sweepPoolList().find(e => e.id === a.id);
-    const sweepBadge = sweepQ ? `<span class="sp-badge sp-badge-line">🧹 Kehr-Zettel im Druckpool ${esc(sweepQ.time || "")}</span>` : a.sweepSlip ? `<span class="sp-badge sp-badge-line">🧹 Kehr-Zettel ${esc(a.sweepSlip.time || "")}</span>` : "";
+    const sweepBadge = Object.keys(SLIPS).map(t => {
+      const q = sweepPoolList().find(e => e.id === a.id && (e.type || "kehr") === t), sl = a[SLIPS[t].field];
+      return q ? `<span class="sp-badge sp-badge-line">${SLIPS[t].icon} ${SLIPS[t].name} im Druckpool ${esc(q.time || "")}</span>` : sl ? `<span class="sp-badge sp-badge-line">${SLIPS[t].icon} ${SLIPS[t].name} ${esc(sl.time || "")}</span>` : "";
+    }).join("");
     const badgeLine = wishBadge + grpBadge + sweepBadge + (pooled && !compact ? `<span class="sp-badge sp-badge-line sp-badge-time">🗂 im Druckpool</span>` : "") + (waOpen && !compact ? `<span class="sp-badge sp-badge-line sp-badge-time">💬 per WhatsApp anmelden</span>` : "") + (ann === "ok" && !compact ? `<span class="sp-badge sp-badge-line sp-badge-ann">📲 angesagt</span>` : ann === "stale" && !compact ? `<span class="sp-badge sp-badge-line sp-badge-ann stale">📲 neu ansagen – Termin geändert</span>` : "") + (att > 1 && !compact ? `<span class="sp-badge sp-badge-line">${attemptLabel(att)}</span>` : "") + (stale && !compact ? `<span class="sp-badge sp-badge-line sp-badge-warn">⚠ Zettel neu drucken</span>` : "");
     const mark = (a.done ? "✔ " : a.missed ? "🚪 " : "") + (grpN > 1 && compact ? "🏘 " : "") + (pooled && compact ? "🗂 " : "") + (waOpen && compact ? "💬 " : "") + (hl && compact ? "💡 " : "") + (stale && compact ? "⚠ " : "") + ((tbm || tam) && compact ? "🚗 " : "") + (wt && compact ? (wbad ? "⚠⏰ " : "⏰ ") : "");
     const btn = `<button type="button" class="sp-appt${compact ? " compact" : ""}${a.id === moduleState.selectedId ? " selected" : ""}${a.done ? " done" : ""}${a.missed ? " missed" : ""}" data-sp-open="${esc(a.id)}" data-date="${esc(a.date)}" data-time="${esc(a.time)}" title="${esc(title)}"><span class="sp-appt-time">${mark}${esc(a.time)}${badgeTime}${compact ? codeHtml : ""}</span>${compact ? "" : codeHtml}<span class="sp-appt-main"><strong>${esc(a.customer || "Ohne Kundennamen")}</strong>${badgeLine}${compact || !addr ? "" : `<small>${esc(addr)}</small>`}${hl && !compact ? `<span class="sp-hintline">💡 ${esc(hl)}</span>` : ""}${compact || !(tbm || tam) ? "" : `<small>🚗 ${tbm} Min. vorher · ${tam} Min. nachher</small>`}</span></button>`;
@@ -7376,7 +7384,7 @@
     const inv = a.done && a.invoice ? ` · ${INV_SHORT[a.invoice] || ""}${a.invoice === "bar" && a.amount > 0 ? " " + fmtEUR(a.amount) : ""}` : "";
     const fu = a.missed ? followUpOf(a) : null;
     const missLabel = a.missed ? (fu ? `🚪 Nicht angetroffen · ${esc(attemptLabel(attemptOf(fu)))} am ${esc(shortDate(fu.date))}` : (attemptOf(a) >= 3 ? "🚪 Nicht angetroffen – letzte Anmeldung" : "🚪 Nicht angetroffen – neu anmelden")) : "🚪 Nicht angetroffen";
-    return `<div class="sp-appt-wrap">${btn}<div class="sp-appt-actions"><button type="button" class="sp-act${a.done ? " done" : ""}" data-sp-done="${esc(a.id)}">${a.done ? "✔ Erledigt" + esc(inv) : "☐ Erledigt?"}</button><button type="button" class="sp-act" data-sp-print="${esc(a.id)}">🖨 Drucken</button><details class="sp-more"><summary class="sp-act${a.missed ? " missed" : ""}">${a.missed ? "🚪 " : ""}⋯ Mehr</summary><div class="sp-more-menu"><button type="button" class="sp-act" data-sp-sweep="${esc(a.id)}">🧹 Kehr-Zettel</button><button type="button" class="sp-act" data-sp-msg="${esc(a.id)}">📲 Termin ansagen</button><button type="button" class="sp-act" data-sp-pool="${esc(a.id)}">🗂 ${pooled ? "Aus Druckpool nehmen" : "In Druckpool legen"}</button><button type="button" class="sp-act${a.missed ? " missed" : ""}" data-sp-miss="${esc(a.id)}">${missLabel}</button><button type="button" class="sp-act" data-sp-move="${esc(a.id)}">⇄ Verschieben</button></div></details></div></div>`;
+    return `<div class="sp-appt-wrap">${btn}<div class="sp-appt-actions"><button type="button" class="sp-act${a.done ? " done" : ""}" data-sp-done="${esc(a.id)}">${a.done ? "✔ Erledigt" + esc(inv) : "☐ Erledigt?"}</button><button type="button" class="sp-act" data-sp-print="${esc(a.id)}">🖨 Drucken</button><details class="sp-more"><summary class="sp-act${a.missed ? " missed" : ""}">${a.missed ? "🚪 " : ""}⋯ Mehr</summary><div class="sp-more-menu"><button type="button" class="sp-act" data-sp-sweep="${esc(a.id)}">🧹 Kehr-Zettel</button><button type="button" class="sp-act" data-sp-meas="${esc(a.id)}">📏 Mess-Zettel</button><button type="button" class="sp-act" data-sp-msg="${esc(a.id)}">📲 Termin ansagen</button><button type="button" class="sp-act" data-sp-pool="${esc(a.id)}">🗂 ${pooled ? "Aus Druckpool nehmen" : "In Druckpool legen"}</button><button type="button" class="sp-act${a.missed ? " missed" : ""}" data-sp-miss="${esc(a.id)}">${missLabel}</button><button type="button" class="sp-act" data-sp-move="${esc(a.id)}">⇄ Verschieben</button></div></details></div></div>`;
   }
   function freeTimeIn(day, hour) {
     const used = appointments().filter(a => a.date === day && Number(a.time.slice(0, 2)) === hour).map(a => a.time);
@@ -8452,7 +8460,7 @@
     $("spPoolList").innerHTML = items.map(a => {
       const [why, cls] = poolReason(a);
       return `<div class="sp-pool-row"><div><strong>${esc(fmtDate(a.date))} · ${esc(a.time)} Uhr</strong><span class="sp-pool-why ${cls}">${esc(why)}</span><small>${esc(a.customer || "Ohne Kundennamen")}${unitAddrText(a)}</small></div><button type="button" class="sp-pool-x" data-sp-pool-del="${esc(a.id)}" title="Aus dem Druckpool nehmen" aria-label="Aus dem Druckpool nehmen">✕</button></div>`;
-    }).join("") + sw.map(({ e, a }) => `<div class="sp-pool-row"><div><strong>${esc(fmtDate(e.date))} · ${esc(e.time)} Uhr</strong><span class="sp-pool-why">🧹 Kehr-Zettel</span><small>${esc(a.customer || "Ohne Kundennamen")}${addrLine(a) ? " – " + esc(addrLine(a)) : ""}</small></div><button type="button" class="sp-pool-x" data-sp-sweep-del="${esc(a.id)}" title="Aus dem Druckpool nehmen" aria-label="Kehr-Zettel aus dem Druckpool nehmen">✕</button></div>`).join("");
+    }).join("") + sw.map(({ e, a }) => `<div class="sp-pool-row"><div><strong>${esc(fmtDate(e.date))} · ${esc(e.time)} Uhr</strong><span class="sp-pool-why">${SLIPS[e.type || "kehr"].icon} ${SLIPS[e.type || "kehr"].name}</span><small>${esc(a.customer || "Ohne Kundennamen")}${addrLine(a) ? " – " + esc(addrLine(a)) : ""}</small></div><button type="button" class="sp-pool-x" data-sp-sweep-del="${esc(a.id)}" data-type="${esc(e.type || "kehr")}" title="Aus dem Druckpool nehmen" aria-label="${SLIPS[e.type || "kehr"].name} aus dem Druckpool nehmen">✕</button></div>`).join("");
     $("spPoolPrint").disabled = !n; $("spPoolClear").disabled = !n;
     $("spPoolAuto").checked = poolAutoOn();
     const last = (Array.isArray(data().printLast) ? data().printLast : []).filter(id => appointments().some(a => a.id === id));
@@ -8467,7 +8475,7 @@
   function poolPrint(ids) {
     const byId = new Map(appointments().map(a => [a.id, a]));
     const list = (ids || poolItems().map(a => a.id)).map(id => byId.get(id)).filter(Boolean).sort((x, y) => (x.date + " " + x.time).localeCompare(y.date + " " + y.time));
-    const sweeps = ids ? [] : sweepPoolItems().map(({ e, a }) => sweepData(a, e.date, e.time));   // Kehr-Zettel nur beim normalen Pool-Druck (nicht beim "nochmal drucken")
+    const sweeps = ids ? [] : sweepPoolItems().map(({ e, a }) => sweepData(a, e.date, e.time, e.type));   // Kehr-Zettel nur beim normalen Pool-Druck (nicht beim "nochmal drucken")
     if (!list.length && !sweeps.length) return alert("Der Druckpool ist leer.");
     const keep = list.map(a => a.id);
     printProposals(list, true, `Anmeldezettel_Druckpool_${iso(new Date())}.pdf`, sweeps);
@@ -9163,6 +9171,7 @@
     $("spRcVatId").value = s.vatId || "";
     $("spRcVat").value = VAT_MODES[a.receiptVat] ? a.receiptVat : (VAT_MODES[s.vatMode] ? s.vatMode : "19");
     $("spRcCopy").checked = s.receiptCopy !== false;
+    $("spRcFormat").value = ["a4", "a5", "a5x2"].includes(s.receiptFormat) ? s.receiptFormat : "a4";
     $("spRcNo").textContent = a.receiptNo ? "Quittungsnummer " + a.receiptNo + " (bereits vergeben – bleibt beim erneuten Drucken gleich)" : "Die Quittungsnummer wird beim Erstellen automatisch vergeben.";
     updateReceiptWarn();
     $("spReceiptModal").hidden = false;
@@ -9187,7 +9196,7 @@
     const work = $("spRcWork").value.trim() || "Schornsteinfegerarbeiten";
     const vat = $("spRcVat").value, date = $("spRcDate").value || iso(new Date());
     const sDate = $("spRcServiceDate").value || a.date;
-    const copy = $("spRcCopy").checked;
+    const copy = $("spRcCopy").checked, fmt = $("spRcFormat").value;
     const cur = settings();
     const year = Number(date.slice(0, 4)) || new Date().getFullYear();
     let no = a.receiptNo, counter = cur.receiptCounter && typeof cur.receiptCounter === "object" ? { ...cur.receiptCounter } : {};
@@ -9195,7 +9204,7 @@
       counter[year] = (Number(counter[year]) || 0) + 1;
       no = "Q-" + year + "-" + String(counter[year]).padStart(4, "0");
     }
-    const newSettings = { ...cur, taxNo: $("spRcTaxNo").value.trim(), vatId: $("spRcVatId").value.trim(), vatMode: vat, receiptCopy: copy, receiptCounter: counter };
+    const newSettings = { ...cur, taxNo: $("spRcTaxNo").value.trim(), vatId: $("spRcVatId").value.trim(), vatMode: vat, receiptCopy: copy, receiptFormat: fmt, receiptCounter: counter };
     const cust = a.kid && window.SPKunden ? window.SPKunden.get(a.kid) : null;
     const old = receiptRecords().find(x => x.no === no);
     const now = new Date().toISOString();
@@ -9216,7 +9225,7 @@
       appointments: appointments().map(x => x.id === id ? { ...x, amount, receiptNo: no, receiptDate: date, receiptWork: work, receiptVat: vat } : x),
       receipts: receiptRecords().filter(x => x.no !== no).concat(rec)
     });
-    const blob = buildReceiptPdf({ ...rec, copy }, rec.issuer);
+    const blob = buildReceiptPdf({ ...rec, copy, format: fmt }, rec.issuer);
     const name = "Quittung_" + no + ".pdf";
     closeReceiptModal(); render();
     if (window.navigator.standalone === true || isIOSDevice()) sharePdf(blob, name); else openPdfTab(blob, name);
@@ -9289,7 +9298,7 @@
   function closeReceiptView() { $("spReceiptView").hidden = true; moduleState.rcViewNo = null; }
   function openReceiptPdf(no) {
     const r = receiptRecords().find(x => x.no === no); if (!r) return;
-    const blob = buildReceiptPdf({ ...r, copy: settings().receiptCopy !== false }, r.issuer || {});
+    const blob = buildReceiptPdf({ ...r, copy: settings().receiptCopy !== false, format: settings().receiptFormat }, r.issuer || {});
     const name = "Quittung_" + r.no + ".pdf";
     if (window.navigator.standalone === true || isIOSDevice()) sharePdf(blob, name); else openPdfTab(blob, name);
   }
@@ -9307,7 +9316,10 @@
   }
 
   function buildReceiptPdf(r, s) {
-    const W = 595.28, H = 841.89, ML = 40, CW = W - 2 * ML;
+    let W = 595.28, H = 841.89, ML = 40, CW = W - 2 * ML;
+    const pages = [];
+    let ops = [];
+    const newPage = (w, h) => { W = w; H = h; ops = []; pages.push({ w, h, ops }); };
     const cpMap = { "€": 0x80, "„": 0x84, "…": 0x85, "‘": 0x91, "’": 0x92, "“": 0x93, "”": 0x94, "•": 0x95, "–": 0x96, "—": 0x97 };
     const nz = str => {
       let o = "";
@@ -9337,7 +9349,6 @@
       });
       return out;
     };
-    const ops = [];
     const T = (x, y, str, o = {}) => {
       const size = o.size || 10, bold = !!o.bold;
       let px = x;
@@ -9359,8 +9370,10 @@
     const tax = Math.round((gross - net) * 100) / 100;
     const biz = s.businessName || s.employeeName || "";
 
-    /* ein Quittungsblock; top = obere Kante, label = Exemplar-Hinweis */
-    const block = (top, label) => {
+    /* ein Quittungsblock; top = obere Kante, label = Exemplar-Hinweis, x0/bw = linke Kante und Breite des Bereichs */
+    const block = (top, label, x0 = 0, bw = W) => {
+      const mg = bw >= 500 ? 40 : 28;
+      ML = x0 + mg; CW = bw - 2 * mg;
       let y = top;
       T(ML, y + 16, "QUITTUNG", { size: 22, bold: true });
       T(ML + CW, y + 8, "Nr. " + r.no, { size: 11, bold: true, align: "right" });
@@ -9421,29 +9434,50 @@
       y += 30;
 
       /* Ort/Datum + Unterschrift */
-      L(ML, y, ML + 170, y, "#22272d", 0.7);
-      L(ML + CW - 200, y, ML + CW, y, "#22272d", 0.7);
+      const sgL = Math.min(170, CW * 0.38), sgR = Math.min(200, CW * 0.52);
+      L(ML, y, ML + sgL, y, "#22272d", 0.7);
+      L(ML + CW - sgR, y, ML + CW, y, "#22272d", 0.7);
       T(ML, y + 10, "Ort, " + fmtD(r.date), { size: 8, color: "#6c757d" });
-      T(ML + CW - 200, y + 10, "Unterschrift" + (s.employeeName ? " (" + s.employeeName + ")" : "") + " / Stempel", { size: 8, color: "#6c757d" });
+      T(ML + CW - sgR, y + 10, "Unterschrift" + (s.employeeName ? " (" + s.employeeName + ")" : "") + " / Stempel", { size: 8, color: "#6c757d" });
     };
 
-    const HALF = H / 2;
-    block(34, r.copy ? "Original für den Kunden" : "");
-    if (r.copy) {
-      L(ML - 10, HALF, W - ML + 10, HALF, "#9aa1a8", 0.6, "4 3");
-      T(W - ML, HALF - 3, "Hier abtrennen", { size: 7.5, color: "#9aa1a8", align: "right" });
-      block(HALF + 24, "Durchschrift für den Betrieb");
+    const label1 = r.copy ? "Original für den Kunden" : "", label2 = "Durchschrift für den Betrieb";
+    const A5W = 419.53, A5H = 595.28;
+    if (r.format === "a5") {
+      /* A5 hochkant: eine Quittung pro Blatt, die Durchschrift auf einem zweiten Blatt */
+      newPage(A5W, A5H); block(30, label1);
+      if (r.copy) { newPage(A5W, A5H); block(30, label2); }
+    } else if (r.format === "a5x2") {
+      /* A4 quer: links Original, rechts Durchschrift (je ein A5-Feld) */
+      newPage(841.89, A5H);
+      const half = W / 2;
+      block(30, label1, 0, half);
+      if (r.copy) {
+        L(half, 14, half, H - 14, "#9aa1a8", 0.6, "4 3");
+        block(30, label2, half, half);
+      }
+    } else {
+      newPage(595.28, 841.89);
+      const HALF = H / 2;
+      block(34, label1);
+      if (r.copy) {
+        L(ML - 10, HALF, W - ML + 10, HALF, "#9aa1a8", 0.6, "4 3");
+        T(W - ML, HALF - 3, "Hier abtrennen", { size: 7.5, color: "#9aa1a8", align: "right" });
+        block(HALF + 24, label2);
+      }
     }
 
-    const stream = ops.join("\n");
     const objs = [
       "<< /Type /Catalog /Pages 2 0 R >>",
-      "<< /Type /Pages /Kids [5 0 R] /Count 1 >>",
+      "<< /Type /Pages /Kids [" + pages.map((_, i) => (5 + 2 * i) + " 0 R").join(" ") + "] /Count " + pages.length + " >>",
       "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
-      "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>",
-      "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + W + " " + H + "] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 6 0 R >>",
-      "<< /Length " + stream.length + " >>\nstream\n" + stream + "\nendstream"
+      "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>"
     ];
+    pages.forEach((pg, i) => {
+      const stream = pg.ops.join("\n");
+      objs.push("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + f(pg.w) + " " + f(pg.h) + "] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents " + (6 + 2 * i) + " 0 R >>");
+      objs.push("<< /Length " + stream.length + " >>\nstream\n" + stream + "\nendstream");
+    });
     let pdf = "%PDF-1.4\n%âãÏÓ\n";
     const offs = [];
     objs.forEach((o, i) => { offs.push(pdf.length); pdf += (i + 1) + " 0 obj\n" + o + "\nendobj\n"; });
@@ -9456,20 +9490,35 @@
   }
 
   /* ================= Kehr-Zettel: "Ich habe Ihren Schornstein gekehrt" (mit Datum und Uhrzeit) ================= */
-  function openSweepModal(id) {
+  const SLIPS = {
+    kehr: { icon: "🧹", name: "Kehr-Zettel", plural: "Kehr-Zettel", noun: "Kehrung", field: "sweepSlip" },
+    mess: { icon: "📏", name: "Mess-Zettel", plural: "Mess-Zettel", noun: "Messung", field: "measSlip" }
+  };
+  const slipTypeOf = e => (e && e.type === "mess" ? "mess" : "kehr");
+
+  function openSweepModal(id, type) {
     const a = appointments().find(x => x.id === id);
     if (!a) return;
+    type = type === "mess" ? "mess" : "kehr";
+    const S = SLIPS[type];
     moduleState.sweepId = id;
+    moduleState.sweepType = type;
+    $("spSweepTitle").textContent = S.icon + " " + S.name;
+    $("spSweepDesc").textContent = type === "mess"
+      ? "Für Kunden, bei denen die Feuerungsanlage frei zugänglich ist und du die Messung auch ohne sie durchführen darfst. Auf dem Zettel stehen Datum und Uhrzeit der Messung, ein Dank für das Vertrauen und deine Telefonnummer."
+      : "Für Kunden, bei denen der Schornstein frei zugänglich ist und du ihn auch ohne sie kehren darfst. Auf dem Zettel stehen Datum und Uhrzeit der Kehrung, ein Dank für das Vertrauen und deine Telefonnummer.";
+    $("spSweepDateLbl").textContent = "Datum der " + S.noun;
+    $("spSweepRowsTitle").textContent = "Häuser und Uhrzeit der " + S.noun;
     const u = slipUnit(a).filter(x => !x.missed);
-    $("spSweepDate").value = a.sweepSlip && a.sweepSlip.date ? a.sweepSlip.date : a.date;
-    $("spSweepRows").innerHTML = u.map(x => `<label class="sp-sweep-row" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:6px 0;font-weight:700"><input type="checkbox" class="sp-sweep-on" data-id="${esc(x.id)}" ${x.id === id || u.length === 1 ? "checked" : (x.done ? "" : "checked")} style="width:22px;height:22px"><span style="flex:1;min-width:150px">${esc(x.customer || "Ohne Namen")}<small class="sp-muted" style="display:block;font-weight:600">${esc(addrLine(x))}</small></span><input type="time" class="sp-sweep-time" data-id="${esc(x.id)}" value="${esc((x.sweepSlip && x.sweepSlip.time) || x.time || "")}" aria-label="Uhrzeit der Kehrung" style="min-height:44px"></label>`).join("");
+    $("spSweepDate").value = a[S.field] && a[S.field].date ? a[S.field].date : a.date;
+    $("spSweepRows").innerHTML = u.map(x => `<label class="sp-sweep-row" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:6px 0;font-weight:700"><input type="checkbox" class="sp-sweep-on" data-id="${esc(x.id)}" ${x.id === id || u.length === 1 ? "checked" : (x.done ? "" : "checked")} style="width:22px;height:22px"><span style="flex:1;min-width:150px">${esc(x.customer || "Ohne Namen")}<small class="sp-muted" style="display:block;font-weight:600">${esc(addrLine(x))}</small></span><input type="time" class="sp-sweep-time" data-id="${esc(x.id)}" value="${esc((x[S.field] && x[S.field].time) || x.time || "")}" aria-label="Uhrzeit der ${S.noun}" style="min-height:44px"></label>`).join("");
     $("spSweepModal").hidden = false;
   }
   function closeSweepModal() { $("spSweepModal").hidden = true; moduleState.sweepId = null; }
-  /* Daten eines Kehr-Zettels (A5, wie die Anmeldezettel) */
-  function sweepData(a, date, time) {
+  /* Daten eines Kehr- bzw. Mess-Zettels (A5, wie die Anmeldezettel) */
+  function sweepData(a, date, time, type) {
     const base = proposalData({ ...a, date }, settings(), true);
-    return { ...base, kind: "sweep", multi: false, aptId: a.id, rawDate: date, rawTime: time, time, hint: "", last: false, notes: "" };
+    return { ...base, kind: "sweep", slipType: type === "mess" ? "mess" : "kehr", multi: false, aptId: a.id, rawDate: date, rawTime: time, time, hint: "", last: false, notes: "" };
   }
   function sweepPoolList() { const p = data().sweepPool; return Array.isArray(p) ? p : []; }
   function sweepPoolItems() {
@@ -9477,16 +9526,21 @@
     return sweepPoolList().map(e => ({ e, a: byId.get(e.id) })).filter(x => x.a).sort((x, y) => (x.e.date + " " + x.e.time).localeCompare(y.e.date + " " + y.e.time));
   }
   function markSweepsPrinted(sweeps) {
-    const m = new Map(sweeps.map(d => [d.aptId, d])), now = new Date().toISOString();
+    const key = (id, t) => id + "|" + t, m = new Map(sweeps.map(d => [key(d.aptId, d.slipType || "kehr"), d])), now = new Date().toISOString();
     persist({
-      appointments: appointments().map(a => m.has(a.id) ? { ...a, sweepSlip: { date: m.get(a.id).rawDate, time: m.get(a.id).rawTime, at: now } } : a),
-      sweepPool: sweepPoolList().filter(e => !m.has(e.id))
+      appointments: appointments().map(a => {
+        let out = a;
+        Object.keys(SLIPS).forEach(t => { const d = m.get(key(a.id, t)); if (d) out = { ...out, [SLIPS[t].field]: { date: d.rawDate, time: d.rawTime, at: now } }; });
+        return out;
+      }),
+      sweepPool: sweepPoolList().filter(e => !m.has(key(e.id, slipTypeOf(e))))
     });
     render(); updatePoolButton(); if ($("spPoolModal") && !$("spPoolModal").hidden) renderPool();
   }
   function printSweep(toPool) {
+    const type = moduleState.sweepType === "mess" ? "mess" : "kehr", S = SLIPS[type];
     const date = $("spSweepDate").value;
-    if (!date) return alert("Bitte das Datum der Kehrung eintragen.");
+    if (!date) return alert("Bitte das Datum der " + S.noun + " eintragen.");
     const picked = [];
     document.querySelectorAll("#spSweepRows .sp-sweep-on").forEach(c => {
       if (!c.checked) return;
@@ -9494,17 +9548,17 @@
       if (a) picked.push({ a, time: t });
     });
     if (!picked.length) return alert("Bitte mindestens ein Haus auswählen.");
-    if (picked.some(p => !p.time)) return alert("Bitte bei jedem Haus die Uhrzeit der Kehrung eintragen – sie steht auf dem Zettel.");
+    if (picked.some(p => !p.time)) return alert("Bitte bei jedem Haus die Uhrzeit der " + S.noun + " eintragen – sie steht auf dem Zettel.");
     closeSweepModal();
     if (toPool) {
       const ids = new Set(picked.map(p => p.a.id));
-      persist({ sweepPool: sweepPoolList().filter(e => !ids.has(e.id)).concat(picked.map(p => ({ id: p.a.id, date, time: p.time }))) });
+      persist({ sweepPool: sweepPoolList().filter(e => !(ids.has(e.id) && slipTypeOf(e) === type)).concat(picked.map(p => ({ id: p.a.id, date, time: p.time, type }))) });
       render(); updatePoolButton();
-      showNotice(`🧹 ${picked.length === 1 ? "Der Kehr-Zettel liegt" : picked.length + " Kehr-Zettel liegen"} im Druckpool (${poolItems().length + sweepPoolItems().length}) und ${picked.length === 1 ? "wird" : "werden"} mit den Anmeldezetteln gedruckt.`);
+      showNotice(`${S.icon} ${picked.length === 1 ? "Der " + S.name + " liegt" : picked.length + " " + S.plural + " liegen"} im Druckpool (${poolItems().length + sweepPoolItems().length}) und ${picked.length === 1 ? "wird" : "werden"} mit den Anmeldezetteln gedruckt.`);
       return;
     }
-    const sweeps = picked.map(p => sweepData(p.a, date, p.time));
-    printProposals([], true, "Kehr-Zettel_" + date + ".pdf", sweeps);
+    const sweeps = picked.map(p => sweepData(p.a, date, p.time, type));
+    printProposals([], true, S.name + "_" + date + ".pdf", sweeps);
   }
 
   function openPdfTab(blob, name) {
@@ -9907,20 +9961,21 @@
       y += 13; T(ML, y, "Schornsteinfegerbetrieb", { size: 8.5, color: "#6c757d" });
       d.bizAddr.split(/\r?\n/).filter(Boolean).forEach((ln, i) => { y += i ? 11 : 15; T(ML, y, ln, { size: 8.5, color: "#444444" }); });
       y += 10; L(ML, y, ML + CW, y, "#c79a42", 1.4);
-      y += g(26); T(ML, y, "Hinweis zur Kehrung", { size: 9.5, bold: true, color: "#9a7220" });
-      y += g(25); T(ML, y, "Ihr Schornstein wurde gekehrt", { size: 19, bold: true });
+      const ms = d.slipType === "mess";
+      y += g(26); T(ML, y, ms ? "Hinweis zur Messung" : "Hinweis zur Kehrung", { size: 9.5, bold: true, color: "#9a7220" });
+      y += g(25); T(ML, y, ms ? "Ihre Anlage wurde gemessen" : "Ihr Schornstein wurde gekehrt", { size: 19, bold: true });
       y += g(30); T(ML, y, "Sehr geehrte Kundin, sehr geehrter Kunde,");
       y += g(17);
       const toks = [];
       if (d.business) { const biz = words(d.business, true); biz[biz.length - 1].t += ","; toks.push(...words("als Schornsteinfegergeselle im Auftrag von"), ...biz, ...words("Schornsteinfegermeister, habe")); } else toks.push(...words("habe"));
-      toks.push(...words("ich Ihren Schornstein gekehrt. Da er frei zugänglich ist, konnte ich die Kehrung auch ohne Ihre Anwesenheit durchführen."));
+      toks.push(...words(ms ? "ich die Messung an Ihrer Feuerungsanlage durchgeführt. Da sie frei zugänglich ist, konnte ich die Messung auch ohne Ihre Anwesenheit durchführen." : "ich Ihren Schornstein gekehrt. Da er frei zugänglich ist, konnte ich die Kehrung auch ohne Ihre Anwesenheit durchführen."));
       y = flow(toks, ML, y, CW, 9.5, 14) + 3;
       const top = y + g(12);
       R(ML, top, CW, 19, { fill: "#22272d" });
-      T(ML + 12, top + 13, "Kehrung durchgeführt", { size: 10, bold: true, color: "#ffffff" });
+      T(ML + 12, top + 13, ms ? "Messung durchgeführt" : "Kehrung durchgeführt", { size: 10, bold: true, color: "#ffffff" });
       y = top + 19 + g(15);
       const xR = ML + CW * 0.55;
-      T(ML + 12, y, "Datum", { size: 8, color: "#6c757d" }); T(xR, y, "Uhrzeit der Kehrung", { size: 8, color: "#6c757d" });
+      T(ML + 12, y, "Datum", { size: 8, color: "#6c757d" }); T(xR, y, ms ? "Uhrzeit der Messung" : "Uhrzeit der Kehrung", { size: 8, color: "#6c757d" });
       let vs = 13; while (vs > 9 && wid(d.dateStr, true, vs) > xR - ML - 24) vs -= 0.5;
       y += g(17); T(ML + 12, y, d.dateStr, { size: vs, bold: true });
       let ts = 14; while (ts > 8 && wid(d.time + " Uhr", true, ts) > ML + CW - 12 - xR) ts -= 0.5;
@@ -10138,21 +10193,22 @@
     const business = esc(d.business), employee = esc(d.employee), phone = esc(d.phone);
     const bizAddr = d.bizAddr ? `<div class="biz-addr">${esc(d.bizAddr)}</div>` : "";
     const obj = [d.customer, ...d.addrLines].filter(Boolean).map(esc).join("<br>");
+    const ms = d.slipType === "mess";
     return `
       <div class="sheet">
         <div class="head"><div><div class="biz-name">${business}</div><div class="biz-role">Schornsteinfegerbetrieb</div>${bizAddr}</div></div>
-        <div class="kicker">Hinweis zur Kehrung</div>
-        <h1>Ihr Schornstein wurde gekehrt</h1>
+        <div class="kicker">${ms ? "Hinweis zur Messung" : "Hinweis zur Kehrung"}</div>
+        <h1>${ms ? "Ihre Anlage wurde gemessen" : "Ihr Schornstein wurde gekehrt"}</h1>
         <div class="letter">
           <p>Sehr geehrte Kundin, sehr geehrter Kunde,</p>
-          <p>${d.business ? `als Schornsteinfegergeselle im Auftrag von <strong>${business}</strong>, Schornsteinfegermeister, habe` : "habe"} ich Ihren Schornstein gekehrt. Da er frei zugänglich ist, konnte ich die Kehrung auch ohne Ihre Anwesenheit durchführen.</p>
+          <p>${d.business ? `als Schornsteinfegergeselle im Auftrag von <strong>${business}</strong>, Schornsteinfegermeister, habe` : "habe"} ${ms ? "ich die Messung an Ihrer Feuerungsanlage durchgeführt. Da sie frei zugänglich ist, konnte ich die Messung auch ohne Ihre Anwesenheit durchführen." : "ich Ihren Schornstein gekehrt. Da er frei zugänglich ist, konnte ich die Kehrung auch ohne Ihre Anwesenheit durchführen."}</p>
         </div>
         <div class="appt">
-          <div class="appt-title">Kehrung durchgeführt</div>
+          <div class="appt-title">${ms ? "Messung durchgeführt" : "Kehrung durchgeführt"}</div>
           <div class="appt-body">
             <div class="when">
               <div><div class="k">Datum</div><div class="v">${esc(d.dateStr)}</div></div>
-              <div><div class="k">Uhrzeit der Kehrung</div><div class="v">${esc(d.time)} Uhr</div></div>
+              <div><div class="k">${ms ? "Uhrzeit der Messung" : "Uhrzeit der Kehrung"}</div><div class="v">${esc(d.time)} Uhr</div></div>
             </div>
             ${obj ? `<div class="where"><div class="k">Objekt</div><div class="v">${obj}</div></div>` : ""}
           </div>
