@@ -38,14 +38,252 @@
     .sp-lockbtn:hover { background: rgba(255,255,255,.18); }
   </style>
   <script>
+    /* ===================================================================
+       Verschlüsselter Speicher
+       - Alle App-Daten (Schlüssel "schornstein…") liegen im Browser nur noch
+         verschlüsselt (AES-256-GCM). Der Schlüssel entsteht aus dem Kennwort
+         (PBKDF2-SHA256) und steht nie im Klartext im Code.
+       - Gesperrt: die App sieht keine Daten und kann nichts überschreiben.
+       - Entsperrt: Daten werden beim Start einmal entschlüsselt, der Rest der
+         App arbeitet unverändert; Änderungen werden kurz danach wieder
+         verschlüsselt gespeichert.
+       =================================================================== */
     (function () {
-      var H = "10fda19714c4ac4abc1ffe3f96ac779a596b3ac71f55ef6ce3ce88489452b19f";
+      var SALT = "2lrlpi8cGFWOZb7qe0hOAg==", ITER = 400000, CHECK = "G+kFqmisLaAYeKyzy4yHAPDMaRJQsAT3Y1qYdhFCpPR0", PFX = "spenc1:";
+      var LS, origGet, origSet, origRem, origKey, origClear;
       try {
-        var ok = sessionStorage.getItem("sp-lock-ok") === H || localStorage.getItem("sp-lock-ok") === H;
-        if (!ok) document.documentElement.classList.add("sp-locked");
-      } catch (e) {
-        document.documentElement.classList.add("sp-locked");
+        LS = window.localStorage;
+        origGet = Storage.prototype.getItem; origSet = Storage.prototype.setItem;
+        origRem = Storage.prototype.removeItem; origKey = Storage.prototype.key; origClear = Storage.prototype.clear;
+      } catch (e) { document.documentElement.classList.add("sp-locked"); return; }
+
+      /* ---------- AES-256 + GCM (synchron) ---------- */
+      var SB = new Uint8Array(256), T0 = new Uint32Array(256), T1 = new Uint32Array(256), T2 = new Uint32Array(256), T3 = new Uint32Array(256);
+      (function () {
+        var ex = new Uint8Array(256), lg = new Uint8Array(256), x = 1, i;
+        function xt(a) { return ((a << 1) ^ ((a & 0x80) ? 0x1b : 0)) & 255; }
+        for (i = 0; i < 255; i++) { ex[i] = x; lg[x] = i; x ^= xt(x); }
+        function rl(a, n) { return ((a << n) | (a >>> (8 - n))) & 255; }
+        for (i = 0; i < 256; i++) {
+          var inv = i ? ex[(255 - lg[i]) % 255] : 0;
+          var s = inv ^ rl(inv, 1) ^ rl(inv, 2) ^ rl(inv, 3) ^ rl(inv, 4) ^ 0x63;
+          SB[i] = s;
+          var t = ((xt(s) << 24) | (s << 16) | (s << 8) | (xt(s) ^ s)) >>> 0;
+          T0[i] = t; T1[i] = ((t >>> 8) | (t << 24)) >>> 0; T2[i] = ((t >>> 16) | (t << 16)) >>> 0; T3[i] = ((t >>> 24) | (t << 8)) >>> 0;
+        }
+      })();
+
+      function expandKey(kb) {
+        var w = new Uint32Array(60), i, rc = 1;
+        for (i = 0; i < 8; i++) w[i] = ((kb[4 * i] << 24) | (kb[4 * i + 1] << 16) | (kb[4 * i + 2] << 8) | kb[4 * i + 3]) >>> 0;
+        function sub(v) { return ((SB[v >>> 24] << 24) | (SB[(v >>> 16) & 255] << 16) | (SB[(v >>> 8) & 255] << 8) | SB[v & 255]) >>> 0; }
+        for (i = 8; i < 60; i++) {
+          var t = w[i - 1];
+          if (i % 8 === 0) { t = (sub(((t << 8) | (t >>> 24)) >>> 0) ^ (rc << 24)) >>> 0; rc = ((rc << 1) ^ ((rc & 0x80) ? 0x1b : 0)) & 255; }
+          else if (i % 8 === 4) t = sub(t);
+          w[i] = (w[i - 8] ^ t) >>> 0;
+        }
+        return w;
       }
+
+      function encBlock(w, a0, a1, a2, a3, out) {
+        var s0 = (a0 ^ w[0]) >>> 0, s1 = (a1 ^ w[1]) >>> 0, s2 = (a2 ^ w[2]) >>> 0, s3 = (a3 ^ w[3]) >>> 0, t0, t1, t2, t3, k = 4;
+        for (var r = 1; r < 14; r++) {
+          t0 = T0[s0 >>> 24] ^ T1[(s1 >>> 16) & 255] ^ T2[(s2 >>> 8) & 255] ^ T3[s3 & 255] ^ w[k];
+          t1 = T0[s1 >>> 24] ^ T1[(s2 >>> 16) & 255] ^ T2[(s3 >>> 8) & 255] ^ T3[s0 & 255] ^ w[k + 1];
+          t2 = T0[s2 >>> 24] ^ T1[(s3 >>> 16) & 255] ^ T2[(s0 >>> 8) & 255] ^ T3[s1 & 255] ^ w[k + 2];
+          t3 = T0[s3 >>> 24] ^ T1[(s0 >>> 16) & 255] ^ T2[(s1 >>> 8) & 255] ^ T3[s2 & 255] ^ w[k + 3];
+          s0 = t0 >>> 0; s1 = t1 >>> 0; s2 = t2 >>> 0; s3 = t3 >>> 0; k += 4;
+        }
+        out[0] = ((SB[s0 >>> 24] << 24) | (SB[(s1 >>> 16) & 255] << 16) | (SB[(s2 >>> 8) & 255] << 8) | SB[s3 & 255]) ^ w[56];
+        out[1] = ((SB[s1 >>> 24] << 24) | (SB[(s2 >>> 16) & 255] << 16) | (SB[(s3 >>> 8) & 255] << 8) | SB[s0 & 255]) ^ w[57];
+        out[2] = ((SB[s2 >>> 24] << 24) | (SB[(s3 >>> 16) & 255] << 16) | (SB[(s0 >>> 8) & 255] << 8) | SB[s1 & 255]) ^ w[58];
+        out[3] = ((SB[s3 >>> 24] << 24) | (SB[(s0 >>> 16) & 255] << 16) | (SB[(s1 >>> 8) & 255] << 8) | SB[s2 & 255]) ^ w[59];
+      }
+
+      /* GHASH: Multiplikation mit H über 4-Bit-Tabelle */
+      function shift1(v) {
+        var lsb = v[3] & 1;
+        v[3] = ((v[3] >>> 1) | (v[2] << 31)) >>> 0; v[2] = ((v[2] >>> 1) | (v[1] << 31)) >>> 0; v[1] = ((v[1] >>> 1) | (v[0] << 31)) >>> 0; v[0] = v[0] >>> 1;
+        if (lsb) v[0] = (v[0] ^ 0xe1000000) >>> 0;
+      }
+      var R4 = new Uint32Array(16);
+      (function () { for (var r = 0; r < 16; r++) { var v = new Uint32Array([0, 0, 0, r]); for (var i = 0; i < 4; i++) shift1(v); R4[r] = v[0]; } })();
+      function makeM(H) {
+        var M = new Uint32Array(64), v = new Uint32Array(H), n, j;
+        M.set(v, 32);               /* n = 8 -> H */
+        shift1(v); M.set(v, 16);    /* n = 4 -> H*x */
+        shift1(v); M.set(v, 8);     /* n = 2 -> H*x^2 */
+        shift1(v); M.set(v, 4);     /* n = 1 -> H*x^3 */
+        for (n = 3; n < 16; n++) {
+          if (n === 4 || n === 8) continue;
+          var hi = n & 8 ? 8 : n & 4 ? 4 : n & 2 ? 2 : 1, lo = n ^ hi;
+          if (!lo) continue;
+          for (j = 0; j < 4; j++) M[n * 4 + j] = M[hi * 4 + j] ^ M[lo * 4 + j];
+        }
+        return M;
+      }
+      function mulH(Y, M) {
+        var z0 = 0, z1 = 0, z2 = 0, z3 = 0;
+        for (var i = 31; i >= 0; i--) {
+          var rem = z3 & 15;
+          z3 = (z3 >>> 4) | (z2 << 28); z2 = (z2 >>> 4) | (z1 << 28); z1 = (z1 >>> 4) | (z0 << 28); z0 = (z0 >>> 4) ^ R4[rem];
+          var n = ((Y[i >> 3] >>> (28 - 4 * (i & 7))) & 15) * 4;
+          z0 ^= M[n]; z1 ^= M[n + 1]; z2 ^= M[n + 2]; z3 ^= M[n + 3];
+        }
+        Y[0] = z0 >>> 0; Y[1] = z1 >>> 0; Y[2] = z2 >>> 0; Y[3] = z3 >>> 0;
+      }
+      function wordsOf(b, o) { return ((b[o] << 24) | (b[o + 1] << 16) | (b[o + 2] << 8) | b[o + 3]) >>> 0; }
+
+      /* Verschlüsseln (decrypt=false): input = Klartext, Ergebnis = Chiffre||Tag.
+         Entschlüsseln (decrypt=true): input = Chiffre||Tag, Ergebnis = Klartext oder null (falscher Schlüssel / verändert). */
+      function gcm(kb, iv, input, decrypt) {
+        var w = expandKey(kb), tmp = new Uint32Array(4), H;
+        encBlock(w, 0, 0, 0, 0, tmp); H = new Uint32Array(tmp);
+        var M = makeM(H), len = decrypt ? input.length - 16 : input.length, i, j;
+        if (len < 0) return null;
+        var data = decrypt ? input.subarray(0, len) : input, ct = decrypt ? data : new Uint8Array(len), outp = decrypt ? new Uint8Array(len) : ct;
+        var iv0 = wordsOf(iv, 0), iv1 = wordsOf(iv, 4), iv2 = wordsOf(iv, 8);
+        /* Tag über die Chiffre */
+        var Y = new Uint32Array(4);
+        function ghashBlocks(bytes) {
+          var full = bytes.length >> 4, o = 0, b;
+          for (b = 0; b < full; b++, o += 16) { Y[0] ^= wordsOf(bytes, o); Y[1] ^= wordsOf(bytes, o + 4); Y[2] ^= wordsOf(bytes, o + 8); Y[3] ^= wordsOf(bytes, o + 12); mulH(Y, M); }
+          if (bytes.length & 15) {
+            var pad = new Uint8Array(16); pad.set(bytes.subarray(o)); Y[0] ^= wordsOf(pad, 0); Y[1] ^= wordsOf(pad, 4); Y[2] ^= wordsOf(pad, 8); Y[3] ^= wordsOf(pad, 12); mulH(Y, M);
+          }
+        }
+        function ctr(src, dst) {
+          var ks = new Uint32Array(4), c = 2;
+          for (var p = 0; p < src.length; p += 16, c++) {
+            encBlock(w, iv0, iv1, iv2, c >>> 0, ks);
+            var n = Math.min(16, src.length - p);
+            for (j = 0; j < n; j++) dst[p + j] = src[p + j] ^ (ks[j >> 2] >>> (24 - 8 * (j & 3)));
+          }
+        }
+        if (!decrypt) ctr(input, ct);
+        ghashBlocks(ct);
+        var bits = len * 8;
+        Y[2] ^= Math.floor(bits / 4294967296); Y[3] ^= bits >>> 0; mulH(Y, M);
+        var ek = new Uint32Array(4); encBlock(w, iv0, iv1, iv2, 1, ek);
+        var tag = new Uint8Array(16);
+        for (i = 0; i < 4; i++) { var tv = (Y[i] ^ ek[i]) >>> 0; tag[4 * i] = tv >>> 24; tag[4 * i + 1] = (tv >>> 16) & 255; tag[4 * i + 2] = (tv >>> 8) & 255; tag[4 * i + 3] = tv & 255; }
+        if (decrypt) {
+          var diff = 0; for (i = 0; i < 16; i++) diff |= tag[i] ^ input[len + i];
+          if (diff) return null;
+          ctr(data, outp);
+          return outp;
+        }
+        var res = new Uint8Array(len + 16); res.set(ct); res.set(tag, len);
+        return res;
+      }
+
+      /* ---------- kleine Helfer ---------- */
+      function b64(u8) { var s = "", i; for (i = 0; i < u8.length; i += 8192) s += String.fromCharCode.apply(null, u8.subarray(i, i + 8192)); return btoa(s); }
+      function unb64(s) { var bin = atob(s), u = new Uint8Array(bin.length), i; for (i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u; }
+      function rnd(n) { var u = new Uint8Array(n); if (window.crypto && crypto.getRandomValues) crypto.getRandomValues(u); else for (var i = 0; i < n; i++) u[i] = Math.floor(Math.random() * 256); return u; }
+      function encStr(kb, str) { var iv = rnd(12), ct = gcm(kb, iv, new TextEncoder().encode(str), false), o = new Uint8Array(12 + ct.length); o.set(iv); o.set(ct, 12); return b64(o); }
+      function decStr(kb, s) { var all = unb64(s); if (all.length < 28) return null; var pt = gcm(kb, all.subarray(0, 12), all.subarray(12), true); return pt ? new TextDecoder().decode(pt) : null; }
+      function norm(s) { return String(s || "").trim().replace(/ß/g, "ss").normalize("NFC"); }
+      function prot(k) { return typeof k === "string" && (k.indexOf("schornstein") === 0 || k === "sp-vor-wiederherstellung"); }
+      function keyOk(kb) { try { return kb.length === 32 && decStr(kb, CHECK) === "sp-ok"; } catch (e) { return false; } }
+      function getStored() { try { return sessionStorage.getItem("sp-enc-key") || origGet.call(LS, "sp-enc-key"); } catch (e) { return null; } }
+
+      /* ---------- Schlüssel prüfen ---------- */
+      var kb = null;
+      try { var sk = getStored(); if (sk) { var cand = unb64(sk); if (keyOk(cand)) kb = cand; } } catch (e) {}
+
+      if (!kb) {
+        /* GESPERRT: geschützte Daten sind unsichtbar und nicht beschreibbar */
+        document.documentElement.classList.add("sp-locked");
+        Storage.prototype.getItem = function (k) { return this === LS && prot(k) ? null : origGet.call(this, k); };
+        Storage.prototype.setItem = function (k, v) { if (this === LS && prot(k)) return; return origSet.call(this, k, v); };
+        Storage.prototype.removeItem = function (k) { if (this === LS && prot(k)) return; return origRem.call(this, k); };
+        Storage.prototype.clear = function () { if (this === LS) return; return origClear.call(this); };
+      } else {
+        /* ENTSPERRT */
+        var mem = new Map(), dirty = new Set(), bad = {}, timer = 0;
+        function loadKey(k, v) {
+          if (v === null || v === undefined) return;
+          if (v.indexOf(PFX) === 0) {
+            var body = v.slice(PFX.length);
+            if (!body) return;
+            var pt = null; try { pt = decStr(kb, body); } catch (e) {}
+            if (pt === null) bad[k] = v; else mem.set(k, pt);
+          } else { mem.set(k, v); dirty.add(k); }   /* alter Klartext-Stand: wird gleich verschlüsselt */
+        }
+        var n = LS.length, names = [], i;
+        for (i = 0; i < n; i++) { var nm = origKey.call(LS, i); if (prot(nm)) names.push(nm); }
+        names.forEach(function (k) { loadKey(k, origGet.call(LS, k)); });
+
+        function flush() {
+          clearTimeout(timer); timer = 0;
+          Array.from(dirty).forEach(function (k) {
+            try {
+              if (mem.has(k)) {
+                if (bad[k]) { try { origSet.call(LS, "sp-enc-bad:" + k + ":" + Date.now(), bad[k]); } catch (e) {} delete bad[k]; }
+                origSet.call(LS, k, PFX + encStr(kb, mem.get(k)));
+              }
+              dirty.delete(k);
+            } catch (e) { try { console.warn("Speichern fehlgeschlagen:", k, e); } catch (x) {} }
+          });
+        }
+        function later() { if (!timer) timer = setTimeout(flush, 250); }
+
+        Storage.prototype.getItem = function (k) { if (this === LS && prot(k)) return mem.has(k) ? mem.get(k) : null; return origGet.call(this, k); };
+        Storage.prototype.setItem = function (k, v) {
+          if (this === LS && prot(k)) {
+            var isNew = !mem.has(k);
+            mem.set(k, String(v)); dirty.add(k);
+            if (isNew) { try { if (origGet.call(LS, k) === null) origSet.call(LS, k, PFX); } catch (e) {} }
+            later(); return;
+          }
+          return origSet.call(this, k, v);
+        };
+        Storage.prototype.removeItem = function (k) {
+          if (this === LS && prot(k)) { mem.delete(k); dirty.delete(k); return origRem.call(LS, k); }
+          return origRem.call(this, k);
+        };
+        Storage.prototype.clear = function () { if (this === LS) { mem.clear(); dirty.clear(); } return origClear.call(this); };
+
+        /* Änderungen aus einem anderen Tab übernehmen */
+        window.addEventListener("storage", function (e) {
+          if (e.storageArea !== LS || !prot(e.key)) return;
+          if (e.newValue === null) { mem.delete(e.key); return; }
+          dirty.delete(e.key); delete bad[e.key]; loadKey(e.key, e.newValue); dirty.delete(e.key);
+        }, true);
+
+        window.addEventListener("pagehide", flush);
+        window.addEventListener("beforeunload", flush);
+        document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden") flush(); });
+        if (dirty.size) setTimeout(flush, 30);
+        window.__spFlush = flush;
+      }
+
+      /* ---------- Schnittstelle für den Sperrbildschirm ---------- */
+      window.spSec = {
+        /* Kennwort prüfen; bei Erfolg: Schlüssel merken (nur Sitzung, oder dauerhaft auf diesem Gerät) */
+        unlock: function (pw, remember) {
+          if (!(window.crypto && crypto.subtle && crypto.subtle.importKey)) return Promise.reject(new Error("nosubtle"));
+          return crypto.subtle.importKey("raw", new TextEncoder().encode(norm(pw)), "PBKDF2", false, ["deriveBits"]).then(function (ck) {
+            return crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt: unb64(SALT), iterations: ITER }, ck, 256);
+          }).then(function (bits) {
+            var key = new Uint8Array(bits);
+            if (!keyOk(key)) return false;
+            try {
+              if (remember) origSet.call(LS, "sp-enc-key", b64(key)); else sessionStorage.setItem("sp-enc-key", b64(key));
+            } catch (e) { return false; }
+            return true;
+          });
+        },
+        lock: function () {
+          try { if (window.__spFlush) window.__spFlush(); } catch (e) {}
+          try { sessionStorage.removeItem("sp-enc-key"); origRem.call(LS, "sp-enc-key"); } catch (e) {}
+          location.reload();
+        },
+        /* nur für Tests */
+        _gcm: gcm
+      };
     })();
   </script>
 
@@ -1804,49 +2042,14 @@
       <input type="password" class="sp-lock-pw" id="spLockPw" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Kennwort">
       <button type="button" class="sp-lock-eye" id="spLockEye" aria-label="Kennwort anzeigen" title="Anzeigen">👁</button>
     </div>
-    <label class="sp-lock-rem"><input type="checkbox" id="spLockRem"> Auf diesem Gerät merken</label>
+    <label class="sp-lock-rem"><input type="checkbox" id="spLockRem"> Auf diesem Gerät merken (weniger sicher)</label>
     <div class="sp-lock-err" id="spLockErr" role="alert"></div>
     <button type="submit" class="sp-lock-btn" id="spLockGo">Entsperren</button>
-    <a class="sp-lock-ask" id="spLockAsk" href="mailto:kontakt@schornstein-planer.de?subject=Kennwort%20anfragen%20-%20Schornstein%20Planer&amp;body=Guten%20Tag%2C%0D%0A%0D%0Aich%20m%C3%B6chte%20das%20Kennwort%20f%C3%BCr%20den%20Schornstein%20Planer%20anfragen.%0D%0A%0D%0AName%3A%20%0D%0A%0D%0AVielen%20Dank%21">Kennwort anfragen</a>
+    <a class="sp-lock-ask" id="spLockAsk" href="mailto:kontakt@schornstein-planer.de?subject=Kennwort%20anfragen%20-%20Schornstein%20Planer&amp;body=Guten%20Tag%2C%0D%0A%0D%0Aich%20m%C3%B6chte%20das%20Kennwort%20f%C3%BCr%20den%20Schornstein%20Planer%20anfragen.%0D%0A%0D%0AName%3A%20%0D%0ABetrieb%3A%20%0D%0APosition%20%28Chef%20oder%20Mitarbeiter%29%3A%20%0D%0A%0D%0AVielen%20Dank%21">Kennwort anfragen</a>
   </form>
 </div>
 <script>
 (function () {
-  var H = "10fda19714c4ac4abc1ffe3f96ac779a596b3ac71f55ef6ce3ce88489452b19f", SALT = "sp|";
-
-  /* kleine SHA-256-Funktion (läuft auch ohne HTTPS) */
-  function sha256(str) {
-    var m = unescape(encodeURIComponent(str)), l = m.length, b = [], i, t, K = [], h = [], p = 2;
-    function isP(x) { for (var d = 2; d * d <= x; d++) if (x % d === 0) return false; return true; }
-    function ror(x, n) { return (x >>> n) | (x << (32 - n)); }
-    while (K.length < 64) { if (isP(p)) { if (h.length < 8) h.push((Math.sqrt(p) % 1) * 4294967296 | 0); K.push((Math.cbrt(p) % 1) * 4294967296 | 0); } p++; }
-    for (i = 0; i < l; i++) b.push(m.charCodeAt(i));
-    b.push(128);
-    while (b.length % 64 !== 56) b.push(0);
-    var hi = Math.floor(l * 8 / 4294967296), lo = (l * 8) >>> 0;
-    b.push(hi >>> 24 & 255, hi >>> 16 & 255, hi >>> 8 & 255, hi & 255, lo >>> 24 & 255, lo >>> 16 & 255, lo >>> 8 & 255, lo & 255);
-    for (var o = 0; o < b.length; o += 64) {
-      var w = [];
-      for (t = 0; t < 16; t++) w[t] = (b[o + 4 * t] << 24) | (b[o + 4 * t + 1] << 16) | (b[o + 4 * t + 2] << 8) | b[o + 4 * t + 3];
-      for (t = 16; t < 64; t++) {
-        var s0 = ror(w[t - 15], 7) ^ ror(w[t - 15], 18) ^ (w[t - 15] >>> 3), s1 = ror(w[t - 2], 17) ^ ror(w[t - 2], 19) ^ (w[t - 2] >>> 10);
-        w[t] = (w[t - 16] + s0 + w[t - 7] + s1) | 0;
-      }
-      var a = h[0], bb = h[1], c = h[2], d = h[3], e = h[4], f = h[5], g = h[6], hh = h[7];
-      for (t = 0; t < 64; t++) {
-        var S1 = ror(e, 6) ^ ror(e, 11) ^ ror(e, 25), ch = (e & f) ^ (~e & g), t1 = (hh + S1 + ch + K[t] + w[t]) | 0;
-        var S0 = ror(a, 2) ^ ror(a, 13) ^ ror(a, 22), mj = (a & bb) ^ (a & c) ^ (bb & c), t2 = (S0 + mj) | 0;
-        hh = g; g = f; f = e; e = (d + t1) | 0; d = c; c = bb; bb = a; a = (t1 + t2) | 0;
-      }
-      h[0] = (h[0] + a) | 0; h[1] = (h[1] + bb) | 0; h[2] = (h[2] + c) | 0; h[3] = (h[3] + d) | 0;
-      h[4] = (h[4] + e) | 0; h[5] = (h[5] + f) | 0; h[6] = (h[6] + g) | 0; h[7] = (h[7] + hh) | 0;
-    }
-    return h.map(function (x) { return ("00000000" + (x >>> 0).toString(16)).slice(-8); }).join("");
-  }
-
-  /* Groß-/Kleinschreibung und ß/ss sind egal (Handy-Tastaturen) */
-  function norm(s) { return String(s || "").trim().toLowerCase().replace(/ß/g, "ss"); }
-
   var form = document.getElementById("spLockForm"), pw = document.getElementById("spLockPw"), err = document.getElementById("spLockErr"),
       go = document.getElementById("spLockGo"), rem = document.getElementById("spLockRem"), eye = document.getElementById("spLockEye");
 
@@ -1860,31 +2063,33 @@
     focusPw();
   });
 
+  function fail(msg) {
+    err.style.color = "";
+    err.textContent = msg;
+    pw.value = "";
+    form.classList.remove("shake"); void form.offsetWidth; form.classList.add("shake");
+    setTimeout(function () { go.disabled = false; focusPw(); }, 1200);
+  }
+
   form.addEventListener("submit", function (e) {
     e.preventDefault();
     if (go.disabled) return;
-    if (sha256(SALT + norm(pw.value)) === H) {
-      try {
-        if (rem.checked) localStorage.setItem("sp-lock-ok", H);
-        else sessionStorage.setItem("sp-lock-ok", H);
-      } catch (x) {}
-      err.textContent = "";
-      /* neu laden: die App startet dann sauber und sichtbar */
-      location.reload();
-      return;
-    }
-    err.textContent = "Falsches Kennwort.";
-    pw.value = "";
-    form.classList.remove("shake"); void form.offsetWidth; form.classList.add("shake");
     go.disabled = true;
-    setTimeout(function () { go.disabled = false; focusPw(); }, 1200);
+    err.style.color = "#6c757d";
+    err.textContent = "Wird geprüft …";
+    /* kurz warten, damit „Wird geprüft“ erscheint, bevor die Schlüsselberechnung beginnt */
+    setTimeout(function () {
+      window.spSec.unlock(pw.value, rem.checked).then(function (ok) {
+        if (ok) { err.textContent = ""; location.reload(); }
+        else fail("Falsches Kennwort.");
+      }).catch(function () {
+        fail("Die Verschlüsselung geht in diesem Browser nur über eine sichere Adresse (https).");
+      });
+    }, 30);
   });
 
   /* „Sperren“-Knopf im Kopf der Seite */
-  window.spLockNow = function () {
-    try { sessionStorage.removeItem("sp-lock-ok"); localStorage.removeItem("sp-lock-ok"); } catch (e) {}
-    location.reload();
-  };
+  window.spLockNow = function () { window.spSec.lock(); };
 })();
 </script>
 
