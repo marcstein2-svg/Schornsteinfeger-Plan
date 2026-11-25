@@ -10,6 +10,45 @@
 
   <title>Schornstein Planer</title>
 
+  <!-- Kennwortsperre: solange gesperrt, ist nur der Sperrbildschirm sichtbar -->
+  <style id="spLockCss">
+    #spLock { display: none; }
+    html.sp-locked { overflow: hidden; }
+    html.sp-locked body > *:not(#spLock) { display: none !important; }
+    html.sp-locked #spLock { display: flex; }
+    #spLock { position: fixed; inset: 0; z-index: 2147483000; align-items: center; justify-content: center; padding: 20px; background: linear-gradient(135deg, #20252b 0%, #2d343c 100%); }
+    #spLock .sp-lock-card { width: 100%; max-width: 360px; background: #fff; border-radius: 20px; padding: 28px 24px 24px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,.4); }
+    #spLock .sp-lock-ic { width: 64px; height: 64px; margin: 0 auto 12px; border-radius: 18px; background: #c79a42; display: flex; align-items: center; justify-content: center; font-size: 30px; }
+    #spLock h1 { margin: 0 0 4px; font-size: 1.35rem; color: #22272d; }
+    #spLock p { margin: 0 0 18px; color: #6c757d; font-size: .92rem; }
+    #spLock .sp-lock-row { position: relative; }
+    #spLock .sp-lock-pw { width: 100%; min-height: 50px; padding: 10px 52px 10px 14px; border: 1.5px solid #cfd4d9; border-radius: 12px; font: inherit; font-size: 1.05rem; box-sizing: border-box; }
+    #spLock .sp-lock-pw:focus { outline: none; border-color: #c79a42; box-shadow: 0 0 0 3px rgba(199,154,66,.25); }
+    #spLock .sp-lock-eye { position: absolute; right: 4px; top: 4px; width: 42px; height: 42px; border: 0; background: transparent; font-size: 1.15rem; cursor: pointer; border-radius: 10px; }
+    #spLock .sp-lock-rem { display: flex; align-items: center; gap: 8px; margin: 12px 2px 0; font-size: .88rem; color: #4a525a; text-align: left; }
+    #spLock .sp-lock-rem input { width: 20px; height: 20px; }
+    #spLock .sp-lock-btn { width: 100%; margin-top: 16px; min-height: 50px; border: 0; border-radius: 12px; background: #22272d; color: #fff; font: inherit; font-size: 1rem; font-weight: 800; cursor: pointer; }
+    #spLock .sp-lock-btn:disabled { opacity: .55; cursor: default; }
+    #spLock .sp-lock-err { min-height: 1.3em; margin: 10px 0 0; color: #c84d4d; font-size: .9rem; font-weight: 700; }
+    #spLock .sp-lock-ask { display: block; margin-top: 14px; padding: 10px; border-radius: 10px; color: #7a6a45; font-size: .9rem; font-weight: 700; text-decoration: none; }
+    #spLock .sp-lock-ask:hover, #spLock .sp-lock-ask:focus-visible { background: #fbf5e7; color: #4d3d17; outline: none; }
+    #spLock .shake { animation: spShake .35s; }
+    @keyframes spShake { 20%, 60% { transform: translateX(-7px); } 40%, 80% { transform: translateX(7px); } }
+    .sp-lockbtn { margin-left: 10px; min-height: 36px; padding: 6px 14px; border: 1px solid rgba(255,255,255,.28); border-radius: 999px; background: rgba(255,255,255,.08); color: #fff; font: inherit; font-size: .82rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .sp-lockbtn:hover { background: rgba(255,255,255,.18); }
+  </style>
+  <script>
+    (function () {
+      var H = "10fda19714c4ac4abc1ffe3f96ac779a596b3ac71f55ef6ce3ce88489452b19f";
+      try {
+        var ok = sessionStorage.getItem("sp-lock-ok") === H || localStorage.getItem("sp-lock-ok") === H;
+        if (!ok) document.documentElement.classList.add("sp-locked");
+      } catch (e) {
+        document.documentElement.classList.add("sp-locked");
+      }
+    })();
+  </script>
+
   <meta
     name="description"
     content="Termine, Kunden, Anmeldungen, Rechner und Jahresplanung für das Schornsteinfeger-Handwerk."
@@ -1754,6 +1793,102 @@
 <body>
 
 <!-- =====================================================
+     KENNWORTSPERRE
+===================================================== -->
+<div id="spLock" role="dialog" aria-modal="true" aria-labelledby="spLockTitle">
+  <form class="sp-lock-card" id="spLockForm" autocomplete="off">
+    <div class="sp-lock-ic" aria-hidden="true">🔒</div>
+    <h1 id="spLockTitle">Schornstein Planer</h1>
+    <p>Bitte Kennwort eingeben</p>
+    <div class="sp-lock-row">
+      <input type="password" class="sp-lock-pw" id="spLockPw" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Kennwort">
+      <button type="button" class="sp-lock-eye" id="spLockEye" aria-label="Kennwort anzeigen" title="Anzeigen">👁</button>
+    </div>
+    <label class="sp-lock-rem"><input type="checkbox" id="spLockRem"> Auf diesem Gerät merken</label>
+    <div class="sp-lock-err" id="spLockErr" role="alert"></div>
+    <button type="submit" class="sp-lock-btn" id="spLockGo">Entsperren</button>
+    <a class="sp-lock-ask" id="spLockAsk" href="mailto:kontakt@schornstein-planer.de?subject=Kennwort%20anfragen%20-%20Schornstein%20Planer&amp;body=Guten%20Tag%2C%0D%0A%0D%0Aich%20m%C3%B6chte%20das%20Kennwort%20f%C3%BCr%20den%20Schornstein%20Planer%20anfragen.%0D%0A%0D%0AName%3A%20%0D%0A%0D%0AVielen%20Dank%21">Kennwort anfragen</a>
+  </form>
+</div>
+<script>
+(function () {
+  var H = "10fda19714c4ac4abc1ffe3f96ac779a596b3ac71f55ef6ce3ce88489452b19f", SALT = "sp|";
+
+  /* kleine SHA-256-Funktion (läuft auch ohne HTTPS) */
+  function sha256(str) {
+    var m = unescape(encodeURIComponent(str)), l = m.length, b = [], i, t, K = [], h = [], p = 2;
+    function isP(x) { for (var d = 2; d * d <= x; d++) if (x % d === 0) return false; return true; }
+    function ror(x, n) { return (x >>> n) | (x << (32 - n)); }
+    while (K.length < 64) { if (isP(p)) { if (h.length < 8) h.push((Math.sqrt(p) % 1) * 4294967296 | 0); K.push((Math.cbrt(p) % 1) * 4294967296 | 0); } p++; }
+    for (i = 0; i < l; i++) b.push(m.charCodeAt(i));
+    b.push(128);
+    while (b.length % 64 !== 56) b.push(0);
+    var hi = Math.floor(l * 8 / 4294967296), lo = (l * 8) >>> 0;
+    b.push(hi >>> 24 & 255, hi >>> 16 & 255, hi >>> 8 & 255, hi & 255, lo >>> 24 & 255, lo >>> 16 & 255, lo >>> 8 & 255, lo & 255);
+    for (var o = 0; o < b.length; o += 64) {
+      var w = [];
+      for (t = 0; t < 16; t++) w[t] = (b[o + 4 * t] << 24) | (b[o + 4 * t + 1] << 16) | (b[o + 4 * t + 2] << 8) | b[o + 4 * t + 3];
+      for (t = 16; t < 64; t++) {
+        var s0 = ror(w[t - 15], 7) ^ ror(w[t - 15], 18) ^ (w[t - 15] >>> 3), s1 = ror(w[t - 2], 17) ^ ror(w[t - 2], 19) ^ (w[t - 2] >>> 10);
+        w[t] = (w[t - 16] + s0 + w[t - 7] + s1) | 0;
+      }
+      var a = h[0], bb = h[1], c = h[2], d = h[3], e = h[4], f = h[5], g = h[6], hh = h[7];
+      for (t = 0; t < 64; t++) {
+        var S1 = ror(e, 6) ^ ror(e, 11) ^ ror(e, 25), ch = (e & f) ^ (~e & g), t1 = (hh + S1 + ch + K[t] + w[t]) | 0;
+        var S0 = ror(a, 2) ^ ror(a, 13) ^ ror(a, 22), mj = (a & bb) ^ (a & c) ^ (bb & c), t2 = (S0 + mj) | 0;
+        hh = g; g = f; f = e; e = (d + t1) | 0; d = c; c = bb; bb = a; a = (t1 + t2) | 0;
+      }
+      h[0] = (h[0] + a) | 0; h[1] = (h[1] + bb) | 0; h[2] = (h[2] + c) | 0; h[3] = (h[3] + d) | 0;
+      h[4] = (h[4] + e) | 0; h[5] = (h[5] + f) | 0; h[6] = (h[6] + g) | 0; h[7] = (h[7] + hh) | 0;
+    }
+    return h.map(function (x) { return ("00000000" + (x >>> 0).toString(16)).slice(-8); }).join("");
+  }
+
+  /* Groß-/Kleinschreibung und ß/ss sind egal (Handy-Tastaturen) */
+  function norm(s) { return String(s || "").trim().toLowerCase().replace(/ß/g, "ss"); }
+
+  var form = document.getElementById("spLockForm"), pw = document.getElementById("spLockPw"), err = document.getElementById("spLockErr"),
+      go = document.getElementById("spLockGo"), rem = document.getElementById("spLockRem"), eye = document.getElementById("spLockEye");
+
+  function focusPw() { try { pw.focus(); } catch (e) {} }
+  if (document.documentElement.classList.contains("sp-locked")) setTimeout(focusPw, 60);
+
+  eye.addEventListener("click", function () {
+    var show = pw.type === "password";
+    pw.type = show ? "text" : "password";
+    eye.setAttribute("aria-label", show ? "Kennwort verbergen" : "Kennwort anzeigen");
+    focusPw();
+  });
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (go.disabled) return;
+    if (sha256(SALT + norm(pw.value)) === H) {
+      try {
+        if (rem.checked) localStorage.setItem("sp-lock-ok", H);
+        else sessionStorage.setItem("sp-lock-ok", H);
+      } catch (x) {}
+      err.textContent = "";
+      /* neu laden: die App startet dann sauber und sichtbar */
+      location.reload();
+      return;
+    }
+    err.textContent = "Falsches Kennwort.";
+    pw.value = "";
+    form.classList.remove("shake"); void form.offsetWidth; form.classList.add("shake");
+    go.disabled = true;
+    setTimeout(function () { go.disabled = false; focusPw(); }, 1200);
+  });
+
+  /* „Sperren“-Knopf im Kopf der Seite */
+  window.spLockNow = function () {
+    try { sessionStorage.removeItem("sp-lock-ok"); localStorage.removeItem("sp-lock-ok"); } catch (e) {}
+    location.reload();
+  };
+})();
+</script>
+
+<!-- =====================================================
      HEADER
 ===================================================== -->
 
@@ -1821,6 +1956,7 @@
       <div class="brand-badge">
         SCHORNSTEINFEGER
       </div>
+      <button type="button" class="sp-lockbtn" id="spLockNow" onclick="spLockNow()" title="App sperren (Kennwort wird wieder abgefragt)">🔒 Sperren</button>
 
     </div>
 
